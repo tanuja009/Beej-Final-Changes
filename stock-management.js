@@ -104,10 +104,6 @@ App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety)
     var section = '<div class="nav-section"><div class="nav-section-title">Stock Management</div>'
       + ni('dashboard', 'Stock Dashboard', 'sm-dashboard')
       + ni('inventory_2', 'Stock Inventory', 'sm-inventory', true)
-      + ni('login', 'Stock Inward', 'sm-inward', true)
-      + ni('logout', 'Stock Outward', 'sm-outward', true)
-      + ni('tune', 'Stock Adjustment', 'sm-adjust', true)
-      + ni('receipt_long', 'Stock Ledger', 'sm-ledger', true)
       + ni('category', 'Variety Master', 'sm-variety', true)
       + ni('account_tree', 'Sub-Variety Master', 'sm-subvariety', true)
       + ni('bar_chart', 'Stock Reports', 'sm-reports', true)
@@ -203,17 +199,15 @@ App.smInventory = function () {
   var inv = SM.inventory;
   return '<div class="page-header"><h1>Stock Inventory</h1><p>Complete inventory listing</p></div>'
     + '<div class="card"><div class="card-header"><h3>Inventory (' + inv.length + ' items)</h3>'
-    + '<button class="btn btn-primary btn-sm" onclick="App.navigate(\'sm-inward\')"><span class="material-icons">add</span> Add Inward</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Sr.</th><th>Season</th><th>Crop</th><th>Variety</th><th>Sub-Variety</th><th>Lot/Batch</th><th>Opening</th><th>Inward</th><th>Outward</th><th>Available</th><th>Unit</th><th>Status</th><th>Updated</th><th>Action</th></tr></thead><tbody>'
+    + '<thead><tr><th>Sr.</th><th>Season</th><th>Crop</th><th>Variety</th><th>Sub-Variety</th><th>Lot/Batch</th><th>Opening</th><th>Inward</th><th>Outward</th><th>Available</th><th>Unit</th><th>Status</th><th>Updated</th></tr></thead><tbody>'
     + inv.map(function (r, i) {
       var a = App._smAvail(r);
       var st = a <= 0 ? 'Out of Stock' : a < 100 ? 'Low Stock' : 'In Stock';
       return '<tr><td>' + (i + 1) + '</td><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td><td>' + (r.subVariety || '—') + '</td>'
         + '<td>' + r.lot + '</td><td>' + r.opening + '</td><td>' + r.inward + '</td><td>' + r.outward + '</td>'
         + '<td style="font-weight:700;color:' + (a > 0 ? '#2E7D32' : '#C62828') + ';">' + a + '</td><td>' + r.unit + '</td>'
-        + '<td>' + App._smBdg(st) + '</td><td style="font-size:0.78rem;">' + r.updated + '</td>'
-        + '<td><button class="btn btn-outline btn-sm" onclick="App.navigate(\'sm-ledger\')"><span class="material-icons" style="font-size:14px;">receipt_long</span></button></td></tr>';
+        + '<td>' + App._smBdg(st) + '</td><td style="font-size:0.78rem;">' + r.updated + '</td></tr>';
     }).join('')
     + '</tbody></table></div></div></div>';
 };

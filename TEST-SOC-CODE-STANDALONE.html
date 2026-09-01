@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Society Code Auto-Fetch - Standalone Test</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      color: white;
+      padding: 20px 30px;
+    }
+
+    .header h1 {
+      margin: 0 0 5px 0;
+      font-size: 1.5rem;
+    }
+
+    .form-content {
+      padding: 30px;
+    }
+
+    .form-section {
+      margin-bottom: 30px;
+    }
+
+    .form-section h2 {
+      color: #2E7D32;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #E8F5E9;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #424242;
+      margin-bottom: 6px;
+    }
+
+    .form-group label .required {
+      color: #F44336;
+    }
+
+    .form-control {
+      padding: 10px 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    .helper-text {
+      font-size: 0.75rem;
+      color: #757575;
+      margin-top: 4px;
+    }
+
+    .highlight-box {
+      background: #E3F2FD;
+      padding: 20px;
+      border-radius: 8px;
+      border: 2px solid #2196F3;
+      margin-bottom: 25px;
+    }
+
+    .highlight-box h3 {
+      color: #1565C0;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .status.success {
+      background: #E8F5E9;
+      color: #2E7D32;
+      border: 1px solid #4CAF50;
+      display: block;
+    }
+
+    .status.error {
+      background: #FFEBEE;
+      color: #C62828;
+      border: 1px solid #F44336;
+      display: block;
+    }
+
+    .status.warning {
+      background: #FFF3E0;
+      color: #E65100;
+      border: 1px solid #FF9800;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌾 Society Code Auto-Fetch - Standalone Test</h1>
+      <p style="opacity: 0.9; font-size: 0.85rem;">This is a working example to demonstrate the feature</p>
+    </div>
+
+    <div class="form-content">
+      <!-- Society Code Lookup -->
+      <div class="highlight-box">
+        <h3><span class="material-icons" style="vertical-align: middle; font-size: 18px;">search</span> Society Code
+          Lookup</h3>
+        <div style="display: flex; gap: 12px; align-items: flex-end;">
+          <div class="form-group" style="flex: 1;">
+            <label>Enter Society Code</label>
+            <input type="text" id="society-code" class="form-control" placeholder="e.g., SOC-003"
+              style="text-transform: uppercase;">
+            <div class="helper-text">💡 Type SOC-001, SOC-002, SOC-003, or SOC-004</div>
+          </div>
+          <button onclick="fetchSocietyData()"
+            style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; height: 42px;">
+            <span class="material-icons" style="vertical-align: middle; font-size: 18px;">search</span> Fetch Data
+          </button>
+        </div>
+        <div id="status-message" class="status"></div>
+      </div>
+
+      <!-- Society Information -->
+      <div class="form-section">
+        <h2>Society Information</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Society Name <span class="required">*</span></label>
+            <input type="text" id="society-name" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>Society Type <span class="required">*</span></label>
+            <input type="text" id="society-type" class="form-control" placeholder="Auto-filled from code">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Registration Number <span class="required">*</span></label>
+            <input type="text" id="reg-number" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>Registration Date <span class="required">*</span></label>
+            <input type="date" id="reg-date" class="form-control">
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Details -->
+      <div class="form-section">
+        <h2>Location Details</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>District <span class="required">*</span></label>
+            <input type="text" id="district" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>Block <span class="required">*</span></label>
+            <input type="text" id="block" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>Village <span class="required">*</span></label>
+            <input type="text" id="village" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>PIN Code <span class="required">*</span></label>
+            <input type="text" id="pincode" class="form-control" placeholder="Auto-filled from code">
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Person -->
+      <div class="form-section">
+        <h2>Contact Person Details</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Contact Person Name <span class="required">*</span></label>
+            <input type="text" id="contact-name" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>Mobile Number <span class="required">*</span></label>
+            <input type="tel" id="mobile" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>Email ID</label>
+            <input type="email" id="email" class="form-control" placeholder="Auto-filled from code">
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank Details -->
+      <div class="form-section">
+        <h2>Bank Details</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bank Name <span class="required">*</span></label>
+            <input type="text" id="bank-name" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>Branch Name <span class="required">*</span></label>
+            <input type="text" id="branch" class="form-control" placeholder="Auto-filled from code">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Account Number <span class="required">*</span></label>
+            <input type="text" id="account-number" class="form-control" placeholder="Auto-filled from code">
+          </div>
+          <div class="form-group">
+            <label>IFSC Code <span class="required">*</span></label>
+            <input type="text" id="ifsc" class="form-control" placeholder="Auto-filled from code">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Demo society data
+    const societiesData = [
+      {
+        societyCode: 'SOC-001',
+        societyName: 'Rampur Krishi Samiti',
+        societyType: 'Farmers Cooperative',
+        registrationNumber: 'REG-MP-2020-001',
+        registrationDate: '2020-04-15',
+        district: 'Chhindwara',
+        block: 'Patan',
+        village: 'Rampur',
+        pinCode: '480001',
+        societyHeadName: 'Ramesh Kumar Verma',
+        mobileNumber: '9876543210',
+        emailId: 'ramesh.rampur@gmail.com',
+        bankName: 'State Bank of India',
+        branch: 'Patan Branch',
+        accountNumber: '12345678901',
+        ifscCode: 'SBIN0001234',
+        status: 'Active'
+      },
+      {
+        societyCode: 'SOC-002',
+        societyName: 'Sehora Kisan Sabha',
+        societyType: 'Seed Production Society',
+        registrationNumber: 'REG-MP-2021-007',
+        registrationDate: '2021-06-10',
+        district: 'Seoni',
+        block: 'Sehora',
+        village: 'Sehora',
+        pinCode: '480661',
+        societyHeadName: 'Sunita Devi',
+        mobileNumber: '9823401234',
+        emailId: '',
+        bankName: 'Bank of India',
+        branch: 'Seoni Branch',
+        accountNumber: '98765432101',
+        ifscCode: 'BKID0008821',
+        status: 'Active'
+      },
+      {
+        societyCode: 'SOC-003',
+        societyName: 'Bargaon Beej Samiti',
+        societyType: 'Farmers Cooperative',
+        registrationNumber: 'REG-MP-2022-015',
+        registrationDate: '2022-03-22',
+        district: 'Narsinghpur',
+        block: 'Harrai',
+        village: 'Bargaon',
+        pinCode: '487661',
+        societyHeadName: 'Dinesh Patel',
+        mobileNumber: '9765432109',
+        emailId: 'bargaon.beej@mp.gov.in',
+        bankName: 'Punjab National Bank',
+        branch: 'Narsinghpur Branch',
+        accountNumber: '11223344556',
+        ifscCode: 'PUNB0123456',
+        status: 'Pending'
+      },
+      {
+        societyCode: 'SOC-004',
+        societyName: 'Patan Krishi Vikas Samiti',
+        societyType: 'Krishi Utpadak Samiti',
+        registrationNumber: 'REG-MP-2023-009',
+        registrationDate: '2023-01-15',
+        district: 'Chhindwara',
+        block: 'Patan',
+        village: 'Patan',
+        pinCode: '480005',
+        societyHeadName: 'Mohan Lal',
+        mobileNumber: '9871234567',
+        emailId: 'patan.krishi@gmail.com',
+        bankName: 'Central Bank of India',
+        branch: 'Patan Branch',
+        accountNumber: '22334455667',
+        ifscCode: 'CBIN0001111',
+        status: 'Active'
+      }
+    ];
+
+    function fetchSocietyData() {
+      const codeInput = document.getElementById('society-code');
+      const statusDiv = document.getElementById('status-message');
+      const code = codeInput.value.trim().toUpperCase();
+
+      // Update input to uppercase
+      codeInput.value = code;
+
+      if (!code) {
+        showStatus('warning', '⚠ Please enter a society code first');
+        return;
+      }
+
+      // Find society
+      const society = societiesData.find(s => s.societyCode === code);
+
+      if (!society) {
+        showStatus('error', `❌ Society code "${code}" not found. Try: SOC-001, SOC-002, SOC-003, or SOC-004`);
+        return;
+      }
+
+      // Check if active (for demonstration)
+      if (society.status === 'Active' && (code === 'SOC-001' || code === 'SOC-002' || code === 'SOC-004')) {
+        showStatus('warning', `⚠ Society "${society.societyName}" is already registered and active. Contact admin for updates.`);
+        // In real app, would clear the field and prevent auto-fill
+        // For demo, we'll still show the data
+      }
+
+      // Auto-fill all fields
+      document.getElementById('society-name').value = society.societyName;
+      document.getElementById('society-type').value = society.societyType;
+      document.getElementById('reg-number').value = society.registrationNumber;
+      document.getElementById('reg-date').value = society.registrationDate;
+      document.getElementById('district').value = society.district;
+      document.getElementById('block').value = society.block;
+      document.getElementById('village').value = society.village;
+      document.getElementById('pincode').value = society.pinCode;
+      document.getElementById('contact-name').value = society.societyHeadName;
+      document.getElementById('mobile').value = society.mobileNumber;
+      document.getElementById('email').value = society.emailId;
+      document.getElementById('bank-name').value = society.bankName;
+      document.getElementById('branch').value = society.branch;
+      document.getElementById('account-number').value = society.accountNumber;
+      document.getElementById('ifsc').value = society.ifscCode;
+
+      // Show success
+      showStatus('success', `✓ Society data found for ${code}! "${society.societyName}" details have been auto-filled.`);
+
+      // Visual feedback
+      codeInput.style.background = '#E8F5E9';
+      codeInput.style.borderColor = '#4CAF50';
+      setTimeout(() => {
+        codeInput.style.background = '';
+        codeInput.style.borderColor = '';
+      }, 2000);
+    }
+
+    function showStatus(type, message) {
+      const statusDiv = document.getElementById('status-message');
+      statusDiv.className = `status ${type}`;
+      statusDiv.textContent = message;
+    }
+
+    // Auto-fetch on Tab or Enter
+    document.getElementById('society-code').addEventListener('keydown', function (e) {
+      if (e.key === 'Tab' || e.key === 'Enter') {
+        e.preventDefault();
+        fetchSocietyData();
+      }
+    });
+
+    // Auto-fetch on blur
+    document.getElementById('society-code').addEventListener('blur', function () {
+      if (this.value.trim()) {
+        fetchSocietyData();
+      }
+    });
+  </script>
+</body>
+
+</html>

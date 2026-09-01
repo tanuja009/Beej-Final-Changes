@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beej Sangh - Visual Wireframe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Login Screen */
+    .login-page {
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    .emblem {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      max-width: 450px;
+      width: 100%;
+    }
+
+    .login-card h2 {
+      color: #2E7D32;
+      margin-bottom: 24px;
+      font-size: 1.5rem;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: #4CAF50;
+      color: white;
+      width: 100%;
+      justify-content: center;
+      padding: 14px;
+    }
+
+    .btn-primary:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #424242;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .forgot-link {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .forgot-link a {
+      color: #2E7D32;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* Registration Screen */
+    .reg-page {
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      min-height: 100vh;
+      padding: 30px 20px;
+    }
+
+    .reg-header {
+      max-width: 1000px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .reg-card {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      padding: 24px 32px;
+      color: white;
+    }
+
+    .card-body {
+      padding: 32px;
+    }
+
+    .lookup-section {
+      background: #E3F2FD;
+      padding: 24px;
+      border-radius: 12px;
+      border: 2px solid #2196F3;
+      margin-bottom: 32px;
+    }
+
+    .form-section {
+      margin-bottom: 32px;
+    }
+
+    .form-section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2E7D32;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #E8F5E9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .readonly {
+      background: #F5F5F5;
+      color: #616161;
+      cursor: not-allowed;
+    }
+
+    .success-msg {
+      color: #4CAF50;
+      font-weight: 500;
+      margin-top: 12px;
+    }
+
+    .btn-secondary {
+      background: #757575;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #616161;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding-top: 24px;
+      border-top: 2px solid #E0E0E0;
+    }
+
+    /* Success Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-icon {
+      font-size: 64px;
+      color: #4CAF50;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      color: #2E7D32;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    .modal-text {
+      color: #616161;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- SCREEN 1: LOGIN PAGE -->
+  <div id="screen-login" class="screen active">
+    <div class="login-page">
+      <div style="width: 100%; max-width: 450px;">
+        <div class="login-header">
+          <div class="emblem">🌾</div>
+          <h1 style="font-size: 1.8rem; margin-bottom: 8px;">Beej Sangh Procurement Portal</h1>
+          <p style="font-size: 0.9rem; opacity: 0.9;">Madhya Pradesh State Agriculture Department</p>
+        </div>
+
+        <div class="login-card">
+          <h2>🔐 Sign In to Portal</h2>
+
+          <label>Username</label>
+          <input type="text" class="form-control" placeholder="Enter username" value="admin">
+
+          <label>Password</label>
+          <input type="password" class="form-control" placeholder="Enter password" value="********">
+
+          <button class="btn btn-primary"
+            onclick="alert('This is just a visual wireframe. Login functionality would go here.')">
+            <span class="material-icons">login</span>
+            Login to Portal
+          </button>
+
+          <div class="forgot-link">
+            <a href="#">Forgot Password</a> &nbsp;|&nbsp;
+            <a href="#">Login with Mobile</a>
+          </div>
+
+          <div style="margin-top: 20px; text-align: center; padding-top: 20px; border-top: 1px solid #e8f5e9;">
+            <span style="color: #757575; font-size: 14px;">New Society? &nbsp;</span>
+            <button class="btn btn-primary" onclick="showScreen('screen-registration')" style="width: auto;">
+              <span class="material-icons">app_registration</span>
+              New Society Registration
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: NCD REGISTRATION PAGE -->
+  <div id="screen-registration" class="screen">
+    <div class="reg-page">
+      <div class="reg-header">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div
+            style="width: 52px; height: 52px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px;">
+            🌾</div>
+          <div>
+            <div style="font-size: 1.3rem; font-weight: 700;">Beej Sangh Procurement Portal</div>
+            <div style="font-size: 0.85rem; opacity: 0.9;">New Society Registration — NCD ID Based</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="showScreen('screen-login')">
+          <span class="material-icons">arrow_back</span>
+          Back to Login
+        </button>
+      </div>
+
+      <div class="reg-card">
+        <div class="card-header">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span class="material-icons" style="font-size: 32px;">app_registration</span>
+            <div>
+              <div style="font-size: 1.2rem; font-weight: 700;">New Society Registration</div>
+              <div style="font-size: 0.82rem; opacity: 0.85;">Enter your NCD ID to fetch society details and complete
+                registration</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- NCD Lookup -->
+          <div class="lookup-section">
+            <div
+              style="font-size: 1rem; font-weight: 700; color: #1565C0; margin-bottom: 18px; display: flex; align-items: center; gap: 10px;">
+              <span class="material-icons" style="font-size: 24px;">badge</span>
+              NCD ID / Society Code Lookup
+            </div>
+            <div style="display: flex; gap: 14px; align-items: flex-end;">
+              <div style="flex: 1;">
+                <label style="color: #424242;">Enter NCD ID <span style="color: #F44336;">*</span></label>
+                <input type="text" id="ncd-input" class="form-control" placeholder="e.g., NCD001"
+                  style="text-transform: uppercase;">
+                <div style="font-size: 0.75rem; color: #616161; margin-top: 6px;">
+                  💡 Prototype Demo: Try NCD001, NCD002, NCD003, NCD004, or NCD005
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="fetchSociety()" style="width: auto;">
+                <span class="material-icons">search</span>
+                Fetch Society Details
+              </button>
+            </div>
+            <div id="fetch-message"></div>
+          </div>
+
+          <!-- Form (Hidden Initially) -->
+          <div id="registration-form" style="display: none;">
+            <!-- Society Identification -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="material-icons">business</span>
+                Society Identification
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>NCD ID</label>
+                  <input type="text" class="form-control readonly" id="field-ncdid" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Cooperative Society Name</label>
+                  <input type="text" class="form-control readonly" id="field-name" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Registration Number</label>
+                  <input type="text" class="form-control readonly" id="field-regno" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Registration Date</label>
+                  <input type="text" class="form-control readonly" id="field-regdate" readonly>
+                </div>
+              </div>
+            </div>
+
+            <!-- Location Details -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="material-icons">location_on</span>
+                Location Details
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Location</label>
+                  <input type="text" class="form-control readonly" id="field-location" readonly>
+                </div>
+                <div class="form-group">
+                  <label>District</label>
+                  <input type="text" class="form-control readonly" id="field-district" readonly>
+                </div>
+                <div class="form-group">
+                  <label>State/UT</label>
+                  <input type="text" class="form-control readonly" id="field-state" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Pincode</label>
+                  <input type="text" class="form-control readonly" id="field-pincode" readonly>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="form-section">
+              <div class="form-section-title">
+                <span class="material-icons">contact_phone</span>
+                Contact Information
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Mobile Number <span style="color: #F44336;">*</span></label>
+                  <input type="text" class="form-control" id="field-mobile" placeholder="10-digit mobile">
+                </div>
+                <div class="form-group">
+                  <label>Email ID <span style="color: #F44336;">*</span></label>
+                  <input type="email" class="form-control" id="field-email" placeholder="email@example.com">
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-btns">
+              <button class="btn btn-secondary" onclick="showScreen('screen-login')">
+                <span class="material-icons">close</span>
+                Cancel
+              </button>
+              <button class="btn btn-primary" onclick="submitRegistration()">
+                <span class="material-icons">send</span>
+                Submit Registration
+              </button>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" style="text-align: center; padding: 60px 20px; color: #9E9E9E;">
+            <span class="material-icons" style="font-size: 64px; color: #E0E0E0;">search_off</span>
+            <p style="margin-top: 16px;">Enter your NCD ID above and click "Fetch Society Details" to continue</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS MODAL -->
+  <div id="success-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">✅</div>
+      <div class="modal-title">Society registration submitted successfully!</div>
+      <div class="modal-text">
+        <p><strong>Society Name:</strong> <span id="modal-society-name"></span></p>
+        <p><strong>NCD ID:</strong> <span id="modal-ncd-id"></span></p>
+        <p style="margin-top: 16px;">Your registration has been submitted for verification.</p>
+        <p>You will be notified via email and mobile once your account is activated.</p>
+        <p><strong>Please wait for approval before logging in.</strong></p>
+      </div>
+      <button class="btn btn-primary" onclick="closeModal()">
+        Go to Login
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Demo Data
+    const societies = {
+      'NCD001': {
+        ncdId: 'NCD001',
+        name: 'Indore Cooperative Agricultural Society',
+        regNo: 'SOC/MP/2020/001',
+        regDate: '15/06/2020',
+        location: 'Indore',
+        district: 'Indore',
+        state: 'Madhya Pradesh',
+        pincode: '452001',
+        mobile: '9876543210',
+        email: 'indore.coop@example.com'
+      },
+      'NCD002': {
+        ncdId: 'NCD002',
+        name: 'Bhopal Agricultural Cooperative',
+        regNo: 'SOC/MP/2019/045',
+        regDate: '20/08/2019',
+        location: 'Bhopal',
+        district: 'Bhopal',
+        state: 'Madhya Pradesh',
+        pincode: '462001',
+        mobile: '9823401234',
+        email: 'bhopal.agri@example.com'
+      },
+      'NCD003': {
+        ncdId: 'NCD003',
+        name: 'Jabalpur Farmers Welfare Society',
+        regNo: 'SOC/MP/2021/089',
+        regDate: '10/02/2021',
+        location: 'Jabalpur',
+        district: 'Jabalpur',
+        state: 'Madhya Pradesh',
+        pincode: '482001',
+        mobile: '9765432109',
+        email: 'jabalpur.farmers@example.com'
+      }
+    };
+
+    let currentSociety = null;
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    function fetchSociety() {
+      const input = document.getElementById('ncd-input');
+      const ncdId = input.value.trim().toUpperCase();
+      const messageDiv = document.getElementById('fetch-message');
+
+      if (!ncdId) {
+        messageDiv.innerHTML = '<p class="success-msg" style="color: #F44336;">⚠ Please enter an NCD ID</p>';
+        return;
+      }
+
+      const society = societies[ncdId];
+
+      if (!society) {
+        messageDiv.innerHTML = '<p class="success-msg" style="color: #FF9800;">❌ No demo society found. Try: NCD001, NCD002, or NCD003</p>';
+        return;
+      }
+
+      // Populate form
+      currentSociety = society;
+      document.getElementById('field-ncdid').value = society.ncdId;
+      document.getElementById('field-name').value = society.name;
+      document.getElementById('field-regno').value = society.regNo;
+      document.getElementById('field-regdate').value = society.regDate;
+      document.getElementById('field-location').value = society.location;
+      document.getElementById('field-district').value = society.district;
+      document.getElementById('field-state').value = society.state;
+      document.getElementById('field-pincode').value = society.pincode;
+      document.getElementById('field-mobile').value = society.mobile;
+      document.getElementById('field-email').value = society.email;
+
+      // Show form
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('registration-form').style.display = 'block';
+      messageDiv.innerHTML = '<p class="success-msg">✓ Society details fetched successfully! Please review and complete the registration form below.</p>';
+
+      // Scroll to form
+      setTimeout(() => {
+        document.getElementById('registration-form').scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+
+    function submitRegistration() {
+      if (!currentSociety) {
+        alert('Please fetch society details first');
+        return;
+      }
+
+      const mobile = document.getElementById('field-mobile').value;
+      const email = document.getElementById('field-email').value;
+
+      if (!mobile || mobile.length < 10) {
+        alert('Please enter a valid 10-digit mobile number');
+        return;
+      }
+
+      if (!email || !email.includes('@')) {
+        alert('Please enter a valid email address');
+        return;
+      }
+
+      // Show success modal
+      document.getElementById('modal-society-name').textContent = currentSociety.name;
+      document.getElementById('modal-ncd-id').textContent = currentSociety.ncdId;
+      document.getElementById('success-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('success-modal').classList.remove('active');
+      showScreen('screen-login');
+
+      // Reset form
+      document.getElementById('ncd-input').value = '';
+      document.getElementById('fetch-message').innerHTML = '';
+      document.getElementById('empty-state').style.display = 'block';
+      document.getElementById('registration-form').style.display = 'none';
+      currentSociety = null;
+    }
+  </script>
+</body>
+
+</html>

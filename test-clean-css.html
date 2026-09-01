@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean CSS Test</title>
+  <link rel="stylesheet" href="styles-clean.css">
+</head>
+
+<body>
+  <div class="css-test-indicator">
+    ✅ IF YOU SEE THIS GREEN BAR, THE CSS FILE IS LOADING CORRECTLY!
+  </div>
+
+  <div style="padding: 80px 20px 20px 20px;">
+    <h1 style="margin-bottom: 30px;">Clean CSS Test</h1>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Test Card</h3>
+      </div>
+      <div class="card-body">
+        <p style="margin-bottom: 20px;">If you see this card with white background and proper styling, CSS is working.
+        </p>
+
+        <div class="form-group">
+          <label>Test Input</label>
+          <input type="text" class="form-control" value="Test input field" />
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button class="btn btn-primary">Primary Button</button>
+          <button class="btn btn-danger">Danger Button</button>
+          <button class="btn btn-info">Info Button</button>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <span class="badge badge-success">Success</span>
+          <span class="badge badge-warning">Warning</span>
+          <span class="badge badge-danger">Danger</span>
+          <span class="badge badge-info">Info</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 12px; margin-top: 20px;">
+      <h2 style="margin-bottom: 15px;">Color Variables Test:</h2>
+      <div style="background: var(--primary); color: white; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+        var(--primary) = Should be #4CAF50 (Green)
+      </div>
+      <div
+        style="background: var(--primary-dark); color: white; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+        var(--primary-dark) = Should be #2E7D32 (Dark Green)
+      </div>
+      <div style="background: var(--primary-bg); color: #333; padding: 15px; border-radius: 8px;">
+        var(--primary-bg) = Should be #E8F5E9 (Light Green)
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

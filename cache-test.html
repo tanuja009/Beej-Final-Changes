@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Cache Test - Beej Sangh</title>
+  <link rel="stylesheet" href="styles.css?v=1.0.8&t=20260821" />
+  <style>
+    .test-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .test-result {
+      margin: 20px 0;
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid;
+    }
+
+    .test-pass {
+      background: #E8F5E9;
+      border-color: #4CAF50;
+      color: #2E7D32;
+    }
+
+    .test-fail {
+      background: #FFEBEE;
+      border-color: #F44336;
+      color: #C62828;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="test-container">
+    <div class="card">
+      <div class="card-header">
+        <h3>🧪 CSS Cache Test</h3>
+      </div>
+      <div class="card-body">
+        <p style="margin-bottom: 20px;">This page tests if your browser has loaded the latest CSS file. Check the
+          results below:</p>
+
+        <div id="test-results"></div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #FFF8E1; border-radius: 8px;">
+          <h4 style="margin-bottom: 10px;">How to Read Results:</h4>
+          <ul style="margin-left: 20px; line-height: 1.8;">
+            <li><strong style="color: #2E7D32;">✅ PASS (Green Box)</strong> = Cache is cleared, design is correct</li>
+            <li><strong style="color: #C62828;">❌ FAIL (Red Box)</strong> = Still using old cache, needs clearing</li>
+          </ul>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button class="btn btn-primary" onclick="location.reload()">
+            <span class="material-icons" style="font-size: 16px;">refresh</span>
+            Refresh Test
+          </button>
+          <button class="btn btn-outline" onclick="window.open('CLEAR-CACHE-INSTRUCTIONS.html', '_blank')">
+            <span class="material-icons" style="font-size: 16px;">help_outline</span>
+            Cache Clear Instructions
+          </button>
+          <a href="index.html" class="btn btn-success">
+            <span class="material-icons" style="font-size: 16px;">home</span>
+            Go to Application
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+      <div class="card-header">
+        <h3>🎨 Visual Design Test</h3>
+      </div>
+      <div class="card-body">
+        <p style="margin-bottom: 20px;">If cache is cleared properly, you should see:</p>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <span class="material-icons">check_circle</span>
+            </div>
+            <div class="stat-info">
+              <div class="value">100%</div>
+              <div class="label">Primary Green</div>
+            </div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-icon">
+              <span class="material-icons">warning</span>
+            </div>
+            <div class="stat-info">
+              <div class="value">100%</div>
+              <div class="label">Warning Orange</div>
+            </div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon">
+              <span class="material-icons">info</span>
+            </div>
+            <div class="stat-info">
+              <div class="value">100%</div>
+              <div class="label">Info Blue</div>
+            </div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">
+              <span class="material-icons">error</span>
+            </div>
+            <div class="stat-info">
+              <div class="value">100%</div>
+              <div class="label">Danger Red</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <div class="alert alert-success">
+            <span class="material-icons">check_circle</span>
+            <span>Success alert with proper green background</span>
+          </div>
+          <div class="alert alert-warning">
+            <span class="material-icons">warning</span>
+            <span>Warning alert with proper yellow background</span>
+          </div>
+          <div class="alert alert-danger">
+            <span class="material-icons">error</span>
+            <span>Danger alert with proper red background</span>
+          </div>
+          <div class="alert alert-info">
+            <span class="material-icons">info</span>
+            <span>Info alert with proper blue background</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button class="btn btn-primary">Primary Button</button>
+          <button class="btn btn-danger">Danger Button</button>
+          <button class="btn btn-warning">Warning Button</button>
+          <button class="btn btn-info">Info Button</button>
+          <button class="btn btn-success">Success Button</button>
+          <button class="btn btn-outline">Outline Button</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Test if CSS variables are loaded correctly
+    function runCacheTest() {
+      const testResults = document.getElementById('test-results');
+      const root = document.documentElement;
+      const computedStyle = getComputedStyle(root);
+
+      const tests = [
+        {
+          name: 'Primary Color',
+          variable: '--primary',
+          expected: '#4CAF50',
+          getCurrent: () => computedStyle.getPropertyValue('--primary').trim()
+        },
+        {
+          name: 'Primary Dark Color',
+          variable: '--primary-dark',
+          expected: '#2E7D32',
+          getCurrent: () => computedStyle.getPropertyValue('--primary-dark').trim()
+        },
+        {
+          name: 'CSS File Version',
+          variable: 'file-version',
+          expected: 'loaded',
+          getCurrent: () => {
+            // Check if card class is styled
+            const testDiv = document.createElement('div');
+            testDiv.className = 'card';
+            testDiv.style.display = 'none';
+            document.body.appendChild(testDiv);
+            const cardStyle = getComputedStyle(testDiv);
+            const hasStyles = cardStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
+              cardStyle.backgroundColor !== 'transparent';
+            document.body.removeChild(testDiv);
+            return hasStyles ? 'loaded' : 'not-loaded';
+          }
+        }
+      ];
+
+      let html = '';
+      let allPassed = true;
+
+      tests.forEach(test => {
+        const current = test.getCurrent();
+        const passed = current.toLowerCase() === test.expected.toLowerCase();
+        allPassed = allPassed && passed;
+
+        html += `
+                    <div class="test-result ${passed ? 'test-pass' : 'test-fail'}">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <strong>${passed ? '✅' : '❌'} ${test.name}</strong>
+                                <div style="font-size: 0.85rem; margin-top: 5px;">
+                                    Expected: <code>${test.expected}</code> | 
+                                    Got: <code>${current}</code>
+                                </div>
+                            </div>
+                            <div style="font-size: 1.5rem;">
+                                ${passed ? '✅' : '❌'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+      });
+
+      // Overall result
+      html = `
+                <div class="test-result ${allPassed ? 'test-pass' : 'test-fail'}" style="font-size: 1.1rem; font-weight: 600;">
+                    ${allPassed ? '✅ ALL TESTS PASSED - Cache is Clear!' : '❌ TESTS FAILED - Please Clear Browser Cache'}
+                </div>
+            ` + html;
+
+      testResults.innerHTML = html;
+    }
+
+    // Run test when page loads
+    window.addEventListener('DOMContentLoaded', runCacheTest);
+  </script>
+</body>
+
+</html>

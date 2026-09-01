@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Society Code Auto-Fetch - Testing Guide</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 2rem;
+    }
+
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .section {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .section h2 {
+      color: #1B5E20;
+      margin-top: 0;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+
+    .step {
+      background: #f9f9f9;
+      padding: 15px;
+      border-left: 4px solid #4CAF50;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+
+    .step-number {
+      background: #4CAF50;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .expected {
+      background: #E8F5E9;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      border-left: 3px solid #4CAF50;
+    }
+
+    .code {
+      background: #263238;
+      color: #4CAF50;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+    }
+
+    .warning {
+      background: #FFF3E0;
+      padding: 15px;
+      border-left: 4px solid #FF9800;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+
+    .success {
+      background: #E8F5E9;
+      padding: 15px;
+      border-left: 4px solid #4CAF50;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    table th {
+      background: #4CAF50;
+      color: white;
+      padding: 12px;
+      text-align: left;
+    }
+
+    table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+
+    table tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background: #45a049;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>🌾 Society Code Auto-Fetch</h1>
+    <p>Testing Guide for v1.7.0 - Public Society Registration Form</p>
+  </div>
+
+  <div class="warning">
+    <strong>⚠️ IMPORTANT - Clear Cache First!</strong><br>
+    Before testing, you MUST clear your browser cache:<br>
+    • Press <strong>Ctrl + Shift + R</strong> (Windows/Linux)<br>
+    • Press <strong>Cmd + Shift + R</strong> (Mac)<br>
+    • Or close browser completely and reopen
+  </div>
+
+  <div class="section">
+    <h2>📋 How to Access the Form</h2>
+    <div class="step">
+      <span class="step-number">1</span>
+      Open <span class="code">index.html</span> in your browser
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      You'll see the <strong>Beej Sangh Login Page</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>
+      Click the green <strong>"Register Here"</strong> button at the bottom
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>
+      <strong>Public Society Registration Form</strong> will open
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>
+      Find the <strong>"Society Code"</strong> field (first field in Society Information section)
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🧪 Test Cases</h2>
+
+    <h3 style="color: #2E7D32;">Test 1: Full Auto-Fill (Existing Society)</h3>
+    <div class="step">
+      <strong>Objective:</strong> Verify all fields auto-fill with complete data
+    </div>
+    <div class="step">
+      <span class="step-number">1</span>
+      In the <strong>Society Code</strong> field, type: <span class="code">SOC-001</span>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      Press <strong>Tab</strong> key or click on the next field
+    </div>
+    <div class="expected">
+      <strong>✓ Expected Results:</strong><br>
+      • Success alert appears: "Society data found for SOC-001!"<br>
+      • Society Code field turns green for 2 seconds<br>
+      • <strong>ALL</strong> these fields auto-fill:<br>
+      &nbsp;&nbsp;- Society Name: "Rampur Krishi Samiti"<br>
+      &nbsp;&nbsp;- Society Type: "Farmers Cooperative"<br>
+      &nbsp;&nbsp;- Registration Number: "REG-MP-2020-001"<br>
+      &nbsp;&nbsp;- Registration Date: "2020-04-15"<br>
+      &nbsp;&nbsp;- Address, Village, Block, District, PIN Code<br>
+      &nbsp;&nbsp;- Contact Person Name, Mobile, Email<br>
+      &nbsp;&nbsp;- Bank Name, Branch, Account Number, IFSC Code
+    </div>
+
+    <h3 style="color: #2E7D32; margin-top: 30px;">Test 2: Prevent Duplicate Registration</h3>
+    <div class="step">
+      <strong>Objective:</strong> Verify system prevents duplicate active society registration
+    </div>
+    <div class="step">
+      <span class="step-number">1</span>
+      Refresh the page to clear the form
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      Type: <span class="code">SOC-001</span> (this society is Active)
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>
+      Press <strong>Tab</strong>
+    </div>
+    <div class="expected">
+      <strong>✓ Expected Results:</strong><br>
+      • Warning alert appears: "Society ... is already registered and active"<br>
+      • Society Code field is <strong>cleared</strong><br>
+      • Form fields remain <strong>empty</strong> (no auto-fill)<br>
+      • User is advised to contact admin
+    </div>
+
+    <h3 style="color: #2E7D32; margin-top: 30px;">Test 3: Basic Auto-Fill</h3>
+    <div class="step">
+      <strong>Objective:</strong> Verify basic fields auto-fill for societies with limited data
+    </div>
+    <div class="step">
+      <span class="step-number">1</span>
+      Type: <span class="code">SOC-004</span>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      Press <strong>Tab</strong>
+    </div>
+    <div class="expected">
+      <strong>✓ Expected Results:</strong><br>
+      • Success alert appears<br>
+      • Society Code field turns green<br>
+      • Society Name: "Patan Krishi Vikas Samiti"<br>
+      • District: "Chhindwara"<br>
+      • Other fields remain empty (for manual entry)
+    </div>
+
+    <h3 style="color: #2E7D32; margin-top: 30px;">Test 4: New Society Code (Not Found)</h3>
+    <div class="step">
+      <strong>Objective:</strong> Verify no error when entering new society code
+    </div>
+    <div class="step">
+      <span class="step-number">1</span>
+      Type: <span class="code">SOC-999</span>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      Press <strong>Tab</strong>
+    </div>
+    <div class="expected">
+      <strong>✓ Expected Results:</strong><br>
+      • <strong>No alert</strong> (silent, non-intrusive)<br>
+      • <strong>No auto-fill</strong><br>
+      • User can continue filling form manually<br>
+      • No error messages
+    </div>
+
+    <h3 style="color: #2E7D32; margin-top: 30px;">Test 5: Empty Field</h3>
+    <div class="step">
+      <strong>Objective:</strong> Verify no action when field is left empty
+    </div>
+    <div class="step">
+      <span class="step-number">1</span>
+      Leave Society Code field <strong>empty</strong>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      Press <strong>Tab</strong>
+    </div>
+    <div class="expected">
+      <strong>✓ Expected Results:</strong><br>
+      • No alert<br>
+      • No auto-fill<br>
+      • No action taken<br>
+      • User continues to next field normally
+    </div>
+
+    <h3 style="color: #2E7D32; margin-top: 30px;">Test 6: Auto-Uppercase Conversion</h3>
+    <div class="step">
+      <strong>Objective:</strong> Verify code converts to uppercase automatically
+    </div>
+    <div class="step">
+      <span class="step-number">1</span>
+      Type in lowercase: <span class="code">soc-002</span>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      Press <strong>Tab</strong>
+    </div>
+    <div class="expected">
+      <strong>✓ Expected Results:</strong><br>
+      • Code automatically changes to: <strong>SOC-002</strong><br>
+      • Auto-fetch works normally<br>
+      • Fields auto-fill if society found
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Demo Society Codes Available</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Society Name</th>
+          <th>Status</th>
+          <th>Auto-Fill Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="code">SOC-001</span></td>
+          <td>Rampur Krishi Samiti</td>
+          <td style="color: #4CAF50; font-weight: bold;">Active</td>
+          <td>Full (16+ fields)</td>
+        </tr>
+        <tr>
+          <td><span class="code">SOC-002</span></td>
+          <td>Sehora Kisan Sabha</td>
+          <td style="color: #4CAF50; font-weight: bold;">Active</td>
+          <td>Full (16+ fields)</td>
+        </tr>
+        <tr>
+          <td><span class="code">SOC-003</span></td>
+          <td>Bargaon Beej Samiti</td>
+          <td style="color: #FF9800; font-weight: bold;">Pending</td>
+          <td>Full (16+ fields)</td>
+        </tr>
+        <tr>
+          <td><span class="code">SOC-004</span></td>
+          <td>Patan Krishi Vikas Samiti</td>
+          <td style="color: #4CAF50; font-weight: bold;">Active</td>
+          <td>Basic (2 fields)</td>
+        </tr>
+        <tr>
+          <td><span class="code">SOC-999</span></td>
+          <td>(Not Found)</td>
+          <td style="color: #9E9E9E;">N/A</td>
+          <td>None (Manual entry)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>🔍 What to Check</h2>
+    <div class="step">
+      <strong>Visual Feedback:</strong><br>
+      • Society Code field should have green background/border for 2 seconds on success<br>
+      • Helper text "Enter code to auto-fill data" should be visible below field
+    </div>
+    <div class="step">
+      <strong>Alert Messages:</strong><br>
+      • Success: "Society data found for SOC-XXX! ... details have been auto-filled..."<br>
+      • Warning: "Society ... is already registered and active. Please contact admin..."<br>
+      • No error for unknown codes (silent behavior)
+    </div>
+    <div class="step">
+      <strong>Field Population:</strong><br>
+      • Check ALL fields are filled when using SOC-001, SOC-002, SOC-003<br>
+      • Only Society Name and District filled for SOC-004<br>
+      • No fields filled for SOC-999 or other unknown codes
+    </div>
+    <div class="step">
+      <strong>Duplicate Prevention:</strong><br>
+      • SOC-001 should show warning and clear field (because status = Active)<br>
+      • SOC-003 should auto-fill normally (because status = Pending, not Active)
+    </div>
+  </div>
+
+  <div class="success">
+    <strong>✅ Success Criteria</strong><br>
+    All 6 test cases pass without errors, and:<br>
+    • Auto-fetch works for existing codes<br>
+    • Duplicate active registrations are prevented<br>
+    • New codes don't cause errors<br>
+    • Visual feedback is clear and helpful<br>
+    • Form remains usable throughout all scenarios
+  </div>
+
+  <div class="section">
+    <h2>🐛 Troubleshooting</h2>
+    <div class="step">
+      <strong>Problem:</strong> Changes not appearing<br>
+      <strong>Solution:</strong> Clear browser cache (Ctrl+Shift+R) or close/reopen browser
+    </div>
+    <div class="step">
+      <strong>Problem:</strong> Auto-fetch not working<br>
+      <strong>Solution:</strong> Check browser console (F12) for JavaScript errors
+    </div>
+    <div class="step">
+      <strong>Problem:</strong> Fields not auto-filling<br>
+      <strong>Solution:</strong> Verify you're using valid demo codes (SOC-001, SOC-002, etc.)
+    </div>
+    <div class="step">
+      <strong>Problem:</strong> Page not loading<br>
+      <strong>Solution:</strong> Ensure all JavaScript files are in the same folder as index.html
+    </div>
+  </div>
+
+  <div class="section" style="text-align: center;">
+    <h2>🚀 Ready to Test?</h2>
+    <p>Make sure you've cleared your browser cache, then open index.html</p>
+    <a href="index.html" class="btn">Open Beej Sangh Portal</a>
+  </div>
+
+  <div style="text-align: center; color: #757575; margin-top: 40px; padding: 20px; font-size: 0.9rem;">
+    <strong>Beej Sangh Procurement Portal</strong><br>
+    Society Code Auto-Fetch Feature - Version 1.7.0<br>
+    August 25, 2026
+  </div>
+</body>
+
+</html>

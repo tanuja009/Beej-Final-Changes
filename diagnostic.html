@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>DIAGNOSTIC - CSS Loading Test</title>
+  <link rel="stylesheet" href="styles.css?v=1.0.8&t=20260821" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+</head>
+
+<body>
+  <div style="padding: 20px; font-family: Arial, sans-serif;">
+    <h1 style="color: #333; margin-bottom: 20px;">🔍 CSS DIAGNOSTIC REPORT</h1>
+
+    <div id="results" style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;"></div>
+
+    <div style="margin-top: 30px;">
+      <h2 style="color: #333; margin-bottom: 15px;">Visual Test Components:</h2>
+
+      <!-- Test Primary Button -->
+      <div style="margin-bottom: 20px;">
+        <p style="font-weight: 600; margin-bottom: 8px;">Primary Button (should be #4CAF50 green):</p>
+        <button class="btn btn-primary">Primary Button</button>
+        <div id="btn-test" style="margin-top: 5px; font-size: 14px;"></div>
+      </div>
+
+      <!-- Test Card -->
+      <div style="margin-bottom: 20px;">
+        <p style="font-weight: 600; margin-bottom: 8px;">Card (should have white background):</p>
+        <div class="card" id="card-test">
+          <div class="card-header">
+            <h3>Test Card Header</h3>
+          </div>
+          <div class="card-body">
+            Card body content
+          </div>
+        </div>
+        <div id="card-result" style="margin-top: 5px; font-size: 14px;"></div>
+      </div>
+
+      <!-- Test Badge -->
+      <div style="margin-bottom: 20px;">
+        <p style="font-weight: 600; margin-bottom: 8px;">Success Badge (should be #E8F5E9 background, #2E7D32 text):</p>
+        <span class="badge badge-success" id="badge-test">Success Badge</span>
+        <div id="badge-result" style="margin-top: 5px; font-size: 14px;"></div>
+      </div>
+
+      <!-- Test Form Control -->
+      <div style="margin-bottom: 20px;">
+        <p style="font-weight: 600; margin-bottom: 8px;">Form Input (should have #E0E0E0 border, white background):</p>
+        <input type="text" class="form-control" id="input-test" value="Test Input" />
+        <div id="input-result" style="margin-top: 5px; font-size: 14px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function rgb2hex(rgb) {
+      if (rgb.startsWith('#')) return rgb;
+      const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (!match) return rgb;
+      return "#" + ((1 << 24) + (parseInt(match[1]) << 16) + (parseInt(match[2]) << 8) + parseInt(match[3]))
+        .toString(16).slice(1).toUpperCase();
+    }
+
+    function runDiagnostic() {
+      const results = [];
+
+      // Test 1: CSS Variables
+      const root = document.documentElement;
+      const rootStyles = getComputedStyle(root);
+      const primaryColor = rootStyles.getPropertyValue('--primary').trim();
+      const primaryDark = rootStyles.getPropertyValue('--primary-dark').trim();
+      const primaryBg = rootStyles.getPropertyValue('--primary-bg').trim();
+
+      results.push(`<h3 style="color: #2E7D32; margin-bottom: 10px;">CSS Variable Test:</h3>`);
+      results.push(`<div style="padding: 10px; background: white; border-radius: 5px; margin-bottom: 10px;">`);
+      results.push(`  <strong>--primary:</strong> ${primaryColor || 'NOT LOADED'} ${primaryColor === '#4CAF50' ? '✅' : '❌ (Expected: #4CAF50)'}<br>`);
+      results.push(`  <strong>--primary-dark:</strong> ${primaryDark || 'NOT LOADED'} ${primaryDark === '#2E7D32' ? '✅' : '❌ (Expected: #2E7D32)'}<br>`);
+      results.push(`  <strong>--primary-bg:</strong> ${primaryBg || 'NOT LOADED'} ${primaryBg === '#E8F5E9' ? '✅' : '❌ (Expected: #E8F5E9)'}`);
+      results.push(`</div>`);
+
+      // Test 2: Button Styles
+      const btn = document.querySelector('.btn-primary');
+      if (btn) {
+        const btnStyles = getComputedStyle(btn);
+        const btnBg = rgb2hex(btnStyles.backgroundColor);
+        const btnColor = rgb2hex(btnStyles.color);
+        document.getElementById('btn-test').innerHTML =
+          `Background: ${btnBg} ${btnBg === '#4CAF50' ? '✅' : '❌'} | Color: ${btnColor} ${btnColor === '#FFFFFF' ? '✅' : '❌'}`;
+      }
+
+      // Test 3: Card Styles
+      const card = document.getElementById('card-test');
+      if (card) {
+        const cardStyles = getComputedStyle(card);
+        const cardBg = rgb2hex(cardStyles.backgroundColor);
+        const cardRadius = cardStyles.borderRadius;
+        document.getElementById('card-result').innerHTML =
+          `Background: ${cardBg} ${cardBg === '#FFFFFF' ? '✅' : '❌'} | Border Radius: ${cardRadius}`;
+      }
+
+      // Test 4: Badge Styles
+      const badge = document.getElementById('badge-test');
+      if (badge) {
+        const badgeStyles = getComputedStyle(badge);
+        const badgeBg = rgb2hex(badgeStyles.backgroundColor);
+        const badgeColor = rgb2hex(badgeStyles.color);
+        document.getElementById('badge-result').innerHTML =
+          `Background: ${badgeBg} ${badgeBg === '#E8F5E9' ? '✅' : '❌'} | Color: ${badgeColor} ${badgeColor === '#2E7D32' ? '✅' : '❌'}`;
+      }
+
+      // Test 5: Input Styles
+      const input = document.getElementById('input-test');
+      if (input) {
+        const inputStyles = getComputedStyle(input);
+        const inputBorder = rgb2hex(inputStyles.borderTopColor);
+        const inputBg = rgb2hex(inputStyles.backgroundColor);
+        document.getElementById('input-result').innerHTML =
+          `Background: ${inputBg} | Border: ${inputBorder}`;
+      }
+
+      // Test 6: CSS File Loaded
+      const links = Array.from(document.styleSheets);
+      const cssSheet = links.find(sheet => {
+        try {
+          return sheet.href && sheet.href.includes('styles.css');
+        } catch (e) {
+          return false;
+        }
+      });
+
+      results.push(`<h3 style="color: #2E7D32; margin-bottom: 10px;">CSS File Loading Test:</h3>`);
+      results.push(`<div style="padding: 10px; background: white; border-radius: 5px; margin-bottom: 10px;">`);
+      results.push(`  <strong>styles.css loaded:</strong> ${cssSheet ? '✅ YES' : '❌ NO'}<br>`);
+      if (cssSheet) {
+        results.push(`  <strong>CSS URL:</strong> ${cssSheet.href}<br>`);
+        try {
+          results.push(`  <strong>CSS Rules:</strong> ${cssSheet.cssRules ? cssSheet.cssRules.length : 'Cannot access'}`);
+        } catch (e) {
+          results.push(`  <strong>CSS Rules:</strong> Cannot access (CORS issue)`);
+        }
+      }
+      results.push(`</div>`);
+
+      // Test 7: Font Loading
+      results.push(`<h3 style="color: #2E7D32; margin-bottom: 10px;">Font Loading Test:</h3>`);
+      results.push(`<div style="padding: 10px; background: white; border-radius: 5px; margin-bottom: 10px;">`);
+      const bodyFont = getComputedStyle(document.body).fontFamily;
+      results.push(`  <strong>Body Font:</strong> ${bodyFont} ${bodyFont.includes('Roboto') ? '✅' : '❌ (Should include Roboto)'}`);
+      results.push(`</div>`);
+
+      // Overall Summary
+      const allPassed = primaryColor === '#4CAF50' && primaryDark === '#2E7D32' && primaryBg === '#E8F5E9';
+      results.unshift(`<div style="padding: 15px; background: ${allPassed ? '#E8F5E9' : '#FFEBEE'}; border-left: 4px solid ${allPassed ? '#4CAF50' : '#F44336'}; border-radius: 5px; margin-bottom: 20px;">`);
+      results.unshift(`  <h2 style="margin: 0; color: ${allPassed ? '#2E7D32' : '#C62828'};">${allPassed ? '✅ CSS LOADED CORRECTLY' : '❌ CSS NOT LOADED CORRECTLY'}</h2>`);
+      results.unshift(`</div>`);
+
+      document.getElementById('results').innerHTML = results.join('\n');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(runDiagnostic, 100);
+    });
+  </script>
+</body>
+
+</html>

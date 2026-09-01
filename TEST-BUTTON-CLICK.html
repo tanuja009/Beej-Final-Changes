@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button Click Test</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      min-height: 100vh;
+    }
+
+    .test-card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #1B5E20;
+      margin-top: 0;
+    }
+
+    .button-test {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .test-button {
+      padding: 10px 24px;
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+
+    .test-button:hover {
+      background: #45a049;
+    }
+
+    .test-button:active {
+      background: #3d8b40;
+      transform: scale(0.98);
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .result.show {
+      display: block;
+    }
+
+    .result.success {
+      background: #E8F5E9;
+      color: #2E7D32;
+      border: 2px solid #4CAF50;
+    }
+
+    .instructions {
+      background: #E3F2FD;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #2196F3;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="test-card">
+    <h1>🔍 Button Click Test</h1>
+
+    <div class="instructions">
+      <strong>Test Instructions:</strong><br>
+      1. Click the green button below<br>
+      2. If you see a success message, the button works!<br>
+      3. If nothing happens, there's a problem
+    </div>
+
+    <!-- Test 1: Simple onclick -->
+    <div class="button-test">
+      <h3>Test 1: Simple onclick</h3>
+      <button class="test-button" onclick="test1()">
+        <span class="material-icons" style="font-size:18px;">app_registration</span>
+        New Society Registration
+      </button>
+      <div id="result1" class="result"></div>
+    </div>
+
+    <!-- Test 2: With ID and addEventListener -->
+    <div class="button-test">
+      <h3>Test 2: With addEventListener</h3>
+      <button id="test-button-2" class="test-button">
+        <span class="material-icons" style="font-size:18px;">app_registration</span>
+        New Society Registration
+      </button>
+      <div id="result2" class="result"></div>
+    </div>
+
+    <!-- Test 3: Exact copy from app.js -->
+    <div class="button-test">
+      <h3>Test 3: Exact copy from app.js</h3>
+      <button onclick="test3()" style="padding:10px 24px;background:#4CAF50;color:#fff;border:none;border-radius:8px;
+                       font-size:0.88rem;font-weight:600;cursor:pointer;
+                       display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(76,175,80,0.3);">
+        <span class="material-icons" style="font-size:18px;">app_registration</span>
+        New Society Registration
+      </button>
+      <div id="result3" class="result"></div>
+    </div>
+
+    <div
+      style="margin-top: 30px; padding: 20px; background: #FFF3E0; border-radius: 8px; border-left: 4px solid #FF9800;">
+      <strong>⚠️ Important:</strong><br>
+      If ALL three buttons work here but NOT in index.html, the problem is:<br>
+      • Browser cache not cleared<br>
+      • JavaScript error in main app<br>
+      • Element blocking the button
+    </div>
+  </div>
+
+  <script>
+    function test1() {
+      const result = document.getElementById('result1');
+      result.className = 'result show success';
+      result.innerHTML = '✅ SUCCESS! Button 1 is clickable and working!';
+      console.log('✅ Test 1: Button clicked successfully');
+    }
+
+    function test3() {
+      const result = document.getElementById('result3');
+      result.className = 'result show success';
+      result.innerHTML = '✅ SUCCESS! Button 3 (exact copy) is clickable and working!';
+      console.log('✅ Test 3: Button clicked successfully');
+    }
+
+    // Test 2 with addEventListener
+    document.getElementById('test-button-2').addEventListener('click', function () {
+      const result = document.getElementById('result2');
+      result.className = 'result show success';
+      result.innerHTML = '✅ SUCCESS! Button 2 with addEventListener is working!';
+      console.log('✅ Test 2: Button clicked successfully');
+    });
+
+    console.log('🔍 Button Click Test Page Loaded');
+    console.log('📋 Please click each button to test');
+  </script>
+</body>
+
+</html>

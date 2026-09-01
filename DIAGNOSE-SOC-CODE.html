@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Society Code - Diagnostic Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #1B5E20;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .output {
+      background: #263238;
+      color: #4CAF50;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      margin-top: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .success {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #F44336;
+      font-weight: bold;
+    }
+
+    .warning {
+      color: #FF9800;
+      font-weight: bold;
+    }
+
+    input {
+      padding: 10px;
+      width: 200px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>🔍 Society Code Auto-Fetch Diagnostic Tool</h2>
+    <p><strong>Purpose:</strong> Diagnose why Society Code auto-fetch is not working</p>
+    <p><strong>Status:</strong> <span id="status">Ready to diagnose</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Step 1: Check if Main App Loads</h2>
+    <button onclick="checkAppExists()">Check App Object</button>
+    <div id="output-app" class="output" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2: Check if Function Exists</h2>
+    <button onclick="checkFunctionExists()">Check autoFetchSocietyData()</button>
+    <div id="output-function" class="output" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 3: Check if Data Exists</h2>
+    <button onclick="checkDataExists()">Check regSocieties Data</button>
+    <div id="output-data" class="output" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 4: Test Auto-Fetch Manually</h2>
+    <p>Enter a society code and click Test:</p>
+    <input type="text" id="test-code" placeholder="e.g., SOC-003" style="text-transform:uppercase;">
+    <button onclick="testAutoFetch()">Test Auto-Fetch</button>
+    <div id="output-test" class="output" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Step 5: Check Navigation to Form</h2>
+    <button onclick="navigateToForm()">Navigate to Registration Form</button>
+    <p><small>This will navigate to the soc-register page in the main app</small></p>
+    <div id="output-nav" class="output" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>📋 Instructions</h2>
+    <ol>
+      <li>Click each button in order (1 → 2 → 3 → 4)</li>
+      <li>Read the output below each button</li>
+      <li>Look for <span class="error">RED errors</span></li>
+      <li>Share the results with me</li>
+    </ol>
+  </div>
+
+  <!-- Load the main app scripts -->
+  <script src="captcha.js?v=1.7.0"></script>
+  <script src="app.js?v=1.7.0"></script>
+  <script src="modules.js?v=1.7.0"></script>
+  <script src="society-registration.js?v=1.7.0"></script>
+  <script src="seed-modules.js?v=1.7.0"></script>
+  <script src="society-registration-workflow.js?v=1.7.0"></script>
+
+  <script>
+    function log(elementId, message, type = 'info') {
+      const output = document.getElementById(elementId);
+      output.style.display = 'block';
+      const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+      output.innerHTML += `<span class="${className}">${message}</span>\n`;
+    }
+
+    function clearLog(elementId) {
+      const output = document.getElementById(elementId);
+      output.innerHTML = '';
+      output.style.display = 'block';
+    }
+
+    function checkAppExists() {
+      clearLog('output-app');
+
+      if (typeof App === 'undefined') {
+        log('output-app', '❌ ERROR: App object does NOT exist!', 'error');
+        log('output-app', 'This means app.js is not loading correctly.');
+        log('output-app', '\nSolution: Check if app.js file exists in the same folder.');
+        document.getElementById('status').innerHTML = '<span class="error">App not loaded</span>';
+        return;
+      }
+
+      log('output-app', '✓ SUCCESS: App object exists', 'success');
+      log('output-app', '\nApp properties found:');
+      log('output-app', `  - App.state: ${typeof App.state}`);
+      log('output-app', `  - App.render: ${typeof App.render}`);
+      log('output-app', `  - App.navigate: ${typeof App.navigate}`);
+      log('output-app', `  - App.autoFetchSocietyData: ${typeof App.autoFetchSocietyData}`);
+
+      document.getElementById('status').innerHTML = '<span class="success">App loaded ✓</span>';
+    }
+
+    function checkFunctionExists() {
+      clearLog('output-function');
+
+      if (typeof App === 'undefined') {
+        log('output-function', '❌ ERROR: App object does NOT exist!', 'error');
+        log('output-function', 'Run Step 1 first.');
+        return;
+      }
+
+      if (typeof App.autoFetchSocietyData !== 'function') {
+        log('output-function', '❌ ERROR: App.autoFetchSocietyData() function does NOT exist!', 'error');
+        log('output-function', 'This means society-registration.js is not loading correctly.');
+        log('output-function', '\nSolution: Check if society-registration.js file exists.');
+        return;
+      }
+
+      log('output-function', '✓ SUCCESS: App.autoFetchSocietyData() function exists', 'success');
+      log('output-function', '\nFunction details:');
+      log('output-function', `  Type: ${typeof App.autoFetchSocietyData}`);
+      log('output-function', `  Length: ${App.autoFetchSocietyData.length} parameters`);
+    }
+
+    function checkDataExists() {
+      clearLog('output-data');
+
+      if (typeof App === 'undefined' || !App.state) {
+        log('output-data', '❌ ERROR: App.state does NOT exist!', 'error');
+        return;
+      }
+
+      log('output-data', '✓ App.state exists', 'success');
+
+      if (!App.state.regSocieties) {
+        log('output-data', '⚠ WARNING: App.state.regSocieties does NOT exist!', 'warning');
+        log('output-data', 'This means no registration data is available.');
+      } else {
+        log('output-data', `✓ App.state.regSocieties exists with ${App.state.regSocieties.length} records`, 'success');
+        log('output-data', '\nAvailable societies:');
+        App.state.regSocieties.forEach(s => {
+          if (!s.deleted) {
+            log('output-data', `  - ${s.societyCode}: ${s.societyName} (${s.status})`);
+          }
+        });
+      }
+
+      if (!App.state.societies) {
+        log('output-data', '⚠ WARNING: App.state.societies does NOT exist!', 'warning');
+      } else {
+        log('output-data', `\n✓ App.state.societies exists with ${App.state.societies.length} records`, 'success');
+        log('output-data', '\nBasic societies:');
+        App.state.societies.forEach(s => {
+          log('output-data', `  - ${s.code}: ${s.name} (${s.status})`);
+        });
+      }
+    }
+
+    function testAutoFetch() {
+      clearLog('output-test');
+
+      const codeInput = document.getElementById('test-code');
+      const code = codeInput.value.trim().toUpperCase();
+
+      if (!code) {
+        log('output-test', '⚠ Please enter a society code first', 'warning');
+        return;
+      }
+
+      log('output-test', `Testing with code: ${code}`);
+      log('output-test', '─────────────────────────────────────');
+
+      if (typeof App === 'undefined') {
+        log('output-test', '❌ ERROR: App not loaded', 'error');
+        return;
+      }
+
+      if (typeof App.autoFetchSocietyData !== 'function') {
+        log('output-test', '❌ ERROR: autoFetchSocietyData function not found', 'error');
+        return;
+      }
+
+      // Check in regSocieties
+      if (App.state.regSocieties) {
+        const society = App.state.regSocieties.find(s => s.societyCode?.toUpperCase() === code);
+
+        if (society && !society.deleted) {
+          log('output-test', `✓ Found in regSocieties:`, 'success');
+          log('output-test', `  Society Name: ${society.societyName}`);
+          log('output-test', `  Status: ${society.status}`);
+          log('output-test', `  District: ${society.district}`);
+          log('output-test', `  Reg Number: ${society.registrationNumber}`);
+
+          if (society.status === 'Active') {
+            log('output-test', '\n⚠ This society is ACTIVE - will show duplicate warning', 'warning');
+          } else {
+            log('output-test', '\n✓ This society should auto-fill the form', 'success');
+          }
+          return;
+        }
+      }
+
+      // Check in societies
+      if (App.state.societies) {
+        const basicSoc = App.state.societies.find(s => s.code?.toUpperCase() === code);
+
+        if (basicSoc) {
+          log('output-test', `✓ Found in societies (basic):`, 'success');
+          log('output-test', `  Society Name: ${basicSoc.name}`);
+          log('output-test', `  District: ${basicSoc.district}`);
+          log('output-test', `  Status: ${basicSoc.status}`);
+          log('output-test', '\n✓ Will auto-fill name and district only', 'success');
+          return;
+        }
+      }
+
+      log('output-test', `⚠ Society code "${code}" not found in data`, 'warning');
+      log('output-test', 'This is OK - allows manual entry for new societies');
+    }
+
+    function navigateToForm() {
+      clearLog('output-nav');
+
+      if (typeof App === 'undefined') {
+        log('output-nav', '❌ ERROR: App not loaded', 'error');
+        return;
+      }
+
+      if (typeof App.navigate !== 'function') {
+        log('output-nav', '❌ ERROR: App.navigate function not found', 'error');
+        return;
+      }
+
+      log('output-nav', 'Attempting to navigate to soc-register page...', 'success');
+      log('output-nav', '\nThis will load the registration form in the main app.');
+      log('output-nav', 'Check the page to see if the form appears.');
+
+      setTimeout(() => {
+        try {
+          App.navigate('soc-register');
+          log('output-nav', '\n✓ Navigation command sent!', 'success');
+        } catch (e) {
+          log('output-nav', `\n❌ ERROR: ${e.message}`, 'error');
+        }
+      }, 1000);
+    }
+
+    // Auto-run Step 1 on page load
+    window.onload = function () {
+      setTimeout(() => {
+        checkAppExists();
+      }, 500);
+    };
+  </script>
+</body>
+
+</html>

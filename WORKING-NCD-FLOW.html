@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Beej Sangh - NCD Registration (Working Version)</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      min-height: 100vh;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.3rem;
+      margin: 10px 0 8px 0;
+    }
+
+    .content {
+      padding: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #424242;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      text-transform: uppercase;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #4CAF50;
+      color: white;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: #45a049;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-gray {
+      background: #757575;
+      color: white;
+    }
+
+    .btn-gray:hover {
+      background: #616161;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .info-box {
+      background: #E3F2FD;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid #2196F3;
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #1565C0;
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-size: 0.85rem;
+    }
+
+    .field input {
+      padding: 10px;
+      font-size: 0.9rem;
+      background: #f5f5f5;
+    }
+
+    .field input.editable {
+      background: white;
+      border-color: #4CAF50;
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section h3 {
+      color: #2E7D32;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #E8F5E9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .form-card {
+      max-width: 1000px;
+      width: 100%;
+    }
+
+    .page-header {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .page-header-content {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .icon-circle {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Page 1: NCD Entry -->
+  <div id="page-entry" class="page">
+    <div class="card">
+      <div class="header">
+        <div style="font-size: 48px;">🌾</div>
+        <h1>New Society Registration</h1>
+        <p style="opacity: 0.9; font-size: 0.85rem;">Enter your NCD ID / Society Code to proceed</p>
+      </div>
+      <div class="content">
+        <div class="form-group">
+          <label>NCD ID / Society Code <span style="color: #F44336;">*</span></label>
+          <input type="text" id="ncd-input" placeholder="Enter any code (e.g., NCD001, ABC123)">
+          <small style="color: #757575; font-size: 0.8rem; margin-top: 6px; display: block;">
+            💡 Enter any code - no validation required
+          </small>
+        </div>
+        <div class="buttons">
+          <button class="btn btn-primary" style="flex: 1;" onclick="goToForm()">
+            <span class="material-icons">arrow_forward</span>
+            Fetch Details
+          </button>
+          <button class="btn btn-gray" onclick="alert('Return to main app')">
+            <span class="material-icons">arrow_back</span>
+            Back
+          </button>
+        </div>
+        <div class="info-box">
+          <strong>📝 Demo Instructions:</strong><br>
+          • Enter ANY code (NCD001, ABC123, TEST001, etc.)<br>
+          • Click "Fetch Details" to view registration form<br>
+          • All fields will be pre-filled with demo data<br>
+          • This is a working standalone version
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 2: Registration Form -->
+  <div id="page-form" class="page" style="display: none; align-items: flex-start; padding: 30px 16px;">
+    <div style="width: 100%; max-width: 1000px; margin: 0 auto;">
+      <div class="page-header">
+        <div class="page-header-content">
+          <div class="icon-circle">🌾</div>
+          <div>
+            <h2 style="font-size: 1.2rem; color: #1B5E20;">Society Registration Form</h2>
+            <p style="font-size: 0.8rem; color: #757575;">
+              NCD Code: <strong id="display-code">NCD001</strong> | Pre-filled with demo data
+            </p>
+          </div>
+        </div>
+        <button class="btn btn-gray" onclick="goToEntry()">
+          <span class="material-icons" style="font-size: 16px;">arrow_back</span> Back
+        </button>
+      </div>
+
+      <div class="card form-card">
+        <div class="content">
+          <!-- Basic Information -->
+          <div class="section">
+            <h3><span class="material-icons" style="font-size: 20px; vertical-align: middle;">business</span> Basic
+              Information</h3>
+            <div class="grid">
+              <div class="field">
+                <label>NCD ID</label>
+                <input type="text" id="field-ncd" value="NCD001" readonly>
+              </div>
+              <div class="field">
+                <label>Cooperative Society Name</label>
+                <input type="text" value="Indore Cooperative Agricultural Society" readonly>
+              </div>
+              <div class="field">
+                <label>Location</label>
+                <input type="text" value="Indore" readonly>
+              </div>
+              <div class="field">
+                <label>State/UT</label>
+                <input type="text" value="Madhya Pradesh" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Geographic Details -->
+          <div class="section">
+            <h3><span class="material-icons" style="font-size: 20px; vertical-align: middle;">location_on</span>
+              Geographic Details</h3>
+            <div class="grid">
+              <div class="field">
+                <label>District</label>
+                <input type="text" value="Indore" readonly>
+              </div>
+              <div class="field">
+                <label>Block</label>
+                <input type="text" value="Indore" readonly>
+              </div>
+              <div class="field">
+                <label>Urban Local Body</label>
+                <input type="text" value="Indore Municipal Corporation" readonly>
+              </div>
+              <div class="field">
+                <label>Pincode</label>
+                <input type="text" value="452001" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Organization Details -->
+          <div class="section">
+            <h3><span class="material-icons" style="font-size: 20px; vertical-align: middle;">corporate_fare</span>
+              Organization Details</h3>
+            <div class="grid">
+              <div class="field">
+                <label>Sector Type</label>
+                <input type="text" value="Agriculture" readonly>
+              </div>
+              <div class="field">
+                <label>Primary Activity</label>
+                <input type="text" value="Agriculture & Seed Distribution" readonly>
+              </div>
+              <div class="field">
+                <label>Registration Number</label>
+                <input type="text" value="SOC/MP/2020/001" readonly>
+              </div>
+              <div class="field">
+                <label>Registration Date</label>
+                <input type="text" value="15/06/2020" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Operational Status -->
+          <div class="section">
+            <h3><span class="material-icons" style="font-size: 20px; vertical-align: middle;">info</span> Operational
+              Status</h3>
+            <div class="grid">
+              <div class="field">
+                <label>Functional Status</label>
+                <input type="text" value="Active" readonly>
+              </div>
+              <div class="field">
+                <label>Members of Society</label>
+                <input type="text" value="125" readonly>
+              </div>
+              <div class="field">
+                <label>Approval Status</label>
+                <input type="text" value="Approved" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Financial Information -->
+          <div class="section">
+            <h3><span class="material-icons"
+                style="font-size: 20px; vertical-align: middle;">account_balance_wallet</span> Financial Information
+            </h3>
+            <div class="grid">
+              <div class="field">
+                <label>Financial Audit</label>
+                <input type="text" value="Completed" readonly>
+              </div>
+              <div class="field">
+                <label>Audit Complete Year</label>
+                <input type="text" value="2025" readonly>
+              </div>
+              <div class="field">
+                <label>Annual Profit</label>
+                <input type="text" value="₹2,50,000" readonly>
+              </div>
+              <div class="field">
+                <label>Annual Loss</label>
+                <input type="text" value="₹0" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information (Editable) -->
+          <div class="section">
+            <h3>
+              <span class="material-icons" style="font-size: 20px; vertical-align: middle;">contact_phone</span>
+              Contact Information
+              <span style="font-size: 0.75rem; color: #FF9800; font-weight: 400;">(Editable)</span>
+            </h3>
+            <div class="grid">
+              <div class="field">
+                <label>Mobile</label>
+                <input type="tel" class="editable" value="9876543210" maxlength="10">
+                <small style="color: #4CAF50; font-size: 0.75rem;">✎ Editable</small>
+              </div>
+              <div class="field">
+                <label>Email</label>
+                <input type="email" class="editable" value="indore.coop@example.com">
+                <small style="color: #4CAF50; font-size: 0.75rem;">✎ Editable</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box" style="margin-bottom: 24px;">
+            <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">info</span>
+            <strong>Demo Prototype:</strong><br>
+            • All 21 fields are pre-filled with static demo data<br>
+            • Mobile and Email are editable (other fields read-only)<br>
+            • Click "Submit Registration" to complete the flow<br>
+            • This is a working standalone version - no backend needed
+          </div>
+
+          <div class="buttons" style="justify-content: flex-end; padding-top: 20px; border-top: 2px solid #E0E0E0;">
+            <button class="btn btn-gray" onclick="goToEntry()">
+              <span class="material-icons" style="font-size: 18px;">arrow_back</span> Back
+            </button>
+            <button class="btn btn-primary" onclick="submitForm()">
+              <span class="material-icons" style="font-size: 18px;">check_circle</span> Submit Registration
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goToForm() {
+      const input = document.getElementById('ncd-input');
+      let code = input.value.trim().toUpperCase();
+
+      if (!code) {
+        code = 'NCD001';
+      }
+
+      // Update NCD field in form
+      document.getElementById('field-ncd').value = code;
+      document.getElementById('display-code').textContent = code;
+
+      // Show form page
+      document.getElementById('page-entry').style.display = 'none';
+      document.getElementById('page-form').style.display = 'flex';
+
+      console.log('✅ Navigated to form with code:', code);
+    }
+
+    function goToEntry() {
+      document.getElementById('page-form').style.display = 'none';
+      document.getElementById('page-entry').style.display = 'flex';
+      console.log('✅ Navigated back to entry page');
+    }
+
+    function submitForm() {
+      alert('✅ Society Registration submitted successfully for approval!\n\nYour registration has been received and will be reviewed by the admin team.\n\nYou will be notified once the approval process is complete.');
+
+      // Reset and go back to entry
+      document.getElementById('ncd-input').value = '';
+      goToEntry();
+
+      console.log('✅ Form submitted successfully');
+    }
+
+    // Allow Enter key to submit
+    document.getElementById('ncd-input').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        goToForm();
+      }
+    });
+
+    console.log('✅ Working NCD Flow Loaded Successfully');
+    console.log('📋 This is a standalone working version');
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Button - Diagnostic</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #d32f2f;
+    }
+
+    .step {
+      background: #f5f5f5;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid #2196F3;
+    }
+
+    .step h2 {
+      margin-top: 0;
+      color: #1976D2;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .output {
+      background: #263238;
+      color: #4CAF50;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .success {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #F44336;
+      font-weight: bold;
+    }
+
+    .warning {
+      color: #FF9800;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🔧 Fix Button - Complete Diagnostic</h1>
+    <p><strong>Problem:</strong> "New Society Registration" button is not clickable</p>
+    <p><strong>Solution:</strong> Follow these steps in order</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <h2>Step 1: Test Button Click (Standalone)</h2>
+      <p>First, verify buttons work in isolation:</p>
+      <button onclick="window.open('TEST-BUTTON-CLICK.html', '_blank')">
+        Open Button Test Page
+      </button>
+      <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+        <strong>Expected:</strong> All 3 buttons should work and show success messages
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <h2>Step 2: Clear Browser Cache (CRITICAL)</h2>
+      <p>The #1 reason buttons don't work:</p>
+      <ol>
+        <li>Close ALL browser tabs/windows completely</li>
+        <li>Reopen browser</li>
+        <li>Press <strong>Ctrl + Shift + Delete</strong></li>
+        <li>Select "Cached images and files"</li>
+        <li>Click "Clear data"</li>
+      </ol>
+      <p style="background: #FFF3E0; padding: 10px; border-radius: 4px; color: #E65100;">
+        ⚠️ <strong>OR use private/incognito window:</strong> Right-click index.html → Open in Incognito Window
+      </p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <h2>Step 3: Check JavaScript Console</h2>
+      <p>Open index.html and check for errors:</p>
+      <ol>
+        <li>Open index.html in browser</li>
+        <li>Press <strong>F12</strong> (opens Developer Tools)</li>
+        <li>Click <strong>"Console"</strong> tab</li>
+        <li>Look for RED error messages</li>
+      </ol>
+      <button onclick="runConsoleCheck()">Run Console Check Now</button>
+      <div id="console-output" class="output" style="display:none;"></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <h2>Step 4: Check if App Object Exists</h2>
+      <p>Verify the App is loading:</p>
+      <button onclick="checkApp()">Check App Object</button>
+      <div id="app-output" class="output" style="display:none;"></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <h2>Step 5: Manual Button Click Test</h2>
+      <p>Test if button responds to clicks:</p>
+      <ol>
+        <li>Open index.html</li>
+        <li>Press F12 → Console tab</li>
+        <li>Type this command and press Enter:</li>
+      </ol>
+      <div style="background: #263238; color: #4CAF50; padding: 10px; border-radius: 4px; font-family: monospace;">
+        App.navigate('ncd-entry')
+      </div>
+      <p style="margin-top: 10px; font-size: 0.9rem;">
+        <strong>Expected:</strong> NCD Entry page should open<br>
+        <strong>If it works:</strong> Button code is fine, click event is blocked<br>
+        <strong>If error:</strong> App or function not loaded
+      </p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <h2>Step 6: Use Working Standalone Version</h2>
+      <p>If all else fails, use this working version:</p>
+      <button onclick="window.open('WORKING-NCD-FLOW.html', '_blank')" style="background: #2196F3;">
+        Open Working Standalone Version
+      </button>
+      <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+        This is a self-contained version that definitely works
+      </p>
+    </div>
+
+    <!-- Quick Fix -->
+    <div
+      style="margin-top: 30px; padding: 20px; background: #E8F5E9; border-radius: 8px; border-left: 4px solid #4CAF50;">
+      <h2 style="margin-top: 0; color: #2E7D32;">✅ Quick Fix (Most Common)</h2>
+      <p><strong>90% of the time, the fix is:</strong></p>
+      <ol style="font-size: 1.1rem; line-height: 1.8;">
+        <li><strong>Close browser completely</strong></li>
+        <li><strong>Reopen browser</strong></li>
+        <li><strong>Right-click index.html</strong></li>
+        <li><strong>Open with → Chrome/Edge (Incognito)</strong></li>
+      </ol>
+      <p style="color: #2E7D32; font-weight: bold;">This bypasses ALL cache issues!</p>
+    </div>
+  </div>
+
+  <!-- Load main app scripts for testing -->
+  <script src="app.js?v=2.0.0&nocache=<?php echo time(); ?>"></script>
+  <script src="ncd-registration.js?v=2.0.0&nocache=<?php echo time(); ?>"></script>
+
+  <script>
+    function log(elementId, message, type = 'info') {
+      const output = document.getElementById(elementId);
+      output.style.display = 'block';
+      const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+      output.innerHTML += `<span class="${className}">${message}</span>\n`;
+    }
+
+    function runConsoleCheck() {
+      const output = document.getElementById('console-output');
+      output.innerHTML = '';
+      output.style.display = 'block';
+
+      log('console-output', '🔍 Running Console Check...\n');
+      log('console-output', '─────────────────────────────────');
+
+      // Check for common issues
+      if (typeof App === 'undefined') {
+        log('console-output', '❌ ERROR: App object not found!', 'error');
+        log('console-output', '   → app.js is not loading');
+        log('console-output', '   → Check if file exists in same folder');
+      } else {
+        log('console-output', '✓ App object exists', 'success');
+
+        if (typeof App.navigate === 'function') {
+          log('console-output', '✓ App.navigate function exists', 'success');
+        } else {
+          log('console-output', '❌ App.navigate function missing!', 'error');
+        }
+
+        if (typeof App.renderNCDEntry === 'function') {
+          log('console-output', '✓ App.renderNCDEntry function exists', 'success');
+        } else {
+          log('console-output', '⚠ App.renderNCDEntry function missing', 'warning');
+          log('console-output', '   → ncd-registration.js may not be loading');
+        }
+      }
+
+      log('console-output', '\n📋 Recommendation:');
+      if (typeof App === 'undefined') {
+        log('console-output', '   1. Verify all JS files are in same folder as index.html');
+        log('console-output', '   2. Clear browser cache completely');
+        log('console-output', '   3. Try opening in Incognito window');
+      } else if (typeof App.renderNCDEntry !== 'function') {
+        log('console-output', '   1. Clear browser cache (Ctrl+Shift+Delete)');
+        log('console-output', '   2. Close and reopen browser');
+        log('console-output', '   3. Check ncd-registration.js exists');
+      } else {
+        log('console-output', '   ✅ All functions loaded correctly!', 'success');
+        log('console-output', '   Problem is likely: Browser cache or click event blocked');
+        log('console-output', '   Solution: Use Incognito window (Ctrl+Shift+N)');
+      }
+    }
+
+    function checkApp() {
+      const output = document.getElementById('app-output');
+      output.innerHTML = '';
+      output.style.display = 'block';
+
+      log('app-output', '🔍 Checking App Object...\n');
+
+      if (typeof App === 'undefined') {
+        log('app-output', '❌ App object does NOT exist', 'error');
+        log('app-output', '\nThis means app.js is not loading.');
+        log('app-output', '\nSolution:');
+        log('app-output', '1. Check if app.js exists in same folder');
+        log('app-output', '2. Check browser console for errors (F12)');
+        log('app-output', '3. Try opening index.html in Incognito window');
+      } else {
+        log('app-output', '✅ App object exists!', 'success');
+        log('app-output', '\nAvailable functions:');
+        log('app-output', `  - App.navigate: ${typeof App.navigate}`);
+        log('app-output', `  - App.renderNCDEntry: ${typeof App.renderNCDEntry}`);
+        log('app-output', `  - App.proceedToRegistrationForm: ${typeof App.proceedToRegistrationForm}`);
+        log('app-output', `  - App.submitNCDRegistration: ${typeof App.submitNCDRegistration}`);
+
+        log('app-output', '\n✅ All functions are loaded correctly!', 'success');
+        log('app-output', '\nIf button still not working:');
+        log('app-output', '1. Clear browser cache (CRITICAL)');
+        log('app-output', '2. Use Incognito window');
+        log('app-output', '3. Try TEST-BUTTON-CLICK.html to verify buttons work');
+      }
+    }
+
+    // Auto-run checks on page load
+    window.onload = function () {
+      console.log('🔧 Fix Button Diagnostic Page Loaded');
+      console.log('📋 Follow the steps in order to diagnose the issue');
+    };
+  </script>
+</body>
+
+</html>

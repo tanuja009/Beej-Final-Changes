@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Minimal CSS Test</title>
+  <!-- DIRECT CSS LINK WITH NO CACHE -->
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Override test - if this shows, CSS is loading but being overridden */
+    .test-override {
+      background: red !important;
+      color: white !important;
+      padding: 20px;
+      margin: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>MINIMAL CSS TEST</h1>
+
+  <div style="padding: 20px; border: 2px solid #333;">
+    <h2>Test 1: CSS Variable Colors</h2>
+    <div style="background: var(--primary); color: white; padding: 20px; margin-bottom: 10px;">
+      Should be GREEN #4CAF50
+    </div>
+    <div style="background: var(--primary-dark); color: white; padding: 20px; margin-bottom: 10px;">
+      Should be DARK GREEN #2E7D32
+    </div>
+    <div style="background: var(--primary-bg); color: #333; padding: 20px;">
+      Should be LIGHT GREEN #E8F5E9
+    </div>
+  </div>
+
+  <div style="padding: 20px; border: 2px solid #333; margin-top: 20px;">
+    <h2>Test 2: CSS Classes</h2>
+    <button class="btn btn-primary">Primary Button (should be green)</button>
+    <button class="btn btn-danger">Danger Button (should be red)</button>
+    <button class="btn btn-info">Info Button (should be blue)</button>
+
+    <div style="margin-top: 20px;">
+      <span class="badge badge-success">Success Badge</span>
+      <span class="badge badge-warning">Warning Badge</span>
+      <span class="badge badge-danger">Danger Badge</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin: 20px;">
+    <div class="card-header">
+      <h3>Card Header</h3>
+    </div>
+    <div class="card-body">
+      <p>Card body content. This card should have white background and proper styling.</p>
+    </div>
+  </div>
+
+  <div class="test-override">
+    If this is RED, CSS is loading. If this is NOT red, CSS file is NOT loading at all.
+  </div>
+
+  <script>
+    // JavaScript test
+    setTimeout(() => {
+      const root = getComputedStyle(document.documentElement);
+      const primary = root.getPropertyValue('--primary');
+      const msg = document.createElement('div');
+      msg.style.cssText = 'position: fixed; top: 10px; right: 10px; background: black; color: white; padding: 15px; border-radius: 8px; z-index: 9999; font-family: monospace;';
+      msg.innerHTML = `
+                <strong>CSS LOAD STATUS:</strong><br>
+                --primary: ${primary || 'NOT FOUND'}<br>
+                Expected: #4CAF50<br>
+                Status: ${primary.trim() === '#4CAF50' ? '✅ CORRECT' : '❌ INCORRECT'}
+            `;
+      document.body.appendChild(msg);
+    }, 500);
+  </script>
+</body>
+
+</html>

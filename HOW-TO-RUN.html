@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Run - Beej Sangh Portal</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #2E7D32, #4CAF50);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .alert {
+      background: #FFF3CD;
+      border: 2px solid #FFD700;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .alert-danger {
+      background: #FFEBEE;
+      border-color: #F44336;
+    }
+
+    .alert h3 {
+      color: #856404;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+
+    .alert-danger h3 {
+      color: #C62828;
+    }
+
+    .alert p {
+      color: #856404;
+      line-height: 1.6;
+    }
+
+    .alert-danger p {
+      color: #C62828;
+    }
+
+    .method {
+      background: #f7fafc;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+      border-left: 4px solid #4CAF50;
+    }
+
+    .method h2 {
+      color: #2d3748;
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      background: #4CAF50;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .badge-easy {
+      background: #4CAF50;
+    }
+
+    .steps {
+      margin-left: 20px;
+    }
+
+    .steps h3 {
+      color: #2E7D32;
+      font-size: 1.1rem;
+      margin: 20px 0 10px 0;
+    }
+
+    .steps ol,
+    .steps ul {
+      margin-left: 20px;
+      color: #4a5568;
+      line-height: 1.8;
+    }
+
+    .steps li {
+      margin-bottom: 8px;
+    }
+
+    .code {
+      background: #2d3748;
+      color: #E8F5E9;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+
+    .button-demo {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+
+    .btn-success {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-info {
+      background: #2196F3;
+      color: white;
+    }
+
+    .btn-info:hover {
+      background: #1976D2;
+    }
+
+    .success-box {
+      background: #d4edda;
+      border: 2px solid #4CAF50;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+
+    .success-box h3 {
+      color: #155724;
+      margin-bottom: 15px;
+    }
+
+    .checklist {
+      text-align: left;
+      display: inline-block;
+      color: #155724;
+      line-height: 1.8;
+    }
+
+    .icon {
+      font-size: 2rem;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="icon">🌾</div>
+      <h1>Beej Sangh Procurement Portal</h1>
+      <p>How to Run the Application</p>
+    </div>
+
+    <div class="content">
+      <div class="alert alert-danger">
+        <h3>⚠️ STOP! Do NOT Open index.html Directly!</h3>
+        <p><strong>Double-clicking index.html will NOT work!</strong><br>
+          Browser security blocks CSS and JavaScript when using file:// protocol.<br>
+          You must run the application through a local web server.</p>
+      </div>
+
+      <div class="method">
+        <h2>
+          <span class="icon">🚀</span>
+          <span>Method 1: Use Batch Files</span>
+          <span class="badge badge-easy">EASIEST</span>
+        </h2>
+        <div class="steps">
+          <h3>Step 1: Start the Server</h3>
+          <ol>
+            <li>Find and double-click: <strong>START-SERVER.bat</strong></li>
+            <li>A black command window will open</li>
+            <li>Wait for message: "Serving HTTP on :: port 8000"</li>
+            <li><strong>Keep this window OPEN</strong> (do not close it)</li>
+          </ol>
+
+          <h3>Step 2: Open the Application</h3>
+          <ol>
+            <li>Find and double-click: <strong>OPEN-APPLICATION.bat</strong></li>
+            <li>Your browser will automatically open</li>
+            <li>URL will be: <code>http://localhost:8000/index.html</code></li>
+            <li>✅ Application will load with full styling!</li>
+          </ol>
+
+          <div class="button-demo">
+            <a href="javascript:alert('Please run START-SERVER.bat from your file explorer, not from this page!');"
+              class="btn btn-success">
+              ▶️ START-SERVER.bat
+            </a>
+            <a href="javascript:alert('First run START-SERVER.bat, then run OPEN-APPLICATION.bat from your file explorer!');"
+              class="btn btn-info">
+              🌐 OPEN-APPLICATION.bat
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="method">
+        <h2><span class="icon">💻</span> Method 2: Manual Command Line</h2>
+        <div class="steps">
+          <ol>
+            <li>Open Command Prompt (CMD)</li>
+            <li>Navigate to project folder:</li>
+          </ol>
+          <div class="code">cd "c:\Users\hp\Desktop\Projects Folder\Beej Sangh\Breeder Module Wireframe"</div>
+          <ol start="3">
+            <li>Start Python server:</li>
+          </ol>
+          <div class="code">python -m http.server 8000</div>
+          <ol start="4">
+            <li>Open browser and go to:</li>
+          </ol>
+          <div class="code">http://localhost:8000/index.html</div>
+        </div>
+      </div>
+
+      <div class="success-box">
+        <h3>✅ What You Should See When Running Correctly:</h3>
+        <ul class="checklist">
+          <li>✓ URL shows: <code>http://localhost:8000/index.html</code> (NOT file:///)</li>
+          <li>✓ Green gradient background on login page</li>
+          <li>✓ White login card with proper styling</li>
+          <li>✓ All buttons are green (#4CAF50)</li>
+          <li>✓ Light green background on dashboard (#f1f8e9)</li>
+          <li>✓ Dark green sidebar with white text</li>
+          <li>✓ White stat cards with colored borders</li>
+          <li>✓ All text is crisp and properly formatted</li>
+        </ul>
+      </div>
+
+      <div style="margin-top: 30px; padding: 20px; background: #E3F2FD; border-radius: 12px;">
+        <h3 style="color: #1565C0; margin-bottom: 10px;">📌 Quick Reminder:</h3>
+        <p style="color: #1565C0; line-height: 1.6;">
+          <strong>Always use START-SERVER.bat first, then OPEN-APPLICATION.bat</strong><br>
+          Keep the server window open while using the application.<br>
+          To stop: Close browser, then press Ctrl+C in the server window.
+        </p>
+      </div>
+
+      <div style="margin-top: 30px; padding: 20px; background: #F5F5F5; border-radius: 12px; text-align: center;">
+        <p style="color: #666; font-size: 0.9rem;">
+          <strong>Default Login Credentials:</strong><br>
+          Society Head: SOC-001 / ramesh / password<br>
+          Admin: admin / admin123
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

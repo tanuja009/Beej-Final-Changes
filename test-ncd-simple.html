@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>NCD Test - Simple</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+
+    .debug {
+      background: #f0f0f0;
+      padding: 10px;
+      margin: 10px 0;
+      border-left: 4px solid #2196F3;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    input {
+      padding: 8px;
+      margin: 10px 0;
+    }
+
+    .form {
+      background: #e8f5e9;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .field {
+      margin: 10px 0;
+      padding: 8px;
+      background: white;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🧪 NCD Registration - Simple Test</h1>
+
+  <div class="debug">
+    <h3>Debug Console</h3>
+    <div id="debug-log"></div>
+  </div>
+
+  <div>
+    <label>Enter NCD ID:</label><br>
+    <input type="text" id="ncd-input" placeholder="NCD001" style="text-transform:uppercase;">
+    <button onclick="testFetch()">Fetch Details</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    // Simple test without full app
+    const masterData = [
+      {
+        ncdId: 'NCD001',
+        cooperativeSocietyName: 'Indore Cooperative Agricultural Society',
+        location: 'Indore',
+        district: 'Indore',
+        membersOfSociety: '125',
+        mobile: '9876543210',
+        email: 'indore.coop@example.com'
+      }
+    ];
+
+    let state = {
+      fetched: false,
+      societyData: null
+    };
+
+    function log(msg) {
+      const debugLog = document.getElementById('debug-log');
+      debugLog.innerHTML += '<div>' + msg + '</div>';
+      console.log(msg);
+    }
+
+    function testFetch() {
+      log('🔍 Starting fetch...');
+
+      const input = document.getElementById('ncd-input');
+      const ncdId = input.value.trim().toUpperCase();
+
+      log('📝 NCD ID: ' + ncdId);
+
+      if (!ncdId) {
+        log('❌ Empty NCD ID');
+        return;
+      }
+
+      const society = masterData.find(s => s.ncdId === ncdId);
+      log('🔎 Found society: ' + (society ? 'YES' : 'NO'));
+
+      if (!society) {
+        log('❌ Society not found');
+        document.getElementById('result').innerHTML =
+          '<div style="color:red;">Society not found. Try NCD001</div>';
+        return;
+      }
+
+      state.fetched = true;
+      state.societyData = society;
+
+      log('✅ State updated - fetched: ' + state.fetched);
+      log('✅ Society data: ' + JSON.stringify(society, null, 2));
+
+      renderForm();
+    }
+
+    function renderForm() {
+      log('🎨 Rendering form...');
+
+      if (!state.fetched || !state.societyData) {
+        log('⚠️ Cannot render - fetched: ' + state.fetched + ', has data: ' + !!state.societyData);
+        return;
+      }
+
+      const s = state.societyData;
+
+      const html = `
+                <div class="form">
+                    <h2>✅ Form Rendered Successfully!</h2>
+                    <div class="field"><b>NCD ID:</b> ${s.ncdId}</div>
+                    <div class="field"><b>Society Name:</b> ${s.cooperativeSocietyName}</div>
+                    <div class="field"><b>Location:</b> ${s.location}</div>
+                    <div class="field"><b>District:</b> ${s.district}</div>
+                    <div class="field"><b>Members:</b> ${s.membersOfSociety}</div>
+                    <div class="field"><b>Mobile:</b> ${s.mobile}</div>
+                    <div class="field"><b>Email:</b> ${s.email}</div>
+                </div>
+            `;
+
+      document.getElementById('result').innerHTML = html;
+      log('✅ Form HTML inserted into DOM');
+    }
+
+    log('✅ Test page loaded');
+  </script>
+</body>
+
+</html>

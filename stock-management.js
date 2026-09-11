@@ -13,17 +13,17 @@
 if (!App.state.sm) {
   App.state.sm = {
     seasons: [
-      { id: 'SEA-01', name: 'Kharif 2026', status: 'Active' },
-      { id: 'SEA-02', name: 'Rabi 2025-26', status: 'Active' },
-      { id: 'SEA-03', name: 'Summer 2026', status: 'Active' }
+      { id: 'SEA-01', name: 'Kharif 2026', code: 'KH26', desc: 'Monsoon crop season', status: 'Active', created: '2026-01-01' },
+      { id: 'SEA-02', name: 'Rabi 2025-26', code: 'RB2526', desc: 'Winter crop season', status: 'Active', created: '2025-10-01' },
+      { id: 'SEA-03', name: 'Summer 2026', code: 'SM26', desc: 'Zaid crop season', status: 'Active', created: '2026-02-01' }
     ],
     crops: [
-      { id: 'CRP-01', name: 'Paddy', seasons: ['Kharif 2026'], status: 'Active' },
-      { id: 'CRP-02', name: 'Wheat', seasons: ['Rabi 2025-26'], status: 'Active' },
-      { id: 'CRP-03', name: 'Soybean', seasons: ['Kharif 2026'], status: 'Active' },
-      { id: 'CRP-04', name: 'Gram', seasons: ['Rabi 2025-26'], status: 'Active' },
-      { id: 'CRP-05', name: 'Mustard', seasons: ['Rabi 2025-26'], status: 'Active' },
-      { id: 'CRP-06', name: 'Maize', seasons: ['Kharif 2026', 'Summer 2026'], status: 'Active' }
+      { id: 'CRP-01', name: 'Paddy', code: 'PDY', seasons: ['Kharif 2026'], desc: 'Rice crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-02', name: 'Wheat', code: 'WHT', seasons: ['Rabi 2025-26'], desc: 'Wheat crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-03', name: 'Soybean', code: 'SYB', seasons: ['Kharif 2026'], desc: 'Oilseed crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-04', name: 'Gram', code: 'GRM', seasons: ['Rabi 2025-26'], desc: 'Pulse crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-05', name: 'Mustard', code: 'MST', seasons: ['Rabi 2025-26'], desc: 'Oilseed crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-06', name: 'Maize', code: 'MZE', seasons: ['Kharif 2026', 'Summer 2026'], desc: 'Cereal crop', status: 'Active', created: '2026-01-05' }
     ],
     varieties: [
       { id: 'VAR-001', name: 'IR-64', code: 'IR64', crop: 'Paddy', season: 'Kharif 2026', desc: 'Medium-duration paddy', status: 'Active', created: '2026-01-10' },
@@ -39,6 +39,11 @@ if (!App.state.sm) {
       { id: 'SUB-002', name: 'IR-64 Standard', code: 'IR64-ST', variety: 'IR-64', crop: 'Paddy', season: 'Kharif 2026', desc: 'Standard grade', status: 'Active', created: '2026-02-02' },
       { id: 'SUB-003', name: 'GW-322 Bold', code: 'GW322-BD', variety: 'GW-322', crop: 'Wheat', season: 'Rabi 2025-26', desc: 'Bold grain', status: 'Active', created: '2026-02-05' },
       { id: 'SUB-004', name: 'JS-335 Improved', code: 'JS335-IM', variety: 'JS-335', crop: 'Soybean', season: 'Kharif 2026', desc: 'Improved yield', status: 'Active', created: '2026-02-08' }
+    ],
+    financialYears: [
+      { id: 'FY-01', name: '2025-2026', code: 'FY2526', startDate: '2025-04-01', endDate: '2026-03-31', status: 'Active', created: '2025-04-01' },
+      { id: 'FY-02', name: '2026-2027', code: 'FY2627', startDate: '2026-04-01', endDate: '2027-03-31', status: 'Active', created: '2026-04-01' },
+      { id: 'FY-03', name: '2024-2025', code: 'FY2425', startDate: '2024-04-01', endDate: '2025-03-31', status: 'Inactive', created: '2024-04-01' }
     ],
     inventory: [
       { id: 'INV-001', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1000, inward: 500, outward: 200, adjustment: 0, unit: 'KG', updated: '2026-03-01' },
@@ -84,6 +89,7 @@ App._smSubVForVariety = function (variety) {
   return SM.subVarieties.filter(function (sv) { return sv.status === 'Active' && (!variety || sv.variety === variety); });
 };
 App._smSeasonOpts = function (sel) { return SM.seasons.filter(function (s) { return s.status === 'Active'; }).map(function (s) { return '<option value="' + s.name + '"' + (sel === s.name ? ' selected' : '') + '>' + s.name + '</option>'; }).join(''); };
+App._smFinYearOpts = function (sel) { return SM.financialYears.filter(function (fy) { return fy.status === 'Active'; }).map(function (fy) { return '<option value="' + fy.name + '"' + (sel === fy.name ? ' selected' : '') + '>' + fy.name + '</option>'; }).join(''); };
 App._smCropOpts = function (season, sel) { return App._smCropsForSeason(season).map(function (c) { return '<option value="' + c.name + '"' + (sel === c.name ? ' selected' : '') + '>' + c.name + '</option>'; }).join(''); };
 App._smVarOpts = function (crop, season, sel) { return App._smVarietiesForCrop(crop, season).map(function (v) { return '<option value="' + v.name + '"' + (sel === v.name ? ' selected' : '') + '>' + v.name + '</option>'; }).join(''); };
 App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety).map(function (sv) { return '<option value="' + sv.name + '"' + (sel === sv.name ? ' selected' : '') + '>' + sv.name + '</option>'; }).join(''); };
@@ -103,10 +109,10 @@ App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety)
     };
     var section = '<div class="nav-section"><div class="nav-section-title">Stock Management</div>'
       + ni('dashboard', 'Stock Dashboard', 'sm-dashboard')
-      + ni('inventory_2', 'Stock Inventory', 'sm-inventory', true)
+      + ni('event', 'Season Master', 'sm-season', true)
+      + ni('grass', 'Crop Master', 'sm-crop', true)
+      + ni('date_range', 'Financial Year', 'sm-finyear', true)
       + ni('category', 'Variety Master', 'sm-variety', true)
-      + ni('account_tree', 'Sub-Variety Master', 'sm-subvariety', true)
-      + ni('bar_chart', 'Stock Reports', 'sm-reports', true)
       + '</div>';
     if (/nav-section-title">Management</.test(html)) {
       return html.replace(/(<div class="nav-section"><div class="nav-section-title">Management<\/div>)/, section + '\n$1');
@@ -124,6 +130,7 @@ App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety)
     switch (this.state.currentPage) {
       case 'sm-dashboard': return App.smDashboard();
       case 'sm-inventory': return App.smInventory();
+      case 'sm-inventory-form': return App.smInventoryForm();
       case 'sm-inward': return App.smInward();
       case 'sm-outward': return App.smOutward();
       case 'sm-adjust': return App.smAdjust();
@@ -132,6 +139,12 @@ App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety)
       case 'sm-variety-form': return App.smVarietyForm();
       case 'sm-subvariety': return App.smSubVarietyList();
       case 'sm-subvariety-form': return App.smSubVarietyForm();
+      case 'sm-season': return App.smSeasonList();
+      case 'sm-season-form': return App.smSeasonForm();
+      case 'sm-crop': return App.smCropList();
+      case 'sm-crop-form': return App.smCropForm();
+      case 'sm-finyear': return App.smFinYearList();
+      case 'sm-finyear-form': return App.smFinYearForm();
       case 'sm-reports': return App.smReports();
       default: return _prev();
     }
@@ -145,10 +158,14 @@ App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety)
   var _prev = App.renderHeader.bind(App);
   var T = {
     'sm-dashboard': 'Stock Dashboard', 'sm-inventory': 'Stock Inventory',
+    'sm-inventory-form': 'Add Inventory / Stock',
     'sm-inward': 'Stock Inward', 'sm-outward': 'Stock Outward',
     'sm-adjust': 'Stock Adjustment', 'sm-ledger': 'Stock Ledger',
     'sm-variety': 'Variety Master', 'sm-variety-form': 'Variety Master',
     'sm-subvariety': 'Sub-Variety Master', 'sm-subvariety-form': 'Sub-Variety Master',
+    'sm-season': 'Season Master', 'sm-season-form': 'Season Master',
+    'sm-crop': 'Crop Master', 'sm-crop-form': 'Crop Master',
+    'sm-finyear': 'Financial Year Master', 'sm-finyear-form': 'Financial Year Master',
     'sm-reports': 'Stock Reports'
   };
   App.renderHeader = function () {
@@ -199,17 +216,78 @@ App.smInventory = function () {
   var inv = SM.inventory;
   return '<div class="page-header"><h1>Stock Inventory</h1><p>Complete inventory listing</p></div>'
     + '<div class="card"><div class="card-header"><h3>Inventory (' + inv.length + ' items)</h3>'
+    + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.state.sm.filter={season:\'\',crop:\'\',variety:\'\',subVariety:\'\',status:\'\',search:\'\',type:\'\'};App.navigate(\'sm-inventory-form\')"><span class="material-icons">add</span> Add Inventory / Stock</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Sr.</th><th>Season</th><th>Crop</th><th>Variety</th><th>Sub-Variety</th><th>Lot/Batch</th><th>Opening</th><th>Inward</th><th>Outward</th><th>Available</th><th>Unit</th><th>Status</th><th>Updated</th></tr></thead><tbody>'
-    + inv.map(function (r, i) {
+    + '<thead><tr><th>Sr.</th><th>Season</th><th>Crop</th><th>Variety</th><th>Sub-Variety</th><th>Lot/Batch</th><th>Available</th><th>Unit</th><th>Status</th><th>Updated</th><th>Action</th></tr></thead><tbody>'
+    + (inv.length === 0 ? '<tr><td colspan="11" style="text-align:center;padding:30px;color:#9E9E9E;">No inventory records. Click "Add Inventory / Stock" to create one.</td></tr>' : inv.map(function (r, i) {
       var a = App._smAvail(r);
       var st = a <= 0 ? 'Out of Stock' : a < 100 ? 'Low Stock' : 'In Stock';
       return '<tr><td>' + (i + 1) + '</td><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td><td>' + (r.subVariety || '—') + '</td>'
-        + '<td>' + r.lot + '</td><td>' + r.opening + '</td><td>' + r.inward + '</td><td>' + r.outward + '</td>'
+        + '<td>' + r.lot + '</td>'
         + '<td style="font-weight:700;color:' + (a > 0 ? '#2E7D32' : '#C62828') + ';">' + a + '</td><td>' + r.unit + '</td>'
-        + '<td>' + App._smBdg(st) + '</td><td style="font-size:0.78rem;">' + r.updated + '</td></tr>';
-    }).join('')
+        + '<td>' + App._smBdg(st) + '</td><td style="font-size:0.78rem;">' + r.updated + '</td>'
+        + '<td><button class="btn btn-outline btn-sm" title="Edit" onclick="App.state.sm.editId=\'' + r.id + '\';App.state.sm.formMode=\'edit\';App.navigate(\'sm-inventory-form\')"><span class="material-icons" style="font-size:14px;">edit</span></button></td></tr>';
+    }).join(''))
     + '</tbody></table></div></div></div>';
+};
+
+// ── Add / Edit Inventory (stock for a crop) ──
+App.smInventoryForm = function () {
+  var mode = SM.formMode || 'add';
+  var r = mode === 'edit' ? SM.inventory.find(function (x) { return x.id === SM.editId; }) : null;
+  var f = SM.filter;
+  var season = r ? r.season : f.season;
+  var crop = r ? r.crop : f.crop;
+  var variety = r ? r.variety : f.variety;
+  return '<div class="page-header"><h1>' + (mode === 'edit' ? 'Edit' : 'Add') + ' Inventory / Stock</h1><p>Add stock for a crop into inventory</p></div>'
+    + '<div class="card"><div class="card-body">'
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">inventory_2</span> Stock Classification</div>'
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" id="if-finyear"><option value="">Select Financial Year</option>' + App._smFinYearOpts(r ? r.finYear : '') + '</select></div>'
+    + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" id="if-season" onchange="App.state.sm.filter.season=this.value;App.state.sm.filter.crop=\'\';App.state.sm.filter.variety=\'\';App.render()"><option value="">Select Season</option>' + App._smSeasonOpts(season) + '</select></div>'
+    + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="if-crop" onchange="App.state.sm.filter.crop=this.value;App.state.sm.filter.variety=\'\';App.render()"><option value="">Select Crop</option>' + App._smCropOpts(season, crop) + '</select></div>'
+    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label><select class="form-control" id="if-variety" onchange="App.state.sm.filter.variety=this.value;App.render()"><option value="">Select Variety</option>' + App._smVarOpts(crop, season, variety) + '</select></div>'
+    + '</div></div>'
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">scale</span> Lot &amp; Quantity</div>'
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Lot/Batch No. <span style="color:#F44336">*</span></label><input class="form-control" id="if-lot" value="' + (r ? r.lot : '') + '" placeholder="e.g. LOT-P-002"></div>'
+    + '<div class="form-group"><label>Opening Quantity <span style="color:#F44336">*</span></label><input type="number" class="form-control" id="if-opening" value="' + (r ? r.opening : '') + '" placeholder="Opening stock"></div>'
+    + '<div class="form-group"><label>Unit <span style="color:#F44336">*</span></label><select class="form-control" id="if-unit"><option' + (r && r.unit === 'KG' ? ' selected' : '') + '>KG</option><option' + (r && r.unit === 'Quintal' ? ' selected' : '') + '>Quintal</option><option' + (r && r.unit === 'Bag (40Kg)' ? ' selected' : '') + '>Bag (40Kg)</option></select></div>'
+    + '<div class="form-group"><label>Inward Quantity</label><input type="number" class="form-control" id="if-inward" value="' + (r ? r.inward : '0') + '" placeholder="0"></div>'
+    + '</div></div>'
+    + '<div class="form-actions"><button class="btn btn-gray" onclick="App.navigate(\'sm-inventory\')"><span class="material-icons">close</span> Cancel</button>'
+    + '<button class="btn btn-primary" onclick="App.smSaveInventory()"><span class="material-icons">save</span> Save Inventory</button></div>'
+    + '</div></div>';
+};
+
+App.smSaveInventory = function () {
+  var g = function (id) { var e = document.getElementById(id); return e ? String(e.value).trim() : ''; };
+  var finYear = g('if-finyear'), season = g('if-season'), crop = g('if-crop'), variety = g('if-variety'), lot = g('if-lot');
+  var opening = parseFloat(g('if-opening'));
+  if (!finYear || !season || !crop || !variety || !lot || isNaN(opening) || opening < 0) {
+    alert('Please fill Financial Year, Season, Crop, Variety, Lot/Batch and a valid Opening Quantity.'); return;
+  }
+  var unit = g('if-unit') || 'KG', inward = parseFloat(g('if-inward')) || 0;
+  var existingRec = SM.formMode === 'edit' ? SM.inventory.find(function (x) { return x.id === SM.editId; }) : null;
+  var subVar = existingRec ? (existingRec.subVariety || '') : '';
+  // Prevent duplicate lot for the same crop+variety (except the row being edited)
+  var dup = SM.inventory.some(function (x) {
+    return x.id !== SM.editId && x.lot === lot && x.crop === crop && x.variety === variety;
+  });
+  if (dup) { alert('Inventory for Lot "' + lot + '" under ' + crop + ' / ' + variety + ' already exists.'); return; }
+  var today = new Date().toISOString().split('T')[0];
+  if (SM.formMode === 'edit') {
+    var r = SM.inventory.find(function (x) { return x.id === SM.editId; });
+    if (r) { r.finYear = finYear; r.season = season; r.crop = crop; r.variety = variety; r.subVariety = subVar; r.lot = lot; r.opening = opening; r.inward = inward; r.unit = unit; r.updated = today; }
+    App.showToast('Inventory updated successfully.');
+  } else {
+    var rec = { id: App._smNextId(SM.inventory, 'INV-'), finYear: finYear, season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: opening, inward: inward, outward: 0, adjustment: 0, unit: unit, updated: today };
+    SM.inventory.push(rec);
+    // Opening ledger entry so the ledger stays consistent
+    SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: today, type: 'Opening Stock', ref: App._smNextId(SM.ledger, 'OPEN-'), season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: 0, inward: opening + inward, outward: 0, adj: 0, closing: opening + inward, remarks: 'Inventory added' });
+    App.showToast('Inventory / stock added successfully.');
+  }
+  App.navigate('sm-inventory');
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -506,6 +584,192 @@ App.smReports = function () {
         + '</div></div></div>';
     }).join('')
     + '</div>';
+};
+
+// ═══════════════════════════════════════════════════════════
+// 14. SEASON MASTER — List + Form + Save + Toggle
+// ═══════════════════════════════════════════════════════════
+App.smSeasonList = function () {
+  var rows = SM.seasons;
+  return '<div class="page-header"><h1>Season Master</h1><p>Manage crop seasons</p></div>'
+    + '<div class="card"><div class="card-header"><h3>Seasons (' + rows.length + ')</h3>'
+    + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-season-form\')"><span class="material-icons">add</span> Create Season</button>'
+    + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
+    + '<thead><tr><th>Sr.</th><th>Season Name</th><th>Code</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
+    + rows.map(function (r, i) {
+      return '<tr><td>' + (i + 1) + '</td><td><b>' + r.name + '</b></td><td>' + (r.code || '—') + '</td><td style="font-size:0.78rem;">' + (r.desc || '') + '</td>'
+        + '<td>' + App._smBdg(r.status) + '</td><td style="font-size:0.78rem;">' + (r.created || '') + '</td>'
+        + '<td><div class="action-btns">'
+        + '<button class="btn btn-outline btn-sm" title="Edit" onclick="App.state.sm.editId=\'' + r.id + '\';App.state.sm.formMode=\'edit\';App.navigate(\'sm-season-form\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
+        + '<button class="btn ' + (r.status === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smToggleSeason(\'' + r.id + '\')">' + (r.status === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
+        + '</div></td></tr>';
+    }).join('')
+    + '</tbody></table></div></div></div>';
+};
+App.smToggleSeason = function (id) {
+  var r = SM.seasons.find(function (s) { return s.id === id; });
+  if (r) { r.status = r.status === 'Active' ? 'Inactive' : 'Active'; App.showToast('Season status updated.'); App.render(); }
+};
+App.smSeasonForm = function () {
+  var mode = SM.formMode || 'add';
+  var r = mode === 'edit' ? SM.seasons.find(function (s) { return s.id === SM.editId; }) : null;
+  return '<div class="page-header"><h1>' + (mode === 'edit' ? 'Edit' : 'Create') + ' Season</h1></div>'
+    + '<div class="card"><div class="card-body">'
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">event</span> Season Details</div>'
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Season Name <span style="color:#F44336">*</span></label><input class="form-control" id="ss-name" value="' + (r ? r.name : '') + '" placeholder="e.g. Kharif 2026"></div>'
+    + '<div class="form-group"><label>Season Code <span style="color:#F44336">*</span></label><input class="form-control" id="ss-code" value="' + (r ? r.code : '') + '" placeholder="e.g. KH26" style="text-transform:uppercase;"></div>'
+    + '<div class="form-group" style="grid-column:1/-1;"><label>Description</label><textarea class="form-control" id="ss-desc" rows="2">' + (r ? (r.desc || '') : '') + '</textarea></div>'
+    + '<div class="form-group"><label>Status</label><select class="form-control" id="ss-status"><option value="Active"' + (r && r.status === 'Active' ? ' selected' : '') + '>Active</option><option value="Inactive"' + (r && r.status === 'Inactive' ? ' selected' : '') + '>Inactive</option></select></div>'
+    + '</div></div>'
+    + '<div class="form-actions"><button class="btn btn-gray" onclick="App.navigate(\'sm-season\')"><span class="material-icons">close</span> Cancel</button>'
+    + '<button class="btn btn-primary" onclick="App.smSaveSeason()"><span class="material-icons">save</span> Save</button></div>'
+    + '</div></div>';
+};
+App.smSaveSeason = function () {
+  var g = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var name = g('ss-name'), code = g('ss-code').toUpperCase();
+  if (!name || !code) { alert('Please fill Season Name and Code.'); return; }
+  var existing = SM.seasons.filter(function (s) { return s.id !== SM.editId; });
+  if (existing.some(function (s) { return (s.code || '').toUpperCase() === code; })) { alert('Season Code "' + code + '" already exists.'); return; }
+  if (existing.some(function (s) { return s.name.toLowerCase() === name.toLowerCase(); })) { alert('Season "' + name + '" already exists.'); return; }
+  if (SM.formMode === 'edit') {
+    var r = SM.seasons.find(function (s) { return s.id === SM.editId; });
+    if (r) { r.name = name; r.code = code; r.desc = g('ss-desc'); r.status = g('ss-status'); }
+    App.showToast('Season updated successfully.');
+  } else {
+    SM.seasons.push({ id: App._smNextId(SM.seasons, 'SEA-'), name: name, code: code, desc: g('ss-desc'), status: g('ss-status') || 'Active', created: new Date().toISOString().split('T')[0] });
+    App.showToast('Season created successfully.');
+  }
+  App.navigate('sm-season');
+};
+
+// ═══════════════════════════════════════════════════════════
+// 15. CROP MASTER — List + Form + Save + Toggle
+// ═══════════════════════════════════════════════════════════
+App.smCropList = function () {
+  var rows = SM.crops;
+  return '<div class="page-header"><h1>Crop Master</h1><p>Manage crops and their applicable seasons</p></div>'
+    + '<div class="card"><div class="card-header"><h3>Crops (' + rows.length + ')</h3>'
+    + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-crop-form\')"><span class="material-icons">add</span> Create Crop</button>'
+    + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
+    + '<thead><tr><th>Sr.</th><th>Crop Name</th><th>Code</th><th>Applicable Seasons</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
+    + rows.map(function (r, i) {
+      return '<tr><td>' + (i + 1) + '</td><td><b>' + r.name + '</b></td><td>' + (r.code || '—') + '</td><td style="font-size:0.8rem;">' + (r.seasons || []).join(', ') + '</td><td style="font-size:0.78rem;">' + (r.desc || '') + '</td>'
+        + '<td>' + App._smBdg(r.status) + '</td><td style="font-size:0.78rem;">' + (r.created || '') + '</td>'
+        + '<td><div class="action-btns">'
+        + '<button class="btn btn-outline btn-sm" title="Edit" onclick="App.state.sm.editId=\'' + r.id + '\';App.state.sm.formMode=\'edit\';App.navigate(\'sm-crop-form\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
+        + '<button class="btn ' + (r.status === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smToggleCrop(\'' + r.id + '\')">' + (r.status === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
+        + '</div></td></tr>';
+    }).join('')
+    + '</tbody></table></div></div></div>';
+};
+App.smToggleCrop = function (id) {
+  var r = SM.crops.find(function (c) { return c.id === id; });
+  if (r) { r.status = r.status === 'Active' ? 'Inactive' : 'Active'; App.showToast('Crop status updated.'); App.render(); }
+};
+App.smCropForm = function () {
+  var mode = SM.formMode || 'add';
+  var r = mode === 'edit' ? SM.crops.find(function (c) { return c.id === SM.editId; }) : null;
+  var selSeasons = r ? (r.seasons || []) : [];
+  var seasonChecks = SM.seasons.filter(function (s) { return s.status === 'Active'; }).map(function (s) {
+    var chk = selSeasons.indexOf(s.name) >= 0 ? ' checked' : '';
+    return '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;margin-right:16px;">'
+      + '<input type="checkbox" class="cf-season-chk" value="' + s.name + '"' + chk + '> ' + s.name + '</label>';
+  }).join('');
+  return '<div class="page-header"><h1>' + (mode === 'edit' ? 'Edit' : 'Create') + ' Crop</h1></div>'
+    + '<div class="card"><div class="card-body">'
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">grass</span> Crop Details</div>'
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Crop Name <span style="color:#F44336">*</span></label><input class="form-control" id="cf-name" value="' + (r ? r.name : '') + '" placeholder="e.g. Paddy"></div>'
+    + '<div class="form-group"><label>Crop Code <span style="color:#F44336">*</span></label><input class="form-control" id="cf-code" value="' + (r ? r.code : '') + '" placeholder="e.g. PDY" style="text-transform:uppercase;"></div>'
+    + '<div class="form-group" style="grid-column:1/-1;"><label>Applicable Seasons</label><div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 0;">' + (seasonChecks || '<span style="color:#9E9E9E;font-size:0.82rem;">No active seasons</span>') + '</div></div>'
+    + '<div class="form-group" style="grid-column:1/-1;"><label>Description</label><textarea class="form-control" id="cf-desc" rows="2">' + (r ? (r.desc || '') : '') + '</textarea></div>'
+    + '<div class="form-group"><label>Status</label><select class="form-control" id="cf-status"><option value="Active"' + (r && r.status === 'Active' ? ' selected' : '') + '>Active</option><option value="Inactive"' + (r && r.status === 'Inactive' ? ' selected' : '') + '>Inactive</option></select></div>'
+    + '</div></div>'
+    + '<div class="form-actions"><button class="btn btn-gray" onclick="App.navigate(\'sm-crop\')"><span class="material-icons">close</span> Cancel</button>'
+    + '<button class="btn btn-primary" onclick="App.smSaveCrop()"><span class="material-icons">save</span> Save</button></div>'
+    + '</div></div>';
+};
+App.smSaveCrop = function () {
+  var g = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var name = g('cf-name'), code = g('cf-code').toUpperCase();
+  if (!name || !code) { alert('Please fill Crop Name and Code.'); return; }
+  var seasons = [];
+  var chks = document.querySelectorAll('.cf-season-chk');
+  for (var i = 0; i < chks.length; i++) { if (chks[i].checked) seasons.push(chks[i].value); }
+  var existing = SM.crops.filter(function (c) { return c.id !== SM.editId; });
+  if (existing.some(function (c) { return (c.code || '').toUpperCase() === code; })) { alert('Crop Code "' + code + '" already exists.'); return; }
+  if (existing.some(function (c) { return c.name.toLowerCase() === name.toLowerCase(); })) { alert('Crop "' + name + '" already exists.'); return; }
+  if (SM.formMode === 'edit') {
+    var r = SM.crops.find(function (c) { return c.id === SM.editId; });
+    if (r) { r.name = name; r.code = code; r.seasons = seasons; r.desc = g('cf-desc'); r.status = g('cf-status'); }
+    App.showToast('Crop updated successfully.');
+  } else {
+    SM.crops.push({ id: App._smNextId(SM.crops, 'CRP-'), name: name, code: code, seasons: seasons, desc: g('cf-desc'), status: g('cf-status') || 'Active', created: new Date().toISOString().split('T')[0] });
+    App.showToast('Crop created successfully.');
+  }
+  App.navigate('sm-crop');
+};
+
+// ═══════════════════════════════════════════════════════════
+// 16. FINANCIAL YEAR MASTER — List + Form + Save + Toggle
+// ═══════════════════════════════════════════════════════════
+App.smFinYearList = function () {
+  var rows = SM.financialYears;
+  return '<div class="page-header"><h1>Financial Year Master</h1><p>Manage financial years</p></div>'
+    + '<div class="card"><div class="card-header"><h3>Financial Years (' + rows.length + ')</h3>'
+    + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-finyear-form\')"><span class="material-icons">add</span> Create Financial Year</button>'
+    + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
+    + '<thead><tr><th>Sr.</th><th>Financial Year</th><th>Code</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
+    + rows.map(function (r, i) {
+      return '<tr><td>' + (i + 1) + '</td><td><b>' + r.name + '</b></td><td>' + (r.code || '—') + '</td><td style="font-size:0.8rem;">' + (r.startDate || '') + '</td><td style="font-size:0.8rem;">' + (r.endDate || '') + '</td>'
+        + '<td>' + App._smBdg(r.status) + '</td><td style="font-size:0.78rem;">' + (r.created || '') + '</td>'
+        + '<td><div class="action-btns">'
+        + '<button class="btn btn-outline btn-sm" title="Edit" onclick="App.state.sm.editId=\'' + r.id + '\';App.state.sm.formMode=\'edit\';App.navigate(\'sm-finyear-form\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
+        + '<button class="btn ' + (r.status === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smToggleFinYear(\'' + r.id + '\')">' + (r.status === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
+        + '</div></td></tr>';
+    }).join('')
+    + '</tbody></table></div></div></div>';
+};
+App.smToggleFinYear = function (id) {
+  var r = SM.financialYears.find(function (fy) { return fy.id === id; });
+  if (r) { r.status = r.status === 'Active' ? 'Inactive' : 'Active'; App.showToast('Financial Year status updated.'); App.render(); }
+};
+App.smFinYearForm = function () {
+  var mode = SM.formMode || 'add';
+  var r = mode === 'edit' ? SM.financialYears.find(function (fy) { return fy.id === SM.editId; }) : null;
+  return '<div class="page-header"><h1>' + (mode === 'edit' ? 'Edit' : 'Create') + ' Financial Year</h1></div>'
+    + '<div class="card"><div class="card-body">'
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">date_range</span> Financial Year Details</div>'
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><input class="form-control" id="fy-name" value="' + (r ? r.name : '') + '" placeholder="e.g. 2026-2027"></div>'
+    + '<div class="form-group"><label>Code <span style="color:#F44336">*</span></label><input class="form-control" id="fy-code" value="' + (r ? r.code : '') + '" placeholder="e.g. FY2627" style="text-transform:uppercase;"></div>'
+    + '<div class="form-group"><label>Start Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="fy-start" value="' + (r ? r.startDate : '') + '"></div>'
+    + '<div class="form-group"><label>End Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="fy-end" value="' + (r ? r.endDate : '') + '"></div>'
+    + '<div class="form-group"><label>Status</label><select class="form-control" id="fy-status"><option value="Active"' + (r && r.status === 'Active' ? ' selected' : '') + '>Active</option><option value="Inactive"' + (r && r.status === 'Inactive' ? ' selected' : '') + '>Inactive</option></select></div>'
+    + '</div></div>'
+    + '<div class="form-actions"><button class="btn btn-gray" onclick="App.navigate(\'sm-finyear\')"><span class="material-icons">close</span> Cancel</button>'
+    + '<button class="btn btn-primary" onclick="App.smSaveFinYear()"><span class="material-icons">save</span> Save</button></div>'
+    + '</div></div>';
+};
+App.smSaveFinYear = function () {
+  var g = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var name = g('fy-name'), code = g('fy-code').toUpperCase(), start = g('fy-start'), end = g('fy-end');
+  if (!name || !code || !start || !end) { alert('Please fill all required fields.'); return; }
+  if (new Date(end) <= new Date(start)) { alert('End Date must be after Start Date.'); return; }
+  var existing = SM.financialYears.filter(function (fy) { return fy.id !== SM.editId; });
+  if (existing.some(function (fy) { return (fy.code || '').toUpperCase() === code; })) { alert('Financial Year Code "' + code + '" already exists.'); return; }
+  if (existing.some(function (fy) { return fy.name.toLowerCase() === name.toLowerCase(); })) { alert('Financial Year "' + name + '" already exists.'); return; }
+  if (SM.formMode === 'edit') {
+    var r = SM.financialYears.find(function (fy) { return fy.id === SM.editId; });
+    if (r) { r.name = name; r.code = code; r.startDate = start; r.endDate = end; r.status = g('fy-status'); }
+    App.showToast('Financial Year updated successfully.');
+  } else {
+    SM.financialYears.push({ id: App._smNextId(SM.financialYears, 'FY-'), name: name, code: code, startDate: start, endDate: end, status: g('fy-status') || 'Active', created: new Date().toISOString().split('T')[0] });
+    App.showToast('Financial Year created successfully.');
+  }
+  App.navigate('sm-finyear');
 };
 
 console.log('[Stock Management] Complete module loaded with demo data');

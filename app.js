@@ -802,6 +802,14 @@ const App = {
           ${this._moField('Village', 'm-village', mo.details.village)}
           ${this._moField('Pincode', 'm-pincode', mo.details.pincode)}
           ${this._moField('Category', 'm-category', mo.details.category)}
+          <div class="form-group">
+            <label>eKYC Status</label>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f5f5f5;border:1px solid #E0E0E0;border-radius:6px;">
+              <span class="material-icons" style="font-size:18px;color:${mo.details.ekyc === 'Verified' ? '#2E7D32' : '#E65100'};">${mo.details.ekyc === 'Verified' ? 'verified' : 'gpp_maybe'}</span>
+              <span class="badge ${mo.details.ekyc === 'Verified' ? 'badge-success' : 'badge-warning'}">${mo.details.ekyc || 'Not Verified'}</span>
+            </div>
+            <input type="hidden" id="m-ekyc" value="${mo.details.ekyc || 'Not Verified'}">
+          </div>
         </div>
       </div>
       <div class="form-actions" style="justify-content:flex-end;">
@@ -826,14 +834,23 @@ const App = {
         <div class="form-section">
           <div class="form-section-title"><span class="material-icons">fingerprint</span> Samagra Verification</div>
 
-          <!-- Step 1: Samagra ID -->
-          <div class="form-group" style="max-width:360px;">
-            <label>Samagra ID <span style="color:#F44336;">*</span></label>
-            <input type="text" class="form-control" id="m-samagra-id" inputmode="numeric" maxlength="12"
-                   placeholder="Enter Samagra ID" value="${mo.samagraId || ''}" ${inVerification ? 'readonly style="background:#f5f5f5;"' : ''}
-                   oninput="this.value=this.value.replace(/[^0-9]/g,'');App.onSamagraIdInput(this.value)"/>
-            <div id="m-samagra-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;">
-              Please enter Samagra ID.
+          <!-- Step 1: Samagra ID + eKYC Status (side by side) -->
+          <div class="form-grid" style="max-width:640px;">
+            <div class="form-group">
+              <label>Samagra ID <span style="color:#F44336;">*</span></label>
+              <input type="text" class="form-control" id="m-samagra-id" inputmode="numeric" maxlength="12"
+                     placeholder="Enter Samagra ID" value="${mo.samagraId || ''}" ${inVerification ? 'readonly style="background:#f5f5f5;"' : ''}
+                     oninput="this.value=this.value.replace(/[^0-9]/g,'');App.onSamagraIdInput(this.value)"/>
+              <div id="m-samagra-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;">
+                Please enter Samagra ID.
+              </div>
+            </div>
+            <div class="form-group">
+              <label>eKYC Status</label>
+              <div id="m-ekyc-status" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f5f5f5;border:1px solid #E0E0E0;border-radius:6px;">
+                <span class="material-icons" style="font-size:18px;color:${(mo.samagraId && mo.samagraId.length >= 9) ? '#2E7D32' : '#9E9E9E'};">${(mo.samagraId && mo.samagraId.length >= 9) ? 'verified' : 'gpp_maybe'}</span>
+                <span class="badge ${(mo.samagraId && mo.samagraId.length >= 9) ? 'badge-success' : 'badge-gray'}">${(mo.samagraId && mo.samagraId.length >= 9) ? 'Active' : 'Inactive'}</span>
+              </div>
             </div>
           </div>
 
@@ -874,9 +891,16 @@ const App = {
   onSamagraIdInput(value) {
     this.state.memberOnboarding = this.state.memberOnboarding || {};
     this.state.memberOnboarding.samagraId = value;
-    const wrap = document.getElementById('m-captcha-wrap');
     const err = document.getElementById('m-samagra-error');
     if (err) err.style.display = 'none';
+    // Live-update the eKYC status (Active once a valid-length Samagra ID is entered)
+    const ekycBox = document.getElementById('m-ekyc-status');
+    if (ekycBox) {
+      const active = value && value.length >= 9;
+      ekycBox.innerHTML = '<span class="material-icons" style="font-size:18px;color:' + (active ? '#2E7D32' : '#9E9E9E') + ';">' + (active ? 'verified' : 'gpp_maybe') + '</span>'
+        + '<span class="badge ' + (active ? 'badge-success' : 'badge-gray') + '">' + (active ? 'Active' : 'Inactive') + '</span>';
+    }
+    const wrap = document.getElementById('m-captcha-wrap');
     if (!wrap) return;
     if (value && value.length >= 9) {
       if (wrap.style.display === 'none') {
@@ -1033,7 +1057,8 @@ const App = {
         block: 'Patan',
         village: 'Sehora',
         pincode: '480002',
-        category: 'General'
+        category: 'General',
+        ekyc: 'Verified'
       };
       this.state.memberOnboarding = { samagraId: mo.samagraId, stage: 'verified', fetched: true, details };
       this.render();
@@ -1143,15 +1168,11 @@ const App = {
           <table>
             <thead>
               <tr>
-                <th>Member ID</th>
-                <th>Society Name</th>
-                <th>Society ID</th>
                 <th>Member Name</th>
                 <th>Gender</th>
                 <th>Category</th>
                 <th>Mobile</th>
                 <th>Email</th>
-                <th>Address</th>
                 <th>District</th>
                 <th>Block</th>
                 <th>Village</th>
@@ -1164,15 +1185,11 @@ const App = {
             <tbody>
               ${this.state.members.map(m => `
               <tr>
-                <td><b>${m.id}</b></td>
-                <td>Rampur Krishi Samiti</td>
-                <td>SOC-001</td>
                 <td>${m.name}</td>
                 <td>${m.gender || 'Male'}</td>
                 <td><span class="badge badge-gray">${m.category}</span></td>
                 <td>${m.mobile}</td>
                 <td>${m.email || 'N/A'}</td>
-                <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.address || m.village + ', ' + m.district}</td>
                 <td>${m.district}</td>
                 <td>${m.block}</td>
                 <td>${m.village}</td>
@@ -2037,7 +2054,7 @@ const App = {
               <tr>
                 <th>Demand ID</th><th>Society</th><th>Crop / Variety</th>
                 <th>Requested</th><th>Approved</th><th>Pending</th>
-                <th>Avail. Stock</th><th>Payment</th><th>Approval</th><th>Actions</th>
+                <th>Payment</th><th>Approval</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -2052,7 +2069,6 @@ const App = {
                   <td style="font-weight:600;">${dem.requestedQty} Qt</td>
                   <td style="color:#2E7D32;font-weight:600;">${dem.approvedQty > 0 ? dem.approvedQty + ' Qt' : '—'}</td>
                   <td style="color:${dem.pendingQty > 0 ? '#E65100' : '#9E9E9E'};font-weight:600;">${dem.pendingQty > 0 ? dem.pendingQty + ' Qt' : '—'}</td>
-                  <td style="color:${avail >= dem.requestedQty ? '#2E7D32' : avail > 0 ? '#E65100' : '#C62828'};font-weight:600;">${avail} Qt</td>
                   <td><span class="badge ${dem.payStatus === 'Paid' ? 'badge-success' : 'badge-warning'}">${dem.payStatus}</span></td>
                   <td><span class="badge ${badgeCls(dem.approvalStatus)}">${dem.approvalStatus}</span></td>
                   <td>
@@ -3826,8 +3842,8 @@ const App = {
   // ADMIN — Society Allocation Screen (Updated Workflow)
   // ============================================================
   renderAdminSocietyAllocation() {
-    // Filter only approved demands for allocation
-    const approvedDemands = this.state.adminDemands.filter(d => d.approvalStatus === 'Approved');
+    // Filter approved (fully or partially) demands for allocation
+    const approvedDemands = this.state.adminDemands.filter(d => d.approvalStatus === 'Approved' || d.approvalStatus === 'Partially Approved');
 
     // Calculate statistics
     const totalApproved = approvedDemands.length;
@@ -3927,9 +3943,11 @@ const App = {
                         <span class="material-icons" style="font-size:13px;">close</span>
                       </button>` : ''}
                       ${allocStatus === 'Allocated' ? `
-                      <button class="btn btn-primary btn-sm" onclick="App.generateDispatchFromDemand('${dem.id}')" title="Generate Dispatch">
+                      <button class="btn btn-primary btn-sm" onclick="App.openDispatchForm('${dem.id}')" title="Generate Dispatch">
                         <span class="material-icons" style="font-size:13px;">local_shipping</span> Dispatch
                       </button>` : ''}
+                      ${allocStatus === 'Dispatched' ? `
+                      <span class="badge badge-info" style="align-self:center;">Dispatched</span>` : ''}
                       ${allocStatus === 'Hold' ? `
                       <button class="btn btn-success btn-sm" onclick="App.resumeAllocation('${dem.id}')" title="Resume">
                         <span class="material-icons" style="font-size:13px;">play_arrow</span>
@@ -3942,7 +3960,82 @@ const App = {
           </table>
         </div>`}
       </div>
+    </div>
+    ${this.state.dispatchFormDemandId ? this.renderDispatchFormModal() : ''}`;
+  },
+
+  // ── Dispatch form (opens after Allocate) ──
+  openDispatchForm(demandId) {
+    this.state.dispatchFormDemandId = demandId;
+    this.render();
+  },
+  closeDispatchForm() {
+    this.state.dispatchFormDemandId = null;
+    this.render();
+  },
+  renderDispatchFormModal() {
+    const dem = this.state.adminDemands.find(d => d.id === this.state.dispatchFormDemandId);
+    if (!dem) return '';
+    const today = new Date().toISOString().split('T')[0];
+    return `
+    <div class="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)App.closeDispatchForm()">
+      <div class="modal-box" style="background:#fff;border-radius:12px;max-width:520px;width:100%;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.3);">
+        <div style="background:linear-gradient(135deg,#1B5E20,#4CAF50);padding:16px 22px;display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;color:#fff;font-size:1.05rem;">Generate Dispatch Order</h3>
+          <button onclick="App.closeDispatchForm()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:22px;">
+          <div class="form-grid">
+            <div class="form-group"><label>Society</label><input class="form-control" value="${dem.society}" readonly style="background:#f5f5f5;"></div>
+            <div class="form-group"><label>Crop / Variety</label><input class="form-control" value="${dem.crop} / ${dem.variety}" readonly style="background:#f5f5f5;"></div>
+            <div class="form-group"><label>Quantity (Qt)</label><input class="form-control" value="${dem.approvedQty}" readonly style="background:#f5f5f5;"></div>
+            <div class="form-group"><label>Dispatch Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="df-date" value="${today}"></div>
+            <div class="form-group"><label>Vehicle Number <span style="color:#F44336">*</span></label><input class="form-control" id="df-vehicle" placeholder="MP-XX-XX-0000"></div>
+            <div class="form-group"><label>Driver Name</label><input class="form-control" id="df-driver" placeholder="Driver name"></div>
+            <div class="form-group" style="grid-column:1/-1;"><label>Remarks</label><textarea class="form-control" id="df-remarks" rows="2" placeholder="Optional remarks"></textarea></div>
+          </div>
+          <div id="df-err" style="display:none;color:#F44336;font-size:0.8rem;margin-top:6px;"></div>
+        </div>
+        <div style="padding:0 22px 22px;display:flex;justify-content:flex-end;gap:10px;">
+          <button class="btn btn-gray" onclick="App.closeDispatchForm()">Cancel</button>
+          <button class="btn btn-primary" onclick="App.confirmDispatchForm('${dem.id}')"><span class="material-icons" style="font-size:16px;">local_shipping</span> Create Dispatch Order</button>
+        </div>
+      </div>
     </div>`;
+  },
+  confirmDispatchForm(demandId) {
+    const dem = this.state.adminDemands.find(d => d.id === demandId);
+    if (!dem) return;
+    const g = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+    const date = g('df-date'), vehicle = g('df-vehicle');
+    const err = document.getElementById('df-err');
+    if (!date || !vehicle) {
+      if (err) { err.textContent = 'Dispatch Date and Vehicle Number are required.'; err.style.display = 'block'; }
+      return;
+    }
+    // Prevent duplicate
+    let existing = this.state.dispatchOrders.find(d => d.demandId === demandId);
+    if (!existing) {
+      const newId = 'DO-2024-00' + (this.state.dispatchOrders.length + 1);
+      this.state.dispatchOrders.push({
+        id: newId,
+        society: dem.society,
+        crop: dem.crop,
+        variety: dem.variety,
+        qty: dem.approvedQty,
+        dispatchDate: date,
+        vehicleNo: vehicle,
+        driver: g('df-driver'),
+        remarks: g('df-remarks'),
+        status: 'Dispatched',
+        demandId: demandId,
+      });
+      dem.dispatchOrderId = newId;
+    }
+    dem.allocationStatus = 'Dispatched';
+    this.state.dispatchFormDemandId = null;
+    this.showToast(`Dispatch order created for ${dem.society}.`);
+    this.navigate('admin-dispatch-orders');
   },
 
   // Allocate approved demand
@@ -3970,7 +4063,7 @@ const App = {
     // Update stock allocation
     stk.allocated += dem.approvedQty;
 
-    this.showToast(`✓ Successfully allocated ${dem.approvedQty} Qt to ${dem.society}`);
+    this.showToast(`✓ Allocated ${dem.approvedQty} Qt to ${dem.society}. Now generate a dispatch.`);
     this.render();
   },
 
@@ -4066,7 +4159,7 @@ const App = {
   // ============================================================
   renderAdminDispatchOrders() {
     const orders = this.state.dispatchOrders;
-    const statusCls = s => s === 'Received' ? 'dsp-received' : s === 'Dispatched' ? 'dsp-dispatched' : 'dsp-pending';
+    const statusCls = s => s === 'Received' ? 'dsp-received' : s === 'Dispatched' ? 'dsp-dispatched' : s === 'Allocated' ? 'dsp-dispatched' : 'dsp-pending';
     return `
     <div class="page-header">
       <h1>Dispatch Orders</h1>
@@ -4076,7 +4169,7 @@ const App = {
       <div class="stat-card"><div class="stat-icon"><span class="material-icons">receipt_long</span></div>
         <div class="stat-info"><div class="value">${orders.length}</div><div class="label">Total Orders</div></div></div>
       <div class="stat-card orange"><div class="stat-icon"><span class="material-icons">pending</span></div>
-        <div class="stat-info"><div class="value">${orders.filter(o => o.status === 'Pending').length}</div><div class="label">Pending</div></div></div>
+        <div class="stat-info"><div class="value">${orders.filter(o => o.status === 'Pending' || o.status === 'Allocated').length}</div><div class="label">Allocated / Pending</div></div></div>
       <div class="stat-card blue"><div class="stat-icon"><span class="material-icons">local_shipping</span></div>
         <div class="stat-info"><div class="value">${orders.filter(o => o.status === 'Dispatched').length}</div><div class="label">Dispatched</div></div></div>
       <div class="stat-card teal"><div class="stat-icon"><span class="material-icons">check_circle</span></div>
@@ -4116,7 +4209,7 @@ const App = {
                 <td style="font-weight:600;">${o.qty} Qt</td>
                 <td>${o.dispatchDate}</td>
                 <td>
-                  ${o.status === 'Pending'
+                  ${(o.status === 'Pending' || o.status === 'Allocated')
         ? `<input type="text" class="form-control vehicle-input" style="width:140px;padding:6px;"
                         id="veh-${o.id}" placeholder="MP-XX-XX-0000" value="${o.vehicleNo}"/>`
         : `<b>${o.vehicleNo || '—'}</b>`}
@@ -4127,12 +4220,12 @@ const App = {
                     <button class="btn btn-info btn-sm" onclick="App.viewDispatchOrder('${o.id}')" title="View & Download">
                       <span class="material-icons" style="font-size:13px;">visibility</span>
                     </button>
-                    ${o.status === 'Pending' ? `
-                    <button class="btn btn-primary btn-sm" onclick="App.dispatchOrder('${o.id}')">
-                      <span class="material-icons" style="font-size:13px;">local_shipping</span>
+                    ${(o.status === 'Pending' || o.status === 'Allocated') ? `
+                    <button class="btn btn-primary btn-sm" onclick="App.dispatchOrder('${o.id}')" title="Dispatch">
+                      <span class="material-icons" style="font-size:13px;">local_shipping</span> Dispatch
                     </button>` : ''}
                     ${o.status === 'Dispatched' ? `
-                    <button class="btn btn-success btn-sm" onclick="App.markReceived('${o.id}')">
+                    <button class="btn btn-success btn-sm" onclick="App.markReceived('${o.id}')" title="Mark Received">
                       <span class="material-icons" style="font-size:13px;">check</span>
                     </button>` : ''}
                   </div>
@@ -4153,6 +4246,11 @@ const App = {
     if (!veh) { this.showToast('Please enter vehicle number before dispatching'); return; }
     o.vehicleNo = veh; o.status = 'Dispatched';
     o.dispatchDate = new Date().toISOString().split('T')[0];
+    // Sync the linked demand's allocation status to Dispatched
+    if (o.demandId) {
+      const dem = this.state.adminDemands.find(d => d.id === o.demandId);
+      if (dem) dem.allocationStatus = 'Dispatched';
+    }
     this.showToast(`Order ${orderId} dispatched with vehicle ${veh}`);
     this.render();
   },

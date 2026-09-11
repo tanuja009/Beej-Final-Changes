@@ -86,7 +86,6 @@
 
       '<div class="nav-section"><div class="nav-section-title">Price &amp; Stock</div>',
       ni('sell', 'Seeds Rate Management', 'admin-beej-price'),
-      ni('warehouse', 'Stock Management', 'admin-stock-mgmt'),
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Management</div>',

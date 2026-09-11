@@ -123,8 +123,8 @@
   App.renderPage = function () {
     const page = this.state.currentPage;
     switch (page) {
-      // Beej Price Management
-      case 'admin-beej-price': return this.renderBeejPriceDashboard();
+      // Beej Price Management — open directly on the Price List
+      case 'admin-beej-price': return this.renderPriceList();
       case 'admin-price-list': return this.renderPriceList();
       case 'admin-price-add': return this.renderPriceForm('add');
       case 'admin-price-edit': return this.renderPriceForm('edit');
@@ -305,7 +305,7 @@ App.renderPriceList = function () {
     <div class="card-header">
       <h3>Price Entries <span style="color:#757575;font-weight:400;font-size:0.85rem;">(${rows.length} records)</span></h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="App.navigate('admin-price-add')"><span class="material-icons">add</span> Add Price</button>
+        <button class="btn btn-primary btn-sm" onclick="App.navigate('admin-price-add')"><span class="material-icons">add</span> Add New Seed Price</button>
         <button class="btn btn-info btn-sm" onclick="App.navigate('admin-price-bulk')"><span class="material-icons">upload_file</span> Bulk Upload</button>
         <button class="btn btn-success btn-sm"><span class="material-icons">table_chart</span> Excel</button>
         <button class="btn btn-danger btn-sm"><span class="material-icons">picture_as_pdf</span> PDF</button>
@@ -315,7 +315,7 @@ App.renderPriceList = function () {
     <div class="card-body" style="padding:0;">
       <div class="table-wrap"><table>
         <thead><tr>
-          <th>Price ID</th><th>Category</th><th>Crop</th><th>Variety</th><th>Class</th>
+          <th>Category</th><th>Crop</th><th>Variety</th><th>Class</th>
           <th>Season</th><th>Unit</th><th>Base Price</th><th>Subsidy</th><th>Selling Price</th>
           <th>Effective From</th><th>Effective To</th><th>Status</th><th>Created By</th><th>Actions</th>
         </tr></thead>
@@ -323,7 +323,6 @@ App.renderPriceList = function () {
           ${rows.length === 0
       ? `<tr><td colspan="15" style="text-align:center;padding:40px;color:#9E9E9E;">No records found</td></tr>`
       : rows.map(p => `<tr>
-            <td><b>${p.id}</b></td>
             <td>${p.category}</td>
             <td>${p.crop}</td>
             <td>${p.variety}</td>

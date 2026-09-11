@@ -1681,7 +1681,7 @@ const App = {
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Demand ID</th><th>Date</th><th>Season</th><th>Crop</th><th>Variety</th><th>Requested</th><th>Approved</th><th>Pending</th><th>Payment</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Crop</th><th>Date</th><th>Season</th><th>Variety</th><th>Requested</th><th>Approved</th><th>Pending</th><th>Payment</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               ${this.state.demands.map(d => {
@@ -1691,10 +1691,9 @@ const App = {
       const status = adm ? adm.approvalStatus : d.approvalStatus;
       const badgeCls = s => s === 'Approved' ? 'badge-success' : s === 'Partially Approved' ? 'badge-info' : s === 'Pending' ? 'badge-warning' : s === 'Rejected' ? 'badge-danger' : 'badge-purple';
       return `<tr>
-                <td><b>${d.id}</b></td>
+                <td>${d.crop}</td>
                 <td>${d.date}</td>
                 <td>${d.season}</td>
-                <td>${d.crop}</td>
                 <td>${d.variety}</td>
                 <td style="font-weight:600;">${d.qty} Qt</td>
                 <td style="color:#2E7D32;font-weight:600;">${approved > 0 ? approved + ' Qt' : '—'}</td>

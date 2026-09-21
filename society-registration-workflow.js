@@ -1586,7 +1586,6 @@ App.renderAdminApplicationDetails = function () {
       ${fieldRow('District', f.district)}
       ${fieldRow('Block', f.block)}
       ${fieldRow('Urban Local Body', f.urbanLocalBody)}
-      ${fieldRow('Location', f.location)}
       ${fieldRow('Pincode', f.pincode)}
     </div>
   </div>

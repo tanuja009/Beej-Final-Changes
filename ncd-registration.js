@@ -700,7 +700,7 @@ App.renderNCDRegistrationForm = function () {
   const fields = [
     { key: 'ncdId', label: 'NCD ID', value: ncdCode, readonly: true },
     { key: 'societyName', label: 'Cooperative Society Name', value: 'Indore Cooperative Agricultural Society' },
-    { key: 'location', label: 'Location', value: 'Indore' },
+    { key: 'location', label: 'Location Type', value: 'Rural' },
     { key: 'state', label: 'State/UT', value: 'Madhya Pradesh' },
     { key: 'district', label: 'District', value: 'Indore' },
     { key: 'block', label: 'Block', value: 'Indore' },
@@ -714,7 +714,6 @@ App.renderNCDRegistrationForm = function () {
     { key: 'financialAudit', label: 'Financial Audit', value: 'Completed' },
     { key: 'auditYear', label: 'Audit Complete Year', value: '2025' },
     { key: 'annualProfit', label: 'Annual Profit', value: '\u20B92,50,000' },
-    { key: 'annualLoss', label: 'Annual Loss', value: '\u20B90' },
     { key: 'pincode', label: 'Pincode', value: '452001' },
     { key: 'mobile', label: 'Mobile', value: regMobile, readonly: true },
     { key: 'email', label: 'Email', value: 'indore.coop@example.com' },

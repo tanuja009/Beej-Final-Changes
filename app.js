@@ -407,6 +407,7 @@ const App = {
     const titles = {
       'dashboard': 'Society Head Dashboard', 'admin-dashboard': 'Admin Dashboard',
       'add-member': 'Add New Member', 'member-list': 'Society Member List',
+      'member-view': 'Member Details', 'member-edit': 'Edit Member',
       'raise-demand': 'Raise Breeder Seed Demand', 'demand-preview': 'Demand Preview',
       'payment': 'Payment', 'demand-history': 'Breeder Seed Demand History',
       'seed-allocation': 'Seed Allocation', 'distribution-register': 'Distribution Register',
@@ -1198,15 +1199,16 @@ const App = {
                 <td>${m.joiningDate || '2024-01-15'}</td>
                 <td>
                   <div class="action-btns">
-                    <button class="btn btn-info btn-sm"><span class="material-icons" style="font-size:16px;">visibility</span></button>
-                    <button class="btn btn-warning btn-sm"><span class="material-icons" style="font-size:16px;">edit</span></button>
-                    <button class="btn btn-danger btn-sm"><span class="material-icons" style="font-size:16px;">delete</span></button>
+                    <button class="btn btn-info btn-sm" title="View" onclick="App.openMemberView('${m.id}')"><span class="material-icons" style="font-size:16px;">visibility</span></button>
+                    <button class="btn btn-warning btn-sm" title="Edit" onclick="App.openMemberEdit('${m.id}')"><span class="material-icons" style="font-size:16px;">edit</span></button>
+                    <button class="btn btn-danger btn-sm" title="Delete" onclick="App.openMemberDelete('${m.id}')"><span class="material-icons" style="font-size:16px;">delete</span></button>
                   </div>
                 </td>
               </tr>`).join('')}
             </tbody>
           </table>
         </div>
+        ${this.state.memberDeleteId ? this.renderMemberDeleteModal() : ''}
       </div>
       <div style="padding:12px 20px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:0.82rem;color:#666;">Showing ${this.state.members.length} of ${this.state.members.length} records</span>
@@ -1214,6 +1216,147 @@ const App = {
           <button class="btn btn-gray btn-sm">← Prev</button>
           <button class="btn btn-primary btn-sm">1</button>
           <button class="btn btn-gray btn-sm">Next →</button>
+        </div>
+      </div>
+    </div>`;
+  },
+
+  // ============================
+  // MEMBER — View / Edit / Delete
+  // ============================
+  openMemberView(id) { this.state.memberViewId = id; this.navigate('member-view'); },
+  openMemberEdit(id) { this.state.memberEditId = id; this.navigate('member-edit'); },
+  openMemberDelete(id) { this.state.memberDeleteId = id; this.render(); },
+  closeMemberDelete() { this.state.memberDeleteId = null; this.render(); },
+
+  confirmMemberDelete() {
+    const m = this.state.members.find(x => x.id === this.state.memberDeleteId);
+    if (m) {
+      const idx = this.state.members.indexOf(m);
+      if (idx >= 0) this.state.members.splice(idx, 1);
+      this.showToast('Member "' + m.name + '" deleted.');
+    }
+    this.state.memberDeleteId = null;
+    this.render();
+  },
+
+  // Member View page
+  renderMemberView() {
+    const m = this.state.members.find(x => x.id === this.state.memberViewId);
+    if (!m) return this.renderMemberList();
+    const row = (label, val) => `
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
+        <span style="color:#757575;">${label}</span><span style="font-weight:600;color:#212121;">${val || '—'}</span>
+      </div>`;
+    return `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+      <button class="btn btn-gray btn-sm" onclick="App.navigate('member-list')"><span class="material-icons" style="font-size:16px;">arrow_back</span> Back to Member List</button>
+      <button class="btn btn-warning btn-sm" onclick="App.openMemberEdit('${m.id}')"><span class="material-icons" style="font-size:16px;">edit</span> Edit</button>
+    </div>
+    <div class="page-header"><h1>Member Details</h1><p>${m.name}</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card"><div class="card-header"><h3>Personal Information</h3></div><div class="card-body">
+        ${row('Member Name', m.name)}
+        ${row('Gender', m.gender)}
+        ${row('Category', m.category)}
+        ${row('Father / Husband Name', m.father)}
+        ${row('Mobile', m.mobile)}
+        ${row('Email', m.email)}
+      </div></div>
+      <div class="card"><div class="card-header"><h3>Address & Status</h3></div><div class="card-body">
+        ${row('Address', m.address)}
+        ${row('District', m.district)}
+        ${row('Block', m.block)}
+        ${row('Village', m.village)}
+        ${row('Pincode', m.pincode)}
+        ${row('Status', m.status)}
+        ${row('Joining Date', m.joiningDate)}
+      </div></div>
+    </div>`;
+  },
+
+  // Member Edit page (pre-filled with existing details)
+  renderMemberEdit() {
+    const m = this.state.members.find(x => x.id === this.state.memberEditId);
+    if (!m) return this.renderMemberList();
+    const sel = (val, opt) => val === opt ? 'selected' : '';
+    return `
+    <div style="margin-bottom:16px;">
+      <button class="btn btn-gray btn-sm" onclick="App.navigate('member-list')"><span class="material-icons" style="font-size:16px;">arrow_back</span> Back to Member List</button>
+    </div>
+    <div class="page-header"><h1>Edit Member</h1><p>Update details for ${m.name}</p></div>
+    <div class="card"><div class="card-body">
+      <div class="form-section">
+        <div class="form-section-title"><span class="material-icons">person</span> Member Information</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Member Name *</label><input class="form-control" id="me-name" value="${m.name || ''}"></div>
+          <div class="form-group"><label>Gender</label><select class="form-control" id="me-gender">
+            <option ${sel(m.gender, 'Male')}>Male</option><option ${sel(m.gender, 'Female')}>Female</option><option ${sel(m.gender, 'Other')}>Other</option>
+          </select></div>
+          <div class="form-group"><label>Category</label><select class="form-control" id="me-category">
+            ${['General', 'OBC', 'SC', 'ST'].map(c => `<option ${sel(m.category, c)}>${c}</option>`).join('')}
+          </select></div>
+          <div class="form-group"><label>Mobile *</label><input class="form-control" id="me-mobile" value="${m.mobile || ''}"></div>
+          <div class="form-group"><label>Email</label><input class="form-control" id="me-email" value="${m.email || ''}"></div>
+          <div class="form-group"><label>Status</label><select class="form-control" id="me-status">
+            <option ${sel(m.status, 'Active')}>Active</option><option ${sel(m.status, 'Inactive')}>Inactive</option>
+          </select></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><span class="material-icons">location_on</span> Address Details</div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1;"><label>Address</label><input class="form-control" id="me-address" value="${m.address || ''}"></div>
+          <div class="form-group"><label>District</label><input class="form-control" id="me-district" value="${m.district || ''}"></div>
+          <div class="form-group"><label>Block</label><input class="form-control" id="me-block" value="${m.block || ''}"></div>
+          <div class="form-group"><label>Village</label><input class="form-control" id="me-village" value="${m.village || ''}"></div>
+          <div class="form-group"><label>Pincode</label><input class="form-control" id="me-pincode" value="${m.pincode || ''}"></div>
+        </div>
+      </div>
+      <div class="form-actions" style="justify-content:flex-end;gap:10px;">
+        <button class="btn btn-gray" onclick="App.navigate('member-list')"><span class="material-icons">close</span> Cancel</button>
+        <button class="btn btn-primary" onclick="App.saveMemberEdit('${m.id}')"><span class="material-icons">save</span> Save Changes</button>
+      </div>
+    </div></div>`;
+  },
+
+  saveMemberEdit(id) {
+    const m = this.state.members.find(x => x.id === id);
+    if (!m) return;
+    const g = fid => { const e = document.getElementById(fid); return e ? e.value.trim() : ''; };
+    const name = g('me-name'), mobile = g('me-mobile');
+    if (!name) { this.showToast('Member Name is required.'); return; }
+    if (!mobile) { this.showToast('Mobile Number is required.'); return; }
+    m.name = name; m.mobile = mobile;
+    m.gender = g('me-gender'); m.category = g('me-category'); m.email = g('me-email'); m.status = g('me-status');
+    m.address = g('me-address'); m.district = g('me-district'); m.block = g('me-block'); m.village = g('me-village'); m.pincode = g('me-pincode');
+    this.showToast('Member "' + m.name + '" updated successfully.');
+    this.navigate('member-list');
+  },
+
+  // Delete confirmation modal (not a browser alert)
+  renderMemberDeleteModal() {
+    const m = this.state.members.find(x => x.id === this.state.memberDeleteId);
+    if (!m) return '';
+    return `
+    <div class="modal-overlay" onclick="if(event.target===this)App.closeMemberDelete()">
+      <div class="modal-box" style="max-width:420px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#C62828,#B71C1C);">
+          <h3>Delete Member</h3>
+          <button class="modal-close" onclick="App.closeMemberDelete()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <span class="material-icons" style="color:#C62828;font-size:32px;">warning</span>
+            <div style="font-size:0.9rem;color:#333;">
+              Are you sure you want to delete <b>${m.name}</b>?<br>
+              <span style="color:#757575;font-size:0.82rem;">This action cannot be undone.</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-gray" onclick="App.closeMemberDelete()">Cancel</button>
+          <button class="btn btn-danger" onclick="App.confirmMemberDelete()"><span class="material-icons" style="font-size:16px;">delete</span> Delete</button>
         </div>
       </div>
     </div>`;
@@ -1354,46 +1497,26 @@ const App = {
               <input type="number" class="form-control" id="d-est-price" placeholder="Auto-calculated" readonly style="background:#f5f5f5;"/>
             </div>
             <div class="form-group">
-              <label>Expected Date / Month of Delivery *</label>
-              <input type="month" class="form-control" id="d-expected-delivery" value="${new Date().toISOString().slice(0, 7)}"/>
+              <label>Expected Date of Delivery *</label>
+              <input type="date" class="form-control" id="d-expected-delivery" value="${new Date().toISOString().slice(0, 10)}"/>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 5: Purpose & Documents -->
+        <!-- SECTION 5: Demand Approval Letter -->
         <div class="form-section">
-          <div class="form-section-title"><span class="material-icons">description</span> Purpose & Supporting Documents</div>
-          <div class="form-group" style="margin-bottom:16px;">
-            <label>Purpose of Demand *</label>
-            <textarea class="form-control" id="d-purpose" rows="3" 
-              placeholder="Describe the purpose of this seed demand (e.g., For Rabi season cultivation for registered members)"></textarea>
-          </div>
+          <div class="form-section-title"><span class="material-icons">attach_file</span> Demand Approval Letter</div>
           <div class="form-group">
-            <label>Supporting Document</label>
-            <input type="file" class="form-control" id="d-support-doc" 
+            <label>Upload Demand Approval Letter *</label>
+            <input type="file" class="form-control" id="d-approval-letter"
               accept=".pdf,.jpg,.jpeg,.png" style="padding:10px;"/>
             <span style="font-size:0.75rem;color:#757575;margin-top:4px;display:block;">
-              Upload supporting documents (Society resolution, Member list, etc.) - PDF, JPG up to 5MB
+              Upload the demand approval letter issued/approved by the competent authority - PDF, JPG up to 5MB
             </span>
           </div>
         </div>
 
-        <!-- SECTION 6: Declaration -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="material-icons">verified</span> Declaration</div>
-          <div style="padding:16px;background:#F5F5F5;border-radius:8px;border-left:4px solid #2E7D32;">
-            <div style="display:flex;align-items:flex-start;gap:12px;">
-              <input type="checkbox" id="d-declaration" style="margin-top:4px;width:18px;height:18px;cursor:pointer;"/>
-              <label for="d-declaration" style="font-size:0.9rem;color:#424242;line-height:1.6;cursor:pointer;margin:0;">
-                I hereby declare that the information provided above is true and correct to the best of my knowledge. 
-                The seed demand is being raised for legitimate agricultural purposes for the registered members of our society. 
-                I understand that any false information may lead to rejection of the demand and legal action.
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 7: Demand Status -->
+        <!-- SECTION 6: Demand Status -->
         <div class="form-section">
           <div class="form-section-title"><span class="material-icons">flag</span> Demand Status</div>
           <div class="form-grid">
@@ -1702,14 +1825,62 @@ const App = {
                 <td><span class="badge ${badgeCls(status)}">${status}</span></td>
                 <td>
                   <div class="action-btns">
-                    <button class="btn btn-info btn-sm"><span class="material-icons" style="font-size:16px;">visibility</span></button>
-                    <button class="btn btn-gray btn-sm"><span class="material-icons" style="font-size:16px;">download</span></button>
+                    <button class="btn btn-info btn-sm" title="View" onclick="App.viewDemandHistory('${d.id}')"><span class="material-icons" style="font-size:16px;">visibility</span></button>
+                    <button class="btn btn-gray btn-sm" title="Download" onclick="App.downloadDemandHistory('${d.id}')"><span class="material-icons" style="font-size:16px;">download</span></button>
                   </div>
                 </td>
               </tr>`;
     }).join('')}
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+    ${this.state.demandHistoryViewId ? this.renderDemandHistoryModal() : ''}`;
+  },
+
+  // ── Demand History actions ──
+  viewDemandHistory(id) { this.state.demandHistoryViewId = id; this.render(); },
+  closeDemandHistoryView() { this.state.demandHistoryViewId = null; this.render(); },
+  downloadDemandHistory(id) {
+    this.showToast('Demand ' + id + ' details downloaded.');
+  },
+
+  renderDemandHistoryModal() {
+    const d = this.state.demands.find(x => x.id === this.state.demandHistoryViewId);
+    if (!d) return '';
+    const adm = this.state.adminDemands.find(x => x.id === d.id);
+    const approved = adm ? adm.approvedQty : (d.approvalStatus === 'Approved' ? d.qty : 0);
+    const pending = adm ? adm.pendingQty : (d.approvalStatus === 'Approved' ? 0 : d.qty);
+    const status = adm ? adm.approvalStatus : d.approvalStatus;
+    const remarks = adm && adm.remarks ? adm.remarks : '—';
+    const row = (label, val) => `
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
+        <span style="color:#757575;">${label}</span><span style="font-weight:600;color:#212121;">${val || '—'}</span>
+      </div>`;
+    return `
+    <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandHistoryView()">
+      <div class="modal-box" style="max-width:480px;">
+        <div class="modal-header">
+          <h3>Demand Details — ${d.id}</h3>
+          <button class="modal-close" onclick="App.closeDemandHistoryView()">✕</button>
+        </div>
+        <div class="modal-body">
+          ${row('Demand ID', d.id)}
+          ${row('Date', d.date)}
+          ${row('Season', d.season)}
+          ${row('Crop', d.crop)}
+          ${row('Variety', d.variety)}
+          ${row('Requested Qty', d.qty + ' Qt')}
+          ${row('Approved Qty', approved > 0 ? approved + ' Qt' : '—')}
+          ${row('Pending Qty', pending > 0 ? pending + ' Qt' : '—')}
+          ${row('Payment Status', d.payStatus)}
+          ${row('Approval Status', status)}
+          ${row('Remarks', remarks)}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-gray" onclick="App.closeDemandHistoryView()">Close</button>
+          <button class="btn btn-primary" onclick="App.downloadDemandHistory('${d.id}')"><span class="material-icons" style="font-size:16px;">download</span> Download</button>
         </div>
       </div>
     </div>`;
@@ -3762,6 +3933,8 @@ const App = {
       case 'dashboard': return this.renderDashboard();
       case 'add-member': return this.renderAddMember();
       case 'member-list': return this.renderMemberList();
+      case 'member-view': return this.renderMemberView();
+      case 'member-edit': return this.renderMemberEdit();
       case 'raise-demand': return this.renderRaiseDemand();
       case 'demand-preview': return this.renderDemandPreview();
       case 'payment': return this.renderPayment();

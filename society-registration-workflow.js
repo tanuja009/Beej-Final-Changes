@@ -28,11 +28,12 @@
 
   // Application Status Constants
   App.SOC_STATUS = {
-    DRAFT: 'Draft',
-    PENDING: 'Pending for Beej Sangh Approval',
+    // Only two statuses are used: Pending and Approved.
+    DRAFT: 'Pending',
+    PENDING: 'Pending',
     APPROVED: 'Approved',
-    REJECTED: 'Rejected',
-    RESUBMISSION: 'Resubmission Required'
+    REJECTED: 'Pending',
+    RESUBMISSION: 'Pending'
   };
 
   // Society Registration Applications
@@ -299,13 +300,10 @@ App.addAuditEntry = function (appNumber, action, prevStatus, newStatus, actionBy
 // Status badge helper
 App._socAppStatusBadge = function (status) {
   const map = {
-    [App.SOC_STATUS.DRAFT]: 'badge-gray',
-    [App.SOC_STATUS.PENDING]: 'badge-warning',
-    [App.SOC_STATUS.APPROVED]: 'badge-success',
-    [App.SOC_STATUS.REJECTED]: 'badge-danger',
-    [App.SOC_STATUS.RESUBMISSION]: 'badge-info'
+    'Pending': 'badge-warning',
+    'Approved': 'badge-success'
   };
-  return `<span class="badge ${map[status] || 'badge-gray'}">${status}</span>`;
+  return `<span class="badge ${map[status] || 'badge-warning'}">${status}</span>`;
 };
 
 // Can edit application check
@@ -1070,7 +1068,8 @@ App.renderAdminRegistrationList = function () {
       <label>Status</label>
       <select class="form-control" onchange="App.state.socAppFilter.status=this.value;App.render()">
         <option value="">All Status</option>
-        ${Object.values(App.SOC_STATUS).map(s => `<option ${f.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+        <option ${f.status === 'Pending' ? 'selected' : ''}>Pending</option>
+        <option ${f.status === 'Approved' ? 'selected' : ''}>Approved</option>
       </select>
     </div>
     <div class="search-field">
@@ -1115,13 +1114,18 @@ App.renderAdminRegistrationList = function () {
               <th>Registration Date</th>
               <th>Submitted Date</th>
               <th>Status</th>
+              <th>Member Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             ${apps.length === 0 ? `
-              <tr><td colspan="8" style="text-align:center;padding:40px;color:#9E9E9E;">No records found</td></tr>
-            ` : apps.map(app => `
+              <tr><td colspan="9" style="text-align:center;padding:40px;color:#9E9E9E;">No records found</td></tr>
+            ` : apps.map(app => {
+    const isApproved = app.status === 'Approved';
+    const memberStatus = app.memberStatus || 'Non-Member';
+    const isMember = memberStatus === 'Member';
+    return `
               <tr>
                 <td><b>${app.societyCode || app.applicationNumber}</b></td>
                 <td>
@@ -1134,21 +1138,55 @@ App.renderAdminRegistrationList = function () {
                 <td style="font-size:0.8rem;">${app.submittedDate ? new Date(app.submittedDate).toLocaleDateString() : '-'}</td>
                 <td>${this._socAppStatusBadge(app.status)}</td>
                 <td>
+                  ${isApproved
+        ? `<span class="badge ${isMember ? 'badge-success' : 'badge-gray'}">${memberStatus}</span>`
+        : `<span style="color:#9E9E9E;font-size:0.82rem;">—</span>`}
+                </td>
+                <td>
                   <div class="action-btns">
                     <button class="btn btn-info btn-sm" title="View Details"
                       onclick="App.state.socAppSelectedId='${app.applicationNumber}';App.state.socAppViewFrom='list';App.navigate('admin-app-details')">
                       <span class="material-icons" style="font-size:14px;">visibility</span>
                     </button>
+                    ${isApproved && !isMember
+        ? `<button class="btn btn-success btn-sm" title="Mark as Member"
+                          onclick="App.markSocietyAsMember('${app.applicationNumber}')">
+                          <span class="material-icons" style="font-size:14px;">how_to_reg</span> Make Member
+                        </button>`
+        : ''}
+                    ${isApproved && isMember
+        ? `<button class="btn btn-warning btn-sm" title="Set as Non-Member"
+                          onclick="App.unmarkSocietyMember('${app.applicationNumber}')">
+                          <span class="material-icons" style="font-size:14px;">person_remove</span> Non-Member
+                        </button>`
+        : ''}
                   </div>
                 </td>
-              </tr>
-            `).join('')}
+              </tr>`;
+  }).join('')}
           </tbody>
         </table>
       </div>
     </div>
   </div>
   `;
+};
+
+// ── Member status management (only for Approved societies) ──
+App.markSocietyAsMember = function (appNumber) {
+  const app = this.state.societyApplications.find(a => a.applicationNumber === appNumber);
+  if (!app) return;
+  if (app.status !== 'Approved') { this.showToast('Only approved societies can become members.'); return; }
+  app.memberStatus = 'Member';
+  this.showToast(app.societyName + ' is now a Member.');
+  this.render();
+};
+App.unmarkSocietyMember = function (appNumber) {
+  const app = this.state.societyApplications.find(a => a.applicationNumber === appNumber);
+  if (!app) return;
+  app.memberStatus = 'Non-Member';
+  this.showToast(app.societyName + ' set to Non-Member.');
+  this.render();
 };
 
 // 8-B: Admin - Pending Approvals (Quick View)

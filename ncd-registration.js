@@ -207,6 +207,7 @@ App.startSocietyRegistration = function () {
   reg.resendAt = 0;
   reg.enteredCode = '';
   reg.formSubmitted = false;
+  reg.locationType = 'Rural';
   App.navigate('mobile-verify');
 };
 
@@ -697,14 +698,15 @@ App.renderNCDRegistrationForm = function () {
   // All registration fields. `key` = data key stored on the application;
   // fetched/auto values are pre-filled but the society can edit them.
   // NCD ID (the fetched key) and Approval Status stay read-only.
+  // Current location type (Rural | Urban) drives the conditional fields.
+  const locationType = App.state.ncdRegistration.locationType || 'Rural';
+
   const fields = [
     { key: 'ncdId', label: 'NCD ID', value: ncdCode, readonly: true },
     { key: 'societyName', label: 'Cooperative Society Name', value: 'Indore Cooperative Agricultural Society' },
-    { key: 'location', label: 'Location Type', value: 'Rural' },
     { key: 'state', label: 'State/UT', value: 'Madhya Pradesh' },
     { key: 'district', label: 'District', value: 'Indore' },
     { key: 'block', label: 'Block', value: 'Indore' },
-    { key: 'urbanLocalBody', label: 'Urban Local Body', value: 'Indore Municipal Corporation' },
     { key: 'sectorType', label: 'Sector Type', value: 'Agriculture' },
     { key: 'primaryActivity', label: 'Primary Activity', value: 'Agriculture & Seed Distribution' },
     { key: 'registrationNumber', label: 'Registration Number', value: 'SOC/MP/2020/001' },
@@ -720,8 +722,7 @@ App.renderNCDRegistrationForm = function () {
     { key: 'approvalStatus', label: 'Approval Status', value: 'Pending', readonly: true }
   ];
 
-  // Build grid of input fields (each carries its data key for capture on submit)
-  const fieldsHtml = fields.map(f => `
+  const inputField = (f) => `
     <div style="margin-bottom:16px;">
       <label style="display:block;font-size:0.82rem;font-weight:600;color:#555;margin-bottom:5px;">
         ${f.label}
@@ -730,8 +731,37 @@ App.renderNCDRegistrationForm = function () {
              value="${f.value}" ${f.readonly ? 'readonly' : ''}
              style="width:100%;padding:11px 14px;font-size:0.92rem;color:#333;
                     background:${f.readonly ? '#F0F0F0' : '#F9F9F9'};border:1px solid #E0E0E0;border-radius:6px;"/>
-    </div>
-  `).join('');
+    </div>`;
+
+  // Location Type dropdown (Rural / Urban) — switching re-renders the form.
+  const locationTypeField = `
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:0.82rem;font-weight:600;color:#555;margin-bottom:5px;">Location Type</label>
+      <select id="reg-fld-location" data-reg-key="location" data-reg-label="Location Type"
+              onchange="App.state.ncdRegistration.locationType=this.value;App.navigate('ncd-registration-form')"
+              style="width:100%;padding:11px 14px;font-size:0.92rem;color:#333;background:#F9F9F9;border:1px solid #E0E0E0;border-radius:6px;">
+        <option ${locationType === 'Rural' ? 'selected' : ''}>Rural</option>
+        <option ${locationType === 'Urban' ? 'selected' : ''}>Urban</option>
+      </select>
+    </div>`;
+
+  // Location-specific fields
+  const ruralFields = [
+    { key: 'gramPanchayat', label: 'Gram Panchayat', value: 'Indore GP' },
+    { key: 'village', label: 'Village', value: 'Rau' }
+  ];
+  const urbanFields = [
+    { key: 'ulbCategory', label: 'शहरी स्थानीय निकाय श्रेणी (Category of Urban Local Body) *', value: 'Municipal Corporation' },
+    { key: 'urbanLocalBody', label: 'शहरी स्थानीय निकाय (Urban Local Body) *', value: 'Indore Municipal Corporation' },
+    { key: 'wardLocality', label: 'मोहल्ला या वार्ड (Locality or Ward) *', value: 'Ward 12, Rajwada' }
+  ];
+  const locationSpecific = (locationType === 'Urban' ? urbanFields : ruralFields).map(inputField).join('');
+
+  // Assemble the grid: base fields + Location Type + location-specific fields.
+  // Insert Location Type + specific fields right after "Cooperative Society Name".
+  const beforeLoc = fields.slice(0, 2).map(inputField).join('');
+  const afterLoc = fields.slice(2).map(inputField).join('');
+  const fieldsHtml = beforeLoc + locationTypeField + locationSpecific + afterLoc;
 
   return `
   <div style="min-height:100vh;background:#F5F5F5;padding:30px 16px;">

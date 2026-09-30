@@ -948,15 +948,127 @@ App.renderCreateCredentials = function () {
         <!-- Body -->
         <div style="padding:28px;">
 
-          <!-- Full Name -->
+          <!-- Title + First Name -->
+          <div style="display:grid;grid-template-columns:120px 1fr;gap:14px;margin-bottom:18px;">
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+                Title <span style="color:#F44336;">*</span>
+              </label>
+              <select id="cred-title" class="form-control" onchange="App.clearCredError('cred-firstname-error')">
+                <option value="Mr" ${saved.title === 'Mr' ? 'selected' : ''}>Mr</option>
+                <option value="Mrs" ${saved.title === 'Mrs' ? 'selected' : ''}>Mrs</option>
+                <option value="Miss" ${saved.title === 'Miss' ? 'selected' : ''}>Miss</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+                First Name <span style="color:#F44336;">*</span>
+              </label>
+              <input type="text" id="cred-firstname" class="form-control" placeholder="Enter First Name"
+                     value="${saved.firstName || ''}" autocomplete="off"
+                     oninput="App.clearCredError('cred-firstname-error')"/>
+            </div>
+          </div>
+          <div id="cred-firstname-error" style="display:none;color:#F44336;font-size:0.78rem;margin:-10px 0 12px;"></div>
+
+          <!-- Middle Name + Last Name -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+                Middle Name
+              </label>
+              <input type="text" id="cred-middlename" class="form-control" placeholder="Enter Middle Name"
+                     value="${saved.middleName || ''}" autocomplete="off"/>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+                Last Name <span style="color:#F44336;">*</span>
+              </label>
+              <input type="text" id="cred-lastname" class="form-control" placeholder="Enter Last Name"
+                     value="${saved.lastName || ''}" autocomplete="off"
+                     oninput="App.clearCredError('cred-lastname-error')"/>
+              <div id="cred-lastname-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+            </div>
+          </div>
+
+          <!-- Date of Birth -->
           <div class="form-group" style="margin-bottom:18px;">
             <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
-              Full Name <span style="color:#F44336;">*</span>
+              Date of Birth <span style="color:#F44336;">*</span>
             </label>
-            <input type="text" id="cred-fullname" class="form-control" placeholder="Enter Full Name"
-                   value="${saved.fullName || ''}" autocomplete="off"
-                   oninput="App.clearCredError('cred-fullname-error')"/>
-            <div id="cred-fullname-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+            <input type="date" id="cred-dob" class="form-control"
+                   value="${saved.dob || ''}" autocomplete="off"
+                   oninput="App.clearCredError('cred-dob-error')"/>
+            <div id="cred-dob-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Gender <span style="color:#F44336;">*</span>
+            </label>
+            <select id="cred-gender" class="form-control" onchange="App.clearCredError('cred-gender-error')">
+              <option value="" ${!saved.gender ? 'selected' : ''}>Select Gender</option>
+              <option value="Male" ${saved.gender === 'Male' ? 'selected' : ''}>Male</option>
+              <option value="Female" ${saved.gender === 'Female' ? 'selected' : ''}>Female</option>
+              <option value="Other" ${saved.gender === 'Other' ? 'selected' : ''}>Other</option>
+            </select>
+            <div id="cred-gender-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+          </div>
+
+          <!-- Nationality -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Nationality <span style="color:#F44336;">*</span>
+            </label>
+            <input type="text" id="cred-nationality" class="form-control" placeholder="Enter Nationality"
+                   value="${saved.nationality || 'Indian'}" autocomplete="off"
+                   oninput="App.clearCredError('cred-nationality-error')"/>
+            <div id="cred-nationality-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Email <span style="color:#F44336;">*</span>
+            </label>
+            <input type="email" id="cred-email" class="form-control" placeholder="Enter Email Address"
+                   value="${saved.email || ''}" autocomplete="off"
+                   oninput="App.clearCredError('cred-email-error')"/>
+            <div id="cred-email-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+          </div>
+
+          <!-- Contact Number -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Contact Number <span style="color:#F44336;">*</span>
+            </label>
+            <input type="tel" id="cred-contact" class="form-control" placeholder="Enter 10-digit Contact Number"
+                   value="${saved.contact || ''}" autocomplete="off" maxlength="10"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'');App.clearCredError('cred-contact-error')"/>
+            <div id="cred-contact-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+          </div>
+
+          <!-- Address -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Address <span style="color:#F44336;">*</span>
+            </label>
+            <textarea id="cred-address" class="form-control" placeholder="Enter Address" rows="2"
+                      autocomplete="off" style="resize:vertical;"
+                      oninput="App.clearCredError('cred-address-error')">${saved.address || ''}</textarea>
+            <div id="cred-address-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+          </div>
+
+          <!-- Samagra ID -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Samagra ID <span style="color:#F44336;">*</span>
+            </label>
+            <input type="text" id="cred-samagra" class="form-control" placeholder="Enter Samagra ID"
+                   value="${saved.samagraId || ''}" autocomplete="off"
+                   oninput="App.clearCredError('cred-samagra-error')"/>
+            <div id="cred-samagra-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
           </div>
 
           <!-- Designation -->
@@ -1070,23 +1182,84 @@ App._showCredError = function (id, msg) {
 
 // Validate credentials, then finalise the registration.
 App.createAccount = function () {
-  const fnEl = document.getElementById('cred-fullname');
-  const dgEl = document.getElementById('cred-designation');
-  const uEl = document.getElementById('cred-username');
-  const pEl = document.getElementById('cred-password');
-  const cEl = document.getElementById('cred-confirm');
-  const fullName = fnEl ? fnEl.value.trim() : '';
-  const designation = dgEl ? dgEl.value.trim() : '';
-  const username = uEl ? uEl.value.trim() : '';
-  const password = pEl ? pEl.value : '';
-  const confirm = cEl ? cEl.value : '';
+  const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const title = val('cred-title') || 'Mr';
+  const firstName = val('cred-firstname');
+  const middleName = val('cred-middlename');
+  const lastName = val('cred-lastname');
+  const dob = val('cred-dob');
+  const gender = val('cred-gender');
+  const nationality = val('cred-nationality');
+  const email = val('cred-email');
+  const contact = val('cred-contact');
+  const address = val('cred-address');
+  const samagraId = val('cred-samagra');
+  const designation = val('cred-designation');
+  const username = val('cred-username');
+  const password = document.getElementById('cred-password') ? document.getElementById('cred-password').value : '';
+  const confirm = document.getElementById('cred-confirm') ? document.getElementById('cred-confirm').value : '';
+
+  // Derive a Full Name from the name parts (kept for existing displays).
+  const fullName = [title, firstName, middleName, lastName].filter(Boolean).join(' ');
 
   // Keep entered values so they survive a re-render
-  App.state.pendingCredentials = { fullName, designation, username };
+  App.state.pendingCredentials = { title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, designation, username };
 
-  // Full Name: required
-  if (!fullName) {
-    App._showCredError('cred-fullname-error', 'Full Name is required.');
+  // First Name: required
+  if (!firstName) {
+    App._showCredError('cred-firstname-error', 'First Name is required.');
+    return;
+  }
+  // Last Name: required
+  if (!lastName) {
+    App._showCredError('cred-lastname-error', 'Last Name is required.');
+    return;
+  }
+  // Date of Birth: required + not in the future
+  if (!dob) {
+    App._showCredError('cred-dob-error', 'Date of Birth is required.');
+    return;
+  }
+  if (new Date(dob) > new Date()) {
+    App._showCredError('cred-dob-error', 'Date of Birth cannot be in the future.');
+    return;
+  }
+  // Gender: required
+  if (!gender) {
+    App._showCredError('cred-gender-error', 'Please select a gender.');
+    return;
+  }
+  // Nationality: required
+  if (!nationality) {
+    App._showCredError('cred-nationality-error', 'Nationality is required.');
+    return;
+  }
+  // Email: required + format
+  if (!email) {
+    App._showCredError('cred-email-error', 'Email is required.');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    App._showCredError('cred-email-error', 'Please enter a valid email address.');
+    return;
+  }
+  // Contact Number: required + 10 digits
+  if (!contact) {
+    App._showCredError('cred-contact-error', 'Contact Number is required.');
+    return;
+  }
+  if (!/^[0-9]{10}$/.test(contact)) {
+    App._showCredError('cred-contact-error', 'Contact Number must be exactly 10 digits.');
+    return;
+  }
+  // Address: required
+  if (!address) {
+    App._showCredError('cred-address-error', 'Address is required.');
+    return;
+  }
+  // Samagra ID: required
+  if (!samagraId) {
+    App._showCredError('cred-samagra-error', 'Samagra ID is required.');
     return;
   }
   // Designation: required
@@ -1137,16 +1310,18 @@ App.createAccount = function () {
   }
 
   // Persist credentials against the registration + finalise the record.
-  App.state.pendingCredentials = { fullName, designation, username, password };
-  App.finaliseSocietyRegistration(username, password, fullName, designation);
+  const profile = { title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, fullName, designation, username };
+  App.state.pendingCredentials = Object.assign({}, profile, { password });
+  App.finaliseSocietyRegistration(username, password, fullName, designation, profile);
 };
 
 // ═══════════════════════════════════════════════════════════════
 // FINALISE: save the society application (with credentials) → Login
 // ═══════════════════════════════════════════════════════════════
-App.finaliseSocietyRegistration = function (username, password, fullName, designation) {
+App.finaliseSocietyRegistration = function (username, password, fullName, designation, profile) {
   const reg = App.state.ncdRegistration;
   const pending = App._pendingRegData || { fields: {}, fieldLabels: {}, documents: [] };
+  profile = profile || {};
 
   const codes = App.SocAppStore.nextCodes();
   const now = new Date();
@@ -1167,6 +1342,17 @@ App.finaliseSocietyRegistration = function (username, password, fullName, design
     // the wireframe/mock only — replace with hashing + real auth for prod).
     fullName: fullName || '',
     designation: designation || '',
+    title: profile.title || '',
+    firstName: profile.firstName || '',
+    middleName: profile.middleName || '',
+    lastName: profile.lastName || '',
+    dob: profile.dob || '',
+    gender: profile.gender || '',
+    nationality: profile.nationality || '',
+    email: profile.email || '',
+    contact: profile.contact || '',
+    address: profile.address || '',
+    samagraId: profile.samagraId || '',
     username: username,
     password: password
   };
@@ -1176,6 +1362,17 @@ App.finaliseSocietyRegistration = function (username, password, fullName, design
   App.SocUserStore.add({
     fullName: fullName || '',
     designation: designation || '',
+    title: profile.title || '',
+    firstName: profile.firstName || '',
+    middleName: profile.middleName || '',
+    lastName: profile.lastName || '',
+    dob: profile.dob || '',
+    gender: profile.gender || '',
+    nationality: profile.nationality || '',
+    email: profile.email || '',
+    contact: profile.contact || '',
+    address: profile.address || '',
+    samagraId: profile.samagraId || '',
     username: username,
     password: password,
     societyCode: record.code,

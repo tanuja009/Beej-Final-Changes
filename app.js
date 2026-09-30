@@ -3969,8 +3969,7 @@ const App = {
     // Draw CAPTCHA canvas after login page (or verification pages) is injected into DOM
     if ((this.state.currentPage === 'login' ||
       this.state.currentPage === 'mobile-verify' ||
-      this.state.currentPage === 'otp-login' ||
-      this.state.currentPage === 'create-credentials') &&
+      this.state.currentPage === 'otp-login') &&
       document.getElementById('captcha-canvas-wrap')) {
       BeejCaptcha.render();
     }

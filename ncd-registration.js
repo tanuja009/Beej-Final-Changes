@@ -1128,11 +1128,6 @@ App.renderCreateCredentials = function () {
             <div id="cred-confirm-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
           </div>
 
-          <!-- CAPTCHA (reused BeejCaptcha component) -->
-          <div style="margin-bottom:20px;">
-            ${BeejCaptcha.getHtml()}
-          </div>
-
           <!-- Buttons -->
           <div style="display:flex;gap:12px;">
             <button onclick="App.navigate('ncd-registration-form')"
@@ -1299,13 +1294,6 @@ App.createAccount = function () {
   // Confirm password must match
   if (confirm !== password) {
     App._showCredError('cred-confirm-error', 'Passwords do not match.');
-    return;
-  }
-
-  // CAPTCHA must be valid
-  const captcha = BeejCaptcha.validate();
-  if (!captcha.valid) {
-    BeejCaptcha.showError(captcha.message);
     return;
   }
 

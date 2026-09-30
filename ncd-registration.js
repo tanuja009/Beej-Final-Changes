@@ -1060,17 +1060,6 @@ App.renderCreateCredentials = function () {
             <div id="cred-address-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
           </div>
 
-          <!-- Samagra ID -->
-          <div class="form-group" style="margin-bottom:18px;">
-            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
-              Samagra ID <span style="color:#F44336;">*</span>
-            </label>
-            <input type="text" id="cred-samagra" class="form-control" placeholder="Enter Samagra ID"
-                   value="${saved.samagraId || ''}" autocomplete="off"
-                   oninput="App.clearCredError('cred-samagra-error')"/>
-            <div id="cred-samagra-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
-          </div>
-
           <!-- Designation -->
           <div class="form-group" style="margin-bottom:18px;">
             <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
@@ -1188,7 +1177,7 @@ App.createAccount = function () {
   const email = val('cred-email');
   const contact = val('cred-contact');
   const address = val('cred-address');
-  const samagraId = val('cred-samagra');
+  const samagraId = '';
   const designation = val('cred-designation');
   const username = val('cred-username');
   const password = document.getElementById('cred-password') ? document.getElementById('cred-password').value : '';
@@ -1250,11 +1239,6 @@ App.createAccount = function () {
   // Address: required
   if (!address) {
     App._showCredError('cred-address-error', 'Address is required.');
-    return;
-  }
-  // Samagra ID: required
-  if (!samagraId) {
-    App._showCredError('cred-samagra-error', 'Samagra ID is required.');
     return;
   }
   // Designation: required

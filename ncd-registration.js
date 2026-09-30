@@ -923,6 +923,8 @@ App.renderCreateCredentials = function () {
     return App.renderMobileVerification ? App.renderMobileVerification() : '';
   }
   const saved = App.state.pendingCredentials || {};
+  const fillMode = saved.fillMode || 'manual';
+  const samagraStage = saved.samagraStage || 'idle'; // idle | otp (verified => fetched)
 
   return `
   <div style="min-height:100vh;background:#F5F5F5;padding:30px 16px;">
@@ -947,6 +949,86 @@ App.renderCreateCredentials = function () {
 
         <!-- Body -->
         <div style="padding:28px;">
+
+          <!-- Fill mode selector: Manual (current) OR Through Samagra ID -->
+          <div style="margin-bottom:20px;padding:14px 16px;background:#F1F8E9;border:1px solid #C8E6C9;border-radius:8px;">
+            <label style="font-size:0.85rem;font-weight:700;color:#1B5E20;display:block;margin-bottom:10px;">
+              How would you like to fill personal details?
+            </label>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:#333;">
+                <input type="radio" name="cred-fillmode" value="manual" ${fillMode === 'manual' ? 'checked' : ''}
+                       onchange="App.setCredFillMode('manual')"/>
+                Enter Manually
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:#333;">
+                <input type="radio" name="cred-fillmode" value="samagra" ${fillMode === 'samagra' ? 'checked' : ''}
+                       onchange="App.setCredFillMode('samagra')"/>
+                Through Samagra ID
+              </label>
+            </div>
+
+            ${fillMode === 'samagra' ? `
+            <div style="margin-top:14px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;">
+                <label style="font-size:0.82rem;font-weight:600;color:#555;display:block;margin-bottom:6px;">
+                  Samagra ID <span style="color:#F44336;">*</span>
+                </label>
+                <input type="text" id="cred-samagra" class="form-control" placeholder="Enter Samagra ID"
+                       inputmode="numeric" maxlength="12" value="${saved.samagraId || ''}" autocomplete="off"
+                       ${samagraStage === 'otp' ? 'readonly style="background:#f5f5f5;"' : ''}
+                       oninput="this.value=this.value.replace(/[^0-9]/g,'');App.clearCredError('cred-samagra-error')"/>
+              </div>
+              ${samagraStage !== 'otp' ? `
+              <button type="button" onclick="App.startSamagraVerify()"
+                      style="padding:11px 20px;background:#4CAF50;color:#fff;border:none;border-radius:8px;
+                             font-size:0.88rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+                <span class="material-icons" style="font-size:18px;">send</span> Send OTP
+              </button>` : `
+              <button type="button" onclick="App.cancelSamagraVerify()"
+                      style="padding:11px 16px;background:#F5F5F5;color:#555;border:none;border-radius:8px;
+                             font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap;">
+                Change ID
+              </button>`}
+            </div>
+            <div id="cred-samagra-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+
+            ${saved.samagraBlockedMsg ? `
+            <div style="margin-top:12px;padding:12px 14px;background:#FFF3E0;border:1px solid #FFCC80;border-radius:8px;
+                        display:flex;align-items:flex-start;gap:8px;">
+              <span class="material-icons" style="font-size:20px;color:#E65100;flex-shrink:0;">warning</span>
+              <div style="font-size:0.83rem;color:#E65100;font-weight:600;line-height:1.5;">${saved.samagraBlockedMsg}</div>
+            </div>` : ''}
+
+            ${samagraStage === 'otp' ? `
+            <div style="margin-top:14px;padding:14px 16px;background:#fff;border:1px solid #C8E6C9;border-radius:8px;">
+              <p style="margin:0 0 10px 0;font-size:0.82rem;color:#555;">
+                An OTP has been sent to the Samagra-registered mobile
+                <strong>${saved.samagraOtpMobile || ''}</strong>. Enter it below to verify. <span style="color:#9E9E9E;">(Demo OTP: 123456)</span>
+              </p>
+              <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+                <div style="flex:1;min-width:180px;">
+                  <label style="font-size:0.82rem;font-weight:600;color:#555;display:block;margin-bottom:6px;">Enter OTP <span style="color:#F44336;">*</span></label>
+                  <input type="text" id="cred-samagra-otp" class="form-control" placeholder="6-digit OTP"
+                         inputmode="numeric" maxlength="6" autocomplete="off"
+                         oninput="this.value=this.value.replace(/[^0-9]/g,'');App.clearCredError('cred-samagra-otp-error')"/>
+                </div>
+                <button type="button" onclick="App.verifySamagraOtp()"
+                        style="padding:11px 20px;background:#1B5E20;color:#fff;border:none;border-radius:8px;
+                               font-size:0.88rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+                  <span class="material-icons" style="font-size:18px;">check</span> Verify &amp; Fetch
+                </button>
+              </div>
+              <div id="cred-samagra-otp-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+            </div>` : ''}
+
+            ${saved.samagraFetched ? `
+            <div style="margin-top:10px;display:flex;align-items:center;gap:6px;color:#2E7D32;font-size:0.8rem;font-weight:600;">
+              <span class="material-icons" style="font-size:18px;">check_circle</span>
+              OTP verified. Details fetched from Samagra ID and filled below.
+            </div>` : ''}
+            ` : ''}
+          </div>
 
           <!-- Title + First Name -->
           <div style="display:grid;grid-template-columns:120px 1fr;gap:14px;margin-bottom:18px;">
@@ -1164,6 +1246,126 @@ App._showCredError = function (id, msg) {
   if (el) { el.textContent = msg; el.style.display = 'block'; }
 };
 
+// Snapshot whatever the user has typed so it survives a re-render.
+App._captureCredForm = function () {
+  const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : undefined; };
+  const prev = App.state.pendingCredentials || {};
+  const cur = {
+    title: val('cred-title'), firstName: val('cred-firstname'), middleName: val('cred-middlename'),
+    lastName: val('cred-lastname'), dob: val('cred-dob'), gender: val('cred-gender'),
+    nationality: val('cred-nationality'), email: val('cred-email'), contact: val('cred-contact'),
+    address: val('cred-address'), samagraId: val('cred-samagra'), designation: val('cred-designation'),
+    username: val('cred-username')
+  };
+  // Only overwrite keys that are actually present on the current page.
+  Object.keys(cur).forEach(k => { if (cur[k] === undefined) delete cur[k]; });
+  App.state.pendingCredentials = Object.assign({}, prev, cur);
+  return App.state.pendingCredentials;
+};
+
+// Switch between Manual entry and Samagra-ID lookup (re-renders the form).
+App.setCredFillMode = function (mode) {
+  App._captureCredForm();
+  App.state.pendingCredentials.fillMode = mode;
+  App.navigate('create-credentials');
+};
+
+App.SAMAGRA_DEMO_OTP = '123456';
+
+// Determine the demo eKYC / mobile status of a Samagra ID.
+//   ends with 0 -> eKYC inactive
+//   ends with 9 -> mobile inactive / not linked
+//   otherwise   -> active (OTP can be sent)
+App._samagraStatus = function (samagraId) {
+  const last = samagraId.charAt(samagraId.length - 1);
+  if (last === '0') return { active: false, reason: 'ekyc' };
+  if (last === '9') return { active: false, reason: 'mobile' };
+  return { active: true };
+};
+
+// Step 1: validate the ID, check eKYC / mobile status. If inactive -> show an
+// update message and stop. If active -> "send" an OTP and move to the OTP stage.
+App.startSamagraVerify = function () {
+  App._captureCredForm();
+  const samagraId = (App.state.pendingCredentials.samagraId || '').trim();
+
+  // Clear any prior blocked message first.
+  App.state.pendingCredentials.samagraBlockedMsg = '';
+
+  if (!samagraId) {
+    App._showCredError('cred-samagra-error', 'Please enter Samagra ID.');
+    return;
+  }
+  if (!/^[0-9]{9,12}$/.test(samagraId)) {
+    App._showCredError('cred-samagra-error', 'Please enter a valid Samagra ID (9 to 12 digits).');
+    return;
+  }
+
+  const status = App._samagraStatus(samagraId);
+  if (!status.active) {
+    const msg = status.reason === 'ekyc'
+      ? 'Your Samagra eKYC is inactive. Please update your Samagra eKYC and try again.'
+      : 'Your registered mobile number is inactive or not linked with Samagra. Please update your mobile number in Samagra and try again.';
+    App.state.pendingCredentials = Object.assign({}, App.state.pendingCredentials, {
+      fillMode: 'samagra', samagraId, samagraStage: 'idle', samagraFetched: false, samagraBlockedMsg: msg
+    });
+    App.navigate('create-credentials');
+    return;
+  }
+
+  // Active -> send OTP to the Samagra-registered mobile (mock).
+  const mobile = '9876500011';
+  const masked = 'XXXXXX' + mobile.slice(-4);
+  App.state.pendingCredentials = Object.assign({}, App.state.pendingCredentials, {
+    fillMode: 'samagra', samagraId, samagraStage: 'otp', samagraFetched: false,
+    samagraOtpMobile: masked, samagraBlockedMsg: ''
+  });
+  App.navigate('create-credentials');
+};
+
+// Step 2: verify the OTP, then fetch + auto-fill the personal fields.
+App.verifySamagraOtp = function () {
+  App._captureCredForm();
+  const otpEl = document.getElementById('cred-samagra-otp');
+  const otp = otpEl ? otpEl.value.trim() : '';
+  if (!otp) {
+    App._showCredError('cred-samagra-otp-error', 'Please enter the OTP.');
+    return;
+  }
+  if (otp !== App.SAMAGRA_DEMO_OTP) {
+    App._showCredError('cred-samagra-otp-error', 'Incorrect OTP. Please try again. (Demo OTP: 123456)');
+    return;
+  }
+
+  // OTP verified -> mock details returned from the Samagra lookup.
+  const fetched = {
+    title: 'Mr',
+    firstName: 'Rajesh',
+    middleName: 'Kumar',
+    lastName: 'Sharma',
+    dob: '1988-05-14',
+    gender: 'Male',
+    nationality: 'Indian',
+    email: 'rajesh.sharma@example.com',
+    contact: '9876500011',
+    address: '12, Rajwada, Indore, Madhya Pradesh - 452001'
+  };
+
+  App.state.pendingCredentials = Object.assign({}, App.state.pendingCredentials, fetched, {
+    fillMode: 'samagra', samagraStage: 'idle', samagraFetched: true, samagraBlockedMsg: ''
+  });
+  App.navigate('create-credentials');
+};
+
+// Cancel OTP stage / change the Samagra ID.
+App.cancelSamagraVerify = function () {
+  App._captureCredForm();
+  App.state.pendingCredentials = Object.assign({}, App.state.pendingCredentials, {
+    fillMode: 'samagra', samagraStage: 'idle', samagraFetched: false, samagraBlockedMsg: '', samagraOtpMobile: ''
+  });
+  App.navigate('create-credentials');
+};
+
 // Validate credentials, then finalise the registration.
 App.createAccount = function () {
   const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -1177,7 +1379,8 @@ App.createAccount = function () {
   const email = val('cred-email');
   const contact = val('cred-contact');
   const address = val('cred-address');
-  const samagraId = '';
+  const prevCred = App.state.pendingCredentials || {};
+  const samagraId = val('cred-samagra') || prevCred.samagraId || '';
   const designation = val('cred-designation');
   const username = val('cred-username');
   const password = document.getElementById('cred-password') ? document.getElementById('cred-password').value : '';
@@ -1186,8 +1389,13 @@ App.createAccount = function () {
   // Derive a Full Name from the name parts (kept for existing displays).
   const fullName = [title, firstName, middleName, lastName].filter(Boolean).join(' ');
 
-  // Keep entered values so they survive a re-render
-  App.state.pendingCredentials = { title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, designation, username };
+  // Keep entered values so they survive a re-render (preserve fill-mode too)
+  App.state.pendingCredentials = {
+    title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, designation, username,
+    fillMode: prevCred.fillMode || 'manual', samagraFetched: prevCred.samagraFetched || false,
+    samagraStage: prevCred.samagraStage || 'idle', samagraOtpMobile: prevCred.samagraOtpMobile || '',
+    samagraBlockedMsg: prevCred.samagraBlockedMsg || ''
+  };
 
   // First Name: required
   if (!firstName) {

@@ -791,18 +791,24 @@ const App = {
           </span>
         </div>
         <div class="form-grid">
-          ${this._moField('Member Name', 'm-name', mo.details.name)}
           ${this._moField('Samagra ID', 'm-samagra-display', mo.details.samagraId)}
-          ${this._moField("Father's / Husband's Name", 'm-father', mo.details.father)}
+          ${this._moSelect('Title', 'm-title', mo.details.title, ['Mr', 'Mrs', 'Miss'])}
+          ${this._moField('First Name', 'm-firstname', mo.details.firstName)}
+          ${this._moField('Middle Name', 'm-middlename', mo.details.middleName)}
+          ${this._moField('Last Name', 'm-lastname', mo.details.lastName)}
           ${this._moField('Date of Birth', 'm-dob', mo.details.dob)}
           ${this._moField('Gender', 'm-gender', mo.details.gender)}
+          ${this._moField('Nationality', 'm-nationality', mo.details.nationality)}
+          ${this._moField('Email', 'm-email', mo.details.email)}
+          ${this._moField('Category', 'm-category', mo.details.category)}
           ${this._moField('Mobile Number', 'm-mobile', mo.details.mobile)}
           ${this._moField('Address', 'm-address', mo.details.address, true)}
           ${this._moField('District', 'm-district', mo.details.district)}
           ${this._moField('Block', 'm-block', mo.details.block)}
           ${this._moField('Village', 'm-village', mo.details.village)}
           ${this._moField('Pincode', 'm-pincode', mo.details.pincode)}
-          ${this._moField('Category', 'm-category', mo.details.category)}
+          ${this._moSelect('Member Status', 'm-status', mo.details.memberStatus || 'Active', ['Active', 'Inactive'], true)}
+          ${this._moDate('Joining Date', 'm-joining-date', mo.details.joiningDate, true)}
           <div class="form-group">
             <label>eKYC Status</label>
             <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f5f5f5;border:1px solid #E0E0E0;border-radius:6px;">
@@ -885,6 +891,26 @@ const App = {
         <label>${label}</label>
         <input type="text" class="form-control" id="${id}" value="${value != null ? value : ''}"
                readonly style="background:#f5f5f5;"/>
+      </div>`;
+  },
+
+  // Editable dropdown field (used for Title, Member Status).
+  _moSelect(label, id, value, options, editable) {
+    const opts = (options || []).map(o => `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`).join('');
+    return `
+      <div class="form-group">
+        <label>${label}</label>
+        <select class="form-control" id="${id}" ${editable ? '' : 'disabled style="background:#f5f5f5;"'}>${opts}</select>
+      </div>`;
+  },
+
+  // Editable date field (used for Joining Date).
+  _moDate(label, id, value, editable) {
+    return `
+      <div class="form-group">
+        <label>${label}</label>
+        <input type="date" class="form-control" id="${id}" value="${value != null ? value : ''}"
+               ${editable ? '' : 'readonly style="background:#f5f5f5;"'}/>
       </div>`;
   },
 
@@ -1049,9 +1075,15 @@ const App = {
       const details = {
         name: 'Priya Sharma',
         samagraId: mo.samagraId,
+        title: 'Miss',
+        firstName: 'Priya',
+        middleName: '',
+        lastName: 'Sharma',
         father: 'Ramesh Sharma',
         dob: '12/08/1990',
         gender: 'Female',
+        nationality: 'Indian',
+        email: 'priya.sharma@example.com',
         mobile: mo.otpMobile || '9876543210',
         address: 'H.No. 12, Ward 4, Main Bazaar, Sehora',
         district: 'Chhindwara',
@@ -1059,6 +1091,8 @@ const App = {
         village: 'Sehora',
         pincode: '480002',
         category: 'General',
+        memberStatus: 'Active',
+        joiningDate: new Date().toISOString().split('T')[0],
         ekyc: 'Verified'
       };
       this.state.memberOnboarding = { samagraId: mo.samagraId, stage: 'verified', fetched: true, details };

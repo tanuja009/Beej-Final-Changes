@@ -613,12 +613,6 @@ App.renderNCDEntry = function () {
                    onfocus="this.style.borderColor='#4CAF50'"
                    onblur="this.style.borderColor='#E0E0E0'"
                    onkeypress="if(event.key==='Enter') App.proceedToRegistrationForm()"/>
-            <div style="display:flex;align-items:center;gap:4px;margin-top:6px;">
-              <span style="font-size:14px;">💡</span>
-              <span style="font-size:0.8rem;color:#757575;">
-                Enter any code - no validation required for this prototype
-              </span>
-            </div>
           </div>
 
           <!-- Two Buttons Side-by-Side -->
@@ -641,20 +635,6 @@ App.renderNCDEntry = function () {
                     onmouseout="this.style.background='#F5F5F5'">
               <span style="font-size:16px;">&#8592;</span> Back to Login
             </button>
-          </div>
-
-          <!-- Light Blue Info Box -->
-          <div style="background:#E3F2FD;border-radius:10px;padding:16px 18px;
-                      border-left:4px solid #2196F3;">
-            <div style="font-weight:700;font-size:0.88rem;color:#1565C0;margin-bottom:8px;">
-              &#128221; Demo Instructions
-            </div>
-            <ul style="margin:0;padding-left:18px;font-size:0.82rem;color:#1565C0;line-height:1.8;">
-              <li>Enter ANY code (NCD001, ABC123, TEST001, etc.)</li>
-              <li>Click "Fetch Details" to view the registration form</li>
-              <li>All fields will be pre-filled with demo data</li>
-              <li>This is a clickable wireframe - no backend required</li>
-            </ul>
           </div>
 
         </div>
@@ -781,7 +761,7 @@ App.renderNCDRegistrationForm = function () {
             Society Registration Details
           </h2>
           <p style="margin:4px 0 0 0;font-size:0.82rem;color:#757575;">
-            NCD Code: <strong>${ncdCode}</strong> &mdash; All fields pre-filled with demo data
+            NCD Code: <strong>${ncdCode}</strong>
           </p>
         </div>
         <button onclick="App.navigate('login')"

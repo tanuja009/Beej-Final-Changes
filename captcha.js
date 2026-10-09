@@ -148,149 +148,50 @@ const BeejCaptcha = (function () {
    * Creates/replaces a <canvas> inside that wrapper.
    * Called after renderLogin() injects the wrapper into the DOM.
    */
-  function render() {
-    const wrap = document.getElementById('captcha-canvas-wrap');
-    if (!wrap) return;
-
-    _generate();
-
-    /* Remove old canvas if re-rendering */
-    let canvas = wrap.querySelector('canvas');
-    if (!canvas) {
-      canvas = document.createElement('canvas');
-      canvas.id = 'captcha-canvas';
-      canvas.setAttribute('role', 'img');
-      canvas.setAttribute('aria-label', 'Visual CAPTCHA — type the characters shown into the field below');
-      canvas.title = 'CAPTCHA — type the characters you see';
-      wrap.prepend(canvas);
-    }
-
-    _draw(canvas);
-
-    /* Clear input & hide any previous error */
-    const inp = document.getElementById('captcha-answer');
-    if (inp) inp.value = '';
-    _hideError();
-  }
+  /**
+   * WIREFRAME MODE: CAPTCHA is shown as a placeholder only.
+   * render() is a no-op — there is no canvas to draw.
+   */
+  function render() { /* placeholder only — nothing to render */ }
 
   /**
-   * Validates user's answer.
-   * Returns { valid: true } or { valid: false, message: '…' }
+   * WIREFRAME MODE: there is no CAPTCHA entry field, so validation
+   * always passes. (Kept so existing callers continue to work.)
    */
   function validate() {
-    const inp = document.getElementById('captcha-answer');
-    if (!inp) return { valid: false, message: 'CAPTCHA field not found.' };
-
-    const answer = inp.value.trim();
-
-    if (!answer) {
-      return { valid: false, message: 'Please complete the CAPTCHA before logging in.' };
-    }
-
-    const isMatch = config.caseSensitive
-      ? answer === _code
-      : answer.toLowerCase() === _code.toLowerCase();
-
-    if (!isMatch) {
-      return { valid: false, message: 'Incorrect CAPTCHA. Please try again.' };
-    }
-
     return { valid: true };
   }
 
-  /**
-   * Re-generates and redraws the CAPTCHA (refresh button).
-   */
-  function refresh() {
-    render();
-    /* Re-focus the answer input for accessibility */
-    const inp = document.getElementById('captcha-answer');
-    if (inp) { inp.value = ''; inp.focus(); }
-  }
+  /** WIREFRAME MODE: no CAPTCHA to refresh. */
+  function refresh() { /* placeholder only — nothing to refresh */ }
+
+  /** WIREFRAME MODE: no CAPTCHA validation, so no error to show. */
+  function showError() { /* placeholder only — no validation errors */ }
+
+  /** Clears the error (no-op in placeholder mode). */
+  function clearError() { /* placeholder only */ }
 
   /**
-   * Shows a CAPTCHA validation error message in the UI.
-   * Also triggers a refresh so the old code cannot be retried.
-   */
-  function showError(message) {
-    const el = document.getElementById('captcha-error-msg');
-    if (el) {
-      el.textContent = message;
-      el.style.display = 'flex';
-    }
-    refresh();   /* invalidate current code on failure */
-  }
-
-  /** Hides the CAPTCHA error message. */
-  function _hideError() {
-    const el = document.getElementById('captcha-error-msg');
-    if (el) el.style.display = 'none';
-  }
-
-  /** Clears the error (called when user starts typing). */
-  function clearError() { _hideError(); }
-
-  /**
-   * Returns the HTML string to embed in renderLogin().
-   * Insert this just above the Login button.
+   * Returns the HTML string for the CAPTCHA placeholder.
+   * Shows a visual "CAPTCHA will appear here" box only — no input field,
+   * no refresh button, no actual CAPTCHA generation or validation.
    */
   function getHtml() {
     return `
       <div class="form-group captcha-form-group" id="captcha-section">
         <label class="captcha-label">
           Security Verification
-          <span class="captcha-required" aria-hidden="true">*</span>
         </label>
 
-        <!-- Canvas wrapper + refresh -->
-        <div class="captcha-image-row">
-          <div id="captcha-canvas-wrap" class="captcha-canvas-wrap" aria-hidden="true">
-            <!-- Canvas injected by BeejCaptcha.render() -->
-          </div>
-          <button
-            type="button"
-            class="captcha-refresh-btn"
-            id="captcha-refresh-btn"
-            onclick="BeejCaptcha.refresh()"
-            title="Get a new CAPTCHA"
-            aria-label="Refresh CAPTCHA"
-          >
-            <span class="material-icons">refresh</span>
-          </button>
+        <!-- Placeholder box (wireframe only) -->
+        <div class="captcha-placeholder" aria-hidden="true"
+             style="display:flex;align-items:center;justify-content:center;gap:10px;
+                    min-height:64px;padding:16px;border:1.5px dashed #A5D6A7;
+                    border-radius:8px;background:#F1F8E9;color:#2E7D32;
+                    font-size:0.9rem;font-weight:600;text-align:center;">
+          <span class="material-icons" style="font-size:22px;color:#4CAF50;">verified_user</span>
+          CAPTCHA will appear here
         </div>
-
-        <!-- Answer input -->
-        <div class="input-icon-wrap captcha-input-wrap">
-          <span class="material-icons">security</span>
-          <input
-            type="text"
-            id="captcha-answer"
-            class="form-control"
-            placeholder="Type the characters shown above"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            maxlength="10"
-            oninput="BeejCaptcha.clearError()"
-            aria-label="Enter CAPTCHA text"
-            aria-required="true"
-            aria-describedby="captcha-error-msg"
-          />
-        </div>
-
-        <!-- Error message — hidden until needed -->
-        <div
-          id="captcha-error-msg"
-          class="captcha-error-msg"
-          role="alert"
-          aria-live="polite"
-          style="display:none;"
-        >
-          <span class="material-icons captcha-err-icon">error_outline</span>
-          <span class="captcha-err-text"></span>
-        </div>
-
       </div>`;
   }
 

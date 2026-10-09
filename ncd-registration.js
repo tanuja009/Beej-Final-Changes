@@ -148,8 +148,8 @@ App.SocUserStore = {
 // ═══════════════════════════════════════════════════════════════
 App.renderRegProgress = function (activeStep) {
   const steps = [
-    'Mobile Verification',
-    'NCD Code',
+    'NCD ID Verification',
+    'OTP Verification',
     'Society Details',
     'Registration',
     'Create Login',
@@ -206,6 +206,7 @@ App.startSocietyRegistration = function () {
   reg.otpAttempts = 0;
   reg.resendAt = 0;
   reg.enteredCode = '';
+  reg.societyFetched = false;
   reg.formSubmitted = false;
   reg.locationType = 'Rural';
   App.navigate('mobile-verify');
@@ -231,27 +232,28 @@ App.renderMobileVerification = function () {
                       margin:0 auto 12px auto;display:flex;align-items:center;justify-content:center;
                       font-size:28px;border:2px solid rgba(255,255,255,0.3);">🌾</div>
           <h2 style="color:#fff;margin:0 0 6px 0;font-size:1.3rem;font-weight:700;">
-            Mobile Number Verification
+            NCD ID Verification
           </h2>
           <p style="color:rgba(255,255,255,0.85);margin:0;font-size:0.85rem;">
-            Verify your mobile number to begin New Society Registration
+            Enter your NCD ID to begin New Society Registration
           </p>
         </div>
 
         <!-- Body -->
         <div style="background:#fff;padding:30px 28px;">
 
-          <!-- Mobile Number -->
+          <!-- NCD ID -->
           <div class="form-group" style="margin-bottom:20px;">
             <label style="font-size:0.88rem;font-weight:600;color:#333;display:block;margin-bottom:8px;">
-              Mobile Number <span style="color:#F44336;">*</span>
+              NCD ID <span style="color:#F44336;">*</span>
             </label>
             <div class="input-icon-wrap">
-              <span class="material-icons">phone_android</span>
-              <input type="tel" id="reg-mobile" class="form-control" inputmode="numeric"
-                     maxlength="10" placeholder="Enter 10-digit mobile number"
-                     value="${reg.mobileNumber || ''}"
-                     oninput="this.value=this.value.replace(/[^0-9]/g,'');App.clearMobileError()"
+              <span class="material-icons">badge</span>
+              <input type="text" id="reg-ncd-id" class="form-control"
+                     placeholder="Enter your NCD ID (e.g., NCD001)"
+                     value="${reg.enteredCode || ''}"
+                     style="text-transform:uppercase;"
+                     oninput="App.clearMobileError()"
                      onkeypress="if(event.key==='Enter') App.sendRegistrationOTP()"/>
             </div>
             <div id="reg-mobile-error" style="display:none;color:#F44336;font-size:0.78rem;
@@ -269,6 +271,19 @@ App.renderMobileVerification = function () {
                   onclick="App.sendRegistrationOTP()">
             <span class="material-icons">sms</span> Send OTP
           </button>
+
+          <!-- Light Blue Info Box -->
+          <div style="background:#E3F2FD;border-radius:10px;padding:16px 18px;margin-top:20px;
+                      border-left:4px solid #2196F3;">
+            <div style="font-weight:700;font-size:0.88rem;color:#1565C0;margin-bottom:8px;">
+              &#128221; Instructions
+            </div>
+            <ol style="margin:0;padding-left:18px;font-size:0.82rem;color:#1565C0;line-height:1.8;">
+              <li>Enter the NCD ID provided to your society after obtaining membership in Beej Sangh (Example: NCD ID &ndash; <strong>NCD123456</strong>).</li>
+              <li>Click &ldquo;Fetch Details&rdquo; to retrieve your society details and proceed to the registration form.</li>
+              <li>Verify the fetched details and complete the remaining registration process.</li>
+            </ol>
+          </div>
 
           <!-- Back to Login -->
           <div style="margin-top:18px;text-align:center;padding-top:16px;border-top:1px solid #E8F5E9;">
@@ -300,28 +315,36 @@ App.clearMobileError = function () {
 
 App.sendRegistrationOTP = function () {
   const reg = App.state.ncdRegistration;
-  const mobileEl = document.getElementById('reg-mobile');
-  const mobile = mobileEl ? mobileEl.value.trim() : '';
+  const ncdEl = document.getElementById('reg-ncd-id');
+  const ncdId = ncdEl ? ncdEl.value.trim().toUpperCase() : '';
 
-  // 1) Validate Indian mobile number: 10 digits, starts 6-9
-  if (!/^[6-9][0-9]{9}$/.test(mobile)) {
-    App.showMobileError('Enter a valid 10-digit Indian mobile number (starts with 6-9).');
+  // 1) NCD ID is mandatory
+  if (!ncdId) {
+    App.showMobileError('Please enter your NCD ID.');
     return;
   }
 
-  // 2) Validate CAPTCHA using the existing module
+  // 2) Validate CAPTCHA using the existing module (placeholder in wireframe)
   const captchaResult = BeejCaptcha.validate();
   if (!captchaResult.valid) {
     BeejCaptcha.showError(captchaResult.message);
     return;
   }
 
-  // 3) Both valid — generate/send mock OTP and preserve the mobile number
-  reg.mobileNumber = mobile;
+  // 3) Valid — store the NCD ID, then generate/send a mock OTP to the mobile
+  //    registered against this NCD (mocked for the wireframe).
+  reg.enteredCode = ncdId;
+  reg.mobileNumber = App._mockMobileForNcd(ncdId);
   App.issueRegistrationOTP();
 
   // 4) Move to OTP verification step
   App.navigate('otp-verify');
+};
+
+// MOCK: the mobile number registered against an NCD ID. In a real system
+// this comes from the NCD/Samagra lookup; here it is derived for the demo.
+App._mockMobileForNcd = function (ncdId) {
+  return '9876543210';
 };
 
 // Generate a fresh mock OTP (isolated demo mechanism; not rendered to UI)
@@ -356,7 +379,7 @@ App.renderOTPVerification = function () {
   <div style="min-height:100vh;background:#2E7D32;padding:30px 16px;">
     <div style="width:100%;max-width:560px;margin:0 auto;">
 
-      ${this.renderRegProgress(1)}
+      ${this.renderRegProgress(2)}
 
       <div style="border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.25);">
         <!-- Header -->
@@ -438,12 +461,12 @@ App.renderOTPVerification = function () {
             <span class="material-icons">verified_user</span> Verify OTP
           </button>
 
-          <!-- Back to Mobile Verification -->
+          <!-- Back to NCD ID Verification -->
           <div style="margin-top:18px;text-align:center;padding-top:16px;border-top:1px solid #E8F5E9;">
             <a href="#" onclick="App.navigate('mobile-verify');return false;"
                style="color:#666;font-size:0.85rem;text-decoration:none;">
               <span class="material-icons" style="font-size:16px;vertical-align:middle;">arrow_back</span>
-              Back to Mobile Verification
+              Back to NCD ID Verification
             </a>
           </div>
 
@@ -535,7 +558,35 @@ App.verifyRegistrationOTP = function () {
   if (success) success.style.display = 'flex';
   if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.style.opacity = '0.6'; }
 
-  setTimeout(() => { App.navigate('ncd-entry'); }, 1200);
+  // Fetch society details for the entered NCD ID, then auto-populate the form.
+  setTimeout(() => { App.fetchSocietyByNcd(); }, 1200);
+};
+
+// ═══════════════════════════════════════════════════════════════
+// FETCH SOCIETY DETAILS BY NCD ID (after OTP verification)
+// On success: auto-populate the existing registration form (step 3).
+// On failure: show an error and keep the user on the OTP page.
+// MOCK: any non-empty NCD ID is treated as valid for the wireframe,
+// EXCEPT ids ending in "X" which simulate "no society found".
+// ═══════════════════════════════════════════════════════════════
+App.fetchSocietyByNcd = function () {
+  const reg = App.state.ncdRegistration;
+  const ncdId = (reg.enteredCode || '').trim().toUpperCase();
+
+  // Simulated "not found" case for the demo.
+  if (!ncdId || ncdId.endsWith('X')) {
+    reg.otpVerified = true; // mobile/OTP was still verified
+    App.showOtpError('No society details found for NCD ID "' + (ncdId || '') + '". Please check the NCD ID and try again.');
+    const verifyBtn = document.getElementById('reg-verify-btn');
+    if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.style.opacity = '1'; }
+    const success = document.getElementById('otp-success');
+    if (success) success.style.display = 'none';
+    return;
+  }
+
+  // Found — the existing form reads reg.enteredCode and fills demo data.
+  reg.societyFetched = true;
+  App.navigate('ncd-registration-form');
 };
 
 // ACTION: Resend OTP (respects the cooldown)
@@ -635,6 +686,19 @@ App.renderNCDEntry = function () {
                     onmouseout="this.style.background='#F5F5F5'">
               <span style="font-size:16px;">&#8592;</span> Back to Login
             </button>
+          </div>
+
+          <!-- Light Blue Info Box -->
+          <div style="background:#E3F2FD;border-radius:10px;padding:16px 18px;
+                      border-left:4px solid #2196F3;">
+            <div style="font-weight:700;font-size:0.88rem;color:#1565C0;margin-bottom:8px;">
+              &#128221; Instructions
+            </div>
+            <ol style="margin:0;padding-left:18px;font-size:0.82rem;color:#1565C0;line-height:1.8;">
+              <li>Enter the NCD ID provided to your society after obtaining membership in Beej Sangh (Example: NCD ID &ndash; <strong>NCD123456</strong>).</li>
+              <li>Click &ldquo;Fetch Details&rdquo; to retrieve your society details and proceed to the registration form.</li>
+              <li>Verify the fetched details and complete the remaining registration process.</li>
+            </ol>
           </div>
 
         </div>
@@ -906,6 +970,15 @@ App.renderCreateCredentials = function () {
   const fillMode = saved.fillMode || 'manual';
   const samagraStage = saved.samagraStage || 'idle'; // idle | otp (verified => fetched)
 
+  // Society contact details are fetched from the NCD/society record and are
+  // auto-filled + read-only in BOTH manual and Samagra modes.
+  const contactInfo = App._societyContactDefaults();
+  const roContactPerson = saved.contactPerson || contactInfo.contactPerson;
+  const roDesignation = saved.designation || contactInfo.designation;
+  const roContact = saved.contact || contactInfo.contact;
+  const roEmail = saved.email || contactInfo.email;
+  const roStyle = 'background:#F0F0F0;cursor:not-allowed;';
+
   return `
   <div style="min-height:100vh;background:#F5F5F5;padding:30px 16px;">
     <div style="width:100%;max-width:560px;margin:0 auto;">
@@ -1089,26 +1162,31 @@ App.renderCreateCredentials = function () {
             <div id="cred-nationality-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
           </div>
 
-          <!-- Email -->
+          <!-- Contact Person Name (auto-filled, read-only) -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Contact Person Name <span style="color:#F44336;">*</span>
+            </label>
+            <input type="text" id="cred-contactperson" class="form-control"
+                   value="${roContactPerson}" readonly style="${roStyle}"/>
+          </div>
+
+          <!-- Email (auto-filled, read-only) -->
           <div class="form-group" style="margin-bottom:18px;">
             <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
               Email <span style="color:#F44336;">*</span>
             </label>
-            <input type="email" id="cred-email" class="form-control" placeholder="Enter Email Address"
-                   value="${saved.email || ''}" autocomplete="off"
-                   oninput="App.clearCredError('cred-email-error')"/>
-            <div id="cred-email-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+            <input type="email" id="cred-email" class="form-control"
+                   value="${roEmail}" readonly style="${roStyle}"/>
           </div>
 
-          <!-- Contact Number -->
+          <!-- Contact Number (auto-filled, read-only) -->
           <div class="form-group" style="margin-bottom:18px;">
             <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
               Contact Number <span style="color:#F44336;">*</span>
             </label>
-            <input type="tel" id="cred-contact" class="form-control" placeholder="Enter 10-digit Contact Number"
-                   value="${saved.contact || ''}" autocomplete="off" maxlength="10"
-                   oninput="this.value=this.value.replace(/[^0-9]/g,'');App.clearCredError('cred-contact-error')"/>
-            <div id="cred-contact-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+            <input type="tel" id="cred-contact" class="form-control"
+                   value="${roContact}" readonly style="${roStyle}"/>
           </div>
 
           <!-- Address -->
@@ -1122,15 +1200,13 @@ App.renderCreateCredentials = function () {
             <div id="cred-address-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
           </div>
 
-          <!-- Designation -->
+          <!-- Designation (auto-filled, read-only) -->
           <div class="form-group" style="margin-bottom:18px;">
             <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
               Designation <span style="color:#F44336;">*</span>
             </label>
-            <input type="text" id="cred-designation" class="form-control" placeholder="Enter Designation (e.g., President, Secretary)"
-                   value="${saved.designation || ''}" autocomplete="off"
-                   oninput="App.clearCredError('cred-designation-error')"/>
-            <div id="cred-designation-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+            <input type="text" id="cred-designation" class="form-control"
+                   value="${roDesignation}" readonly style="${roStyle}"/>
           </div>
 
           <!-- Username -->
@@ -1226,6 +1302,18 @@ App._showCredError = function (id, msg) {
   if (el) { el.textContent = msg; el.style.display = 'block'; }
 };
 
+// Society contact details fetched from the NCD/society record. These are
+// auto-filled and read-only on the Create Login page in both fill modes.
+// MOCK: derived for the wireframe (would come from the NCD lookup in prod).
+App._societyContactDefaults = function () {
+  return {
+    contactPerson: 'Ramesh Verma',
+    designation: 'Secretary',
+    contact: '9876543210',
+    email: 'indore.coop@example.com'
+  };
+};
+
 // Snapshot whatever the user has typed so it survives a re-render.
 App._captureCredForm = function () {
   const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : undefined; };
@@ -1318,6 +1406,8 @@ App.verifySamagraOtp = function () {
   }
 
   // OTP verified -> mock details returned from the Samagra lookup.
+  // NOTE: Email and Contact Number are NOT fetched from Samagra — they are
+  // auto-filled read-only from the society (NCD) record on this page.
   const fetched = {
     title: 'Mr',
     firstName: 'Rajesh',
@@ -1326,8 +1416,6 @@ App.verifySamagraOtp = function () {
     dob: '1988-05-14',
     gender: 'Male',
     nationality: 'Indian',
-    email: 'rajesh.sharma@example.com',
-    contact: '9876500011',
     address: '12, Rajwada, Indore, Madhya Pradesh - 452001'
   };
 
@@ -1356,13 +1444,17 @@ App.createAccount = function () {
   const dob = val('cred-dob');
   const gender = val('cred-gender');
   const nationality = val('cred-nationality');
-  const email = val('cred-email');
-  const contact = val('cred-contact');
   const address = val('cred-address');
   const prevCred = App.state.pendingCredentials || {};
   const samagraId = val('cred-samagra') || prevCred.samagraId || '';
-  const designation = val('cred-designation');
   const username = val('cred-username');
+
+  // Auto-filled, read-only society contact fields (fall back to society data).
+  const _sc = App._societyContactDefaults();
+  const contactPerson = val('cred-contactperson') || _sc.contactPerson;
+  const email = val('cred-email') || _sc.email;
+  const contact = val('cred-contact') || _sc.contact;
+  const designation = val('cred-designation') || _sc.designation;
   const password = document.getElementById('cred-password') ? document.getElementById('cred-password').value : '';
   const confirm = document.getElementById('cred-confirm') ? document.getElementById('cred-confirm').value : '';
 
@@ -1372,6 +1464,7 @@ App.createAccount = function () {
   // Keep entered values so they survive a re-render (preserve fill-mode too)
   App.state.pendingCredentials = {
     title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, designation, username,
+    contactPerson,
     fillMode: prevCred.fillMode || 'manual', samagraFetched: prevCred.samagraFetched || false,
     samagraStage: prevCred.samagraStage || 'idle', samagraOtpMobile: prevCred.samagraOtpMobile || '',
     samagraBlockedMsg: prevCred.samagraBlockedMsg || ''
@@ -1470,7 +1563,7 @@ App.createAccount = function () {
   }
 
   // Persist credentials against the registration + finalise the record.
-  const profile = { title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, fullName, designation, username };
+  const profile = { title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, fullName, designation, username, contactPerson };
   App.state.pendingCredentials = Object.assign({}, profile, { password });
   App.finaliseSocietyRegistration(username, password, fullName, designation, profile);
 };

@@ -100,7 +100,48 @@ const App = {
     resetPwdGeneratedOTP: '',
   },
 
+  // Key used to persist the lightweight session (so a refresh keeps the
+  // user on the same page instead of bouncing back to login).
+  _SESSION_KEY: 'beejSangh.session',
+
+  // Save just enough state to restore the current page after a refresh.
+  _persistSession() {
+    try {
+      // Don't persist the login page — a logged-out user should start at login.
+      if (this.state.currentPage === 'login') {
+        localStorage.removeItem(this._SESSION_KEY);
+        return;
+      }
+      const snapshot = {
+        currentPage: this.state.currentPage,
+        currentRole: this.state.currentRole,
+        currentUser: this.state.currentUser
+      };
+      localStorage.setItem(this._SESSION_KEY, JSON.stringify(snapshot));
+    } catch (e) { /* storage unavailable — ignore */ }
+  },
+
+  // Restore the persisted session (if any) before the first render.
+  _restoreSession() {
+    try {
+      const raw = localStorage.getItem(this._SESSION_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s && s.currentPage) {
+        this.state.currentPage = s.currentPage;
+        if (s.currentRole) this.state.currentRole = s.currentRole;
+        if (s.currentUser) this.state.currentUser = s.currentUser;
+      }
+    } catch (e) { /* corrupt/unavailable — fall back to defaults */ }
+  },
+
+  // Clear the persisted session (used on logout).
+  _clearSession() {
+    try { localStorage.removeItem(this._SESSION_KEY); } catch (e) { /* ignore */ }
+  },
+
   init() {
+    this._restoreSession();
     this.render();
   },
 
@@ -140,6 +181,7 @@ const App = {
       app.innerHTML = this.renderAppLayout();
     }
     this.bindEvents();
+    this._persistSession();
   },
 
   // ---- LOGIN ----
@@ -490,6 +532,7 @@ const App = {
       this.state.currentUser = null;
       this.state.currentPage = 'login';
       this.state.currentRole = 'society';
+      this._clearSession();
       this.closeUserDropdown();
       this.render();
       alert('✅ Logged out successfully!');
@@ -598,6 +641,7 @@ const App = {
   logout() {
     this.state.currentUser = null;
     this.state.currentPage = 'login';
+    this._clearSession();
     this.render();
   },
 

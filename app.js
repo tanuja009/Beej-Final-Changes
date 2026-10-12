@@ -463,6 +463,7 @@ const App = {
       'admin-society-allocation': 'Society Allocation',
       'admin-dispatch-orders': 'Dispatch Orders',
       'admin-dist-tracking': 'Distribution Tracking',
+      'admin-dist-tracking': 'Distribution Tracking',
       'soc-available-stock': 'Available Stock',
       'soc-member-distribution': 'Breeder Seeds Distribution to Member',
       'soc-dist-register': 'Distribution Register',

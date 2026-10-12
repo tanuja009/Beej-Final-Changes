@@ -91,6 +91,26 @@ App._smSubVForVariety = function (variety) {
 App._smSeasonOpts = function (sel) { return SM.seasons.filter(function (s) { return s.status === 'Active'; }).map(function (s) { return '<option value="' + s.name + '"' + (sel === s.name ? ' selected' : '') + '>' + s.name + '</option>'; }).join(''); };
 App._smFinYearOpts = function (sel) { return SM.financialYears.filter(function (fy) { return fy.status === 'Active'; }).map(function (fy) { return '<option value="' + fy.name + '"' + (sel === fy.name ? ' selected' : '') + '>' + fy.name + '</option>'; }).join(''); };
 App._smCropOpts = function (season, sel) { return App._smCropsForSeason(season).map(function (c) { return '<option value="' + c.name + '"' + (sel === c.name ? ' selected' : '') + '>' + c.name + '</option>'; }).join(''); };
+App._smCropCode = function (name) { var c = SM.crops.find(function (x) { return x.name === name; }); return c ? c.code : ''; };
+// Financial Year options from 2021-2022 up to the current FY (Indian FY: Apr-Mar), newest first.
+App._smFinYearRangeOpts = function (sel) {
+  var now = new Date();
+  // FY starting year: Jan-Mar belongs to the previous FY start.
+  var startYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  var opts = '<option value="">Select Financial Year</option>';
+  var selected = false;
+  for (var y = startYear; y >= 2021; y--) {
+    var name = y + '-' + (y + 1);
+    var isSel = sel === name;
+    if (isSel) selected = true;
+    opts += '<option value="' + name + '"' + (isSel ? ' selected' : '') + '>' + name + '</option>';
+  }
+  // If editing an existing FY outside the range, keep it available/selected.
+  if (sel && !selected) opts += '<option value="' + sel + '" selected>' + sel + '</option>';
+  return opts;
+};
+// Season name only (strip the trailing financial-year part, e.g. "Kharif 2026" -> "Kharif").
+App._smSeasonName = function (season) { return String(season || '').replace(/\s*\d[\d\-\/]*\s*$/, '').trim(); };
 App._smVarOpts = function (crop, season, sel) { return App._smVarietiesForCrop(crop, season).map(function (v) { return '<option value="' + v.name + '"' + (sel === v.name ? ' selected' : '') + '>' + v.name + '</option>'; }).join(''); };
 App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety).map(function (sv) { return '<option value="' + sv.name + '"' + (sel === sv.name ? ' selected' : '') + '>' + sv.name + '</option>'; }).join(''); };
 
@@ -442,9 +462,9 @@ App.smVarietyList = function () {
     + '<div class="card"><div class="card-header"><h3>Varieties (' + rows.length + ')</h3>'
     + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-variety-form\')"><span class="material-icons">add</span> Create Variety</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Sr.</th><th>Variety Name</th><th>Code</th><th>Crop</th><th>Season</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
+    + '<thead><tr><th>Sr.</th><th>Season</th><th>Crop Code</th><th>Crop Name</th><th>Variety Code</th><th>Variety Name</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
     + rows.map(function (r, i) {
-      return '<tr><td>' + (i + 1) + '</td><td><b>' + r.name + '</b></td><td>' + r.code + '</td><td>' + r.crop + '</td><td>' + r.season + '</td><td style="font-size:0.78rem;max-width:150px;">' + (r.desc || '') + '</td>'
+      return '<tr><td>' + (i + 1) + '</td><td>' + App._smSeasonName(r.season) + '</td><td>' + App._smCropCode(r.crop) + '</td><td>' + r.crop + '</td><td>' + r.code + '</td><td><b>' + r.name + '</b></td><td style="font-size:0.78rem;max-width:150px;">' + (r.desc || '') + '</td>'
         + '<td>' + App._smBdg(r.status) + '</td><td style="font-size:0.78rem;">' + r.created + '</td>'
         + '<td><div class="action-btns">'
         + '<button class="btn btn-outline btn-sm" title="Edit" onclick="App.state.sm.editId=\'' + r.id + '\';App.state.sm.formMode=\'edit\';App.navigate(\'sm-variety-form\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
@@ -743,7 +763,7 @@ App.smFinYearForm = function () {
     + '<div class="card"><div class="card-body">'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">date_range</span> Financial Year Details</div>'
     + '<div class="form-grid">'
-    + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><input class="form-control" id="fy-name" value="' + (r ? r.name : '') + '" placeholder="e.g. 2026-2027"></div>'
+    + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" id="fy-name">' + App._smFinYearRangeOpts(r ? r.name : '') + '</select></div>'
     + '<div class="form-group"><label>Code <span style="color:#F44336">*</span></label><input class="form-control" id="fy-code" value="' + (r ? r.code : '') + '" placeholder="e.g. FY2627" style="text-transform:uppercase;"></div>'
     + '<div class="form-group"><label>Start Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="fy-start" value="' + (r ? r.startDate : '') + '"></div>'
     + '<div class="form-group"><label>End Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="fy-end" value="' + (r ? r.endDate : '') + '"></div>'

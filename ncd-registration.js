@@ -280,8 +280,8 @@ App.renderMobileVerification = function () {
             </div>
             <ol style="margin:0;padding-left:18px;font-size:0.82rem;color:#1565C0;line-height:1.8;">
               <li>Enter the NCD ID provided to your society after obtaining membership in Beej Sangh (Example: NCD ID &ndash; <strong>NCD123456</strong>).</li>
-              <li>Click &ldquo;Fetch Details&rdquo; to retrieve your society details and proceed to the registration form.</li>
-              <li>Verify the fetched details and complete the remaining registration process.</li>
+              <li>An OTP will be sent to your registered mobile number. Please check your registered mobile number and verify the OTP to proceed.</li>
+              <li>Verify the fetched society details and complete the remaining registration process.</li>
             </ol>
           </div>
 

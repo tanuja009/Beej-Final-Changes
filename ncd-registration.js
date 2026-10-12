@@ -365,6 +365,13 @@ App.issueRegistrationOTP = function () {
 // PAGE: OTP VERIFICATION (Step 1 continued)
 // 6-digit OTP + Verify + Resend (30s countdown) + Back
 // ═══════════════════════════════════════════════════════════════
+// Mask a mobile number so only the last 4 digits are visible (e.g. XXXXXX1234).
+App.maskMobile = function (mobile) {
+  const digits = String(mobile || '').replace(/\D/g, '');
+  if (digits.length < 4) return digits;
+  return 'X'.repeat(digits.length - 4) + digits.slice(-4);
+};
+
 App.renderOTPVerification = function () {
   const reg = App.state.ncdRegistration;
 
@@ -373,7 +380,8 @@ App.renderOTPVerification = function () {
     return App.renderMobileVerification();
   }
 
-  const masked = reg.mobileNumber.replace(/(\d{5})(\d{5})/, '$1 $2');
+  // Masked mobile — only the last 4 digits are shown for security.
+  const masked = App.maskMobile(reg.mobileNumber);
 
   return `
   <div style="min-height:100vh;background:#2E7D32;padding:30px 16px;">
@@ -413,6 +421,22 @@ App.renderOTPVerification = function () {
                display:flex;align-items:center;gap:8px;">
             <span class="material-icons" style="color:#2E7D32;font-size:20px;">mark_email_read</span>
             <span>OTP sent successfully to <strong>+91 ${masked}</strong></span>
+          </div>
+
+          <!-- Mobile Number (OTP recipient) — masked for security -->
+          <div class="form-group" style="margin-bottom:16px;">
+            <label style="font-size:0.88rem;font-weight:600;color:#333;display:block;margin-bottom:8px;">
+              Mobile Number
+            </label>
+            <div class="input-icon-wrap">
+              <span class="material-icons">phone_android</span>
+              <input type="text" id="reg-otp-mobile" class="form-control"
+                     value="+91 ${masked}" readonly
+                     style="background:#F0F0F0;cursor:not-allowed;letter-spacing:1px;"/>
+            </div>
+            <small style="color:#757575;font-size:0.74rem;margin-top:6px;display:block;">
+              For data privacy and security, only the last four digits of the registered mobile number are displayed.
+            </small>
           </div>
 
           <!-- DEV/DEMO ONLY: shows the dynamically generated OTP for wireframe testing.
@@ -1189,6 +1213,17 @@ App.renderCreateCredentials = function () {
                    value="${roContact}" readonly style="${roStyle}"/>
           </div>
 
+          <!-- Alternate Contact Number (editable, optional) -->
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
+              Alternate Contact Number
+            </label>
+            <input type="tel" id="cred-altcontact" class="form-control" placeholder="Enter 10-digit alternate contact number"
+                   value="${saved.altContact || ''}" autocomplete="off" maxlength="10"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'');App.clearCredError('cred-altcontact-error')"/>
+            <div id="cred-altcontact-error" style="display:none;color:#F44336;font-size:0.78rem;margin-top:6px;"></div>
+          </div>
+
           <!-- Address -->
           <div class="form-group" style="margin-bottom:18px;">
             <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:6px;">
@@ -1322,6 +1357,7 @@ App._captureCredForm = function () {
     title: val('cred-title'), firstName: val('cred-firstname'), middleName: val('cred-middlename'),
     lastName: val('cred-lastname'), dob: val('cred-dob'), gender: val('cred-gender'),
     nationality: val('cred-nationality'), email: val('cred-email'), contact: val('cred-contact'),
+    altContact: val('cred-altcontact'),
     address: val('cred-address'), samagraId: val('cred-samagra'), designation: val('cred-designation'),
     username: val('cred-username')
   };
@@ -1445,6 +1481,7 @@ App.createAccount = function () {
   const gender = val('cred-gender');
   const nationality = val('cred-nationality');
   const address = val('cred-address');
+  const altContact = val('cred-altcontact');
   const prevCred = App.state.pendingCredentials || {};
   const samagraId = val('cred-samagra') || prevCred.samagraId || '';
   const username = val('cred-username');
@@ -1464,7 +1501,7 @@ App.createAccount = function () {
   // Keep entered values so they survive a re-render (preserve fill-mode too)
   App.state.pendingCredentials = {
     title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, designation, username,
-    contactPerson,
+    contactPerson, altContact,
     fillMode: prevCred.fillMode || 'manual', samagraFetched: prevCred.samagraFetched || false,
     samagraStage: prevCred.samagraStage || 'idle', samagraOtpMobile: prevCred.samagraOtpMobile || '',
     samagraBlockedMsg: prevCred.samagraBlockedMsg || ''
@@ -1517,6 +1554,11 @@ App.createAccount = function () {
     App._showCredError('cred-contact-error', 'Contact Number must be exactly 10 digits.');
     return;
   }
+  // Alternate Contact Number: optional, but must be 10 digits if provided.
+  if (altContact && !/^[0-9]{10}$/.test(altContact)) {
+    App._showCredError('cred-altcontact-error', 'Alternate Contact Number must be exactly 10 digits.');
+    return;
+  }
   // Address: required
   if (!address) {
     App._showCredError('cred-address-error', 'Address is required.');
@@ -1563,7 +1605,7 @@ App.createAccount = function () {
   }
 
   // Persist credentials against the registration + finalise the record.
-  const profile = { title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, fullName, designation, username, contactPerson };
+  const profile = { title, firstName, middleName, lastName, dob, gender, nationality, email, contact, address, samagraId, fullName, designation, username, contactPerson, altContact };
   App.state.pendingCredentials = Object.assign({}, profile, { password });
   App.finaliseSocietyRegistration(username, password, fullName, designation, profile);
 };

@@ -100,7 +100,6 @@
         </div>
         <div class="nav-section">
           <div class="nav-section-title">Distribution Workflow</div>
-          ${ni('assignment_turned_in', 'Society Allocation', 'admin-society-allocation')}
           ${ni('local_shipping', 'Dispatch Orders', 'admin-dispatch-orders')}
           ${ni('track_changes', 'Distribution Tracking', 'admin-dist-tracking')}
         </div>
@@ -309,33 +308,31 @@ App.renderPriceList = function () {
         <button class="btn btn-info btn-sm" onclick="App.navigate('admin-price-bulk')"><span class="material-icons">upload_file</span> Bulk Upload</button>
         <button class="btn btn-success btn-sm"><span class="material-icons">table_chart</span> Excel</button>
         <button class="btn btn-danger btn-sm"><span class="material-icons">picture_as_pdf</span> PDF</button>
-        <button class="btn btn-gray btn-sm"><span class="material-icons">print</span> Print</button>
       </div>
     </div>
     <div class="card-body" style="padding:0;">
       <div class="table-wrap"><table>
         <thead><tr>
           <th>Category</th><th>Crop</th><th>Variety</th>
-          <th>Season</th><th>Unit</th><th>Base Price</th><th>Selling Price</th>
+          <th>Season</th><th>Unit</th><th>Selling Price</th>
           <th>Effective From</th><th>Effective To</th><th>Status</th><th>Created Date</th><th>Actions</th>
         </tr></thead>
         <tbody>
           ${rows.length === 0
-      ? `<tr><td colspan="13" style="text-align:center;padding:40px;color:#9E9E9E;">No records found</td></tr>`
+      ? `<tr><td colspan="11" style="text-align:center;padding:40px;color:#9E9E9E;">No records found</td></tr>`
       : rows.map(p => `<tr>
             <td>${p.category}</td>
             <td>${p.crop}</td>
             <td>${p.variety}</td>
             <td>${p.season} ${p.cropYear}</td>
             <td>${p.unit}</td>
-            <td>₹${p.basePrice.toLocaleString()}</td>
             <td style="font-weight:700;color:#2E7D32;">₹${p.sellingPrice.toLocaleString()}</td>
             <td>${p.effectiveFrom}</td>
             <td>${p.effectiveTo}</td>
             <td>${this._priceBadge(p.activeStatus || 'Active')}</td>
             <td style="font-size:0.8rem;">${p.createdDate || '—'}</td>
             <td>
-              <div class="action-btns">
+              <div class="action-btns" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
                 <button class="btn btn-outline btn-sm" title="View"
                   onclick="App.state.selectedPriceId='${p.id}';App.navigate('admin-price-view')">
                   <span class="material-icons">visibility</span>
@@ -483,10 +480,6 @@ App.renderPriceForm = function (mode) {
             </select>
           </div>
           <div class="form-group">
-            <label>Base Price (₹) <span style="color:#F44336">*</span></label>
-            <input type="number" class="form-control" id="pf-base" placeholder="e.g. 5200" value="${v('basePrice')}">
-          </div>
-          <div class="form-group">
             <label>Selling Price (₹) <span style="color:#F44336">*</span></label>
             <input type="number" class="form-control" id="pf-selling" placeholder="e.g. 4400" value="${v('sellingPrice')}"
               style="font-weight:600;">
@@ -527,7 +520,7 @@ App._calcSellingPrice = function () {
 App.savePriceForm = function (action, mode) {
   const get = id => document.getElementById(id)?.value?.trim() || '';
   const p = mode === 'edit' ? this.state.beejPrices.find(x => x.id === this.state.selectedPriceId) : null;
-  const required = ['pf-category', 'pf-crop', 'pf-variety', 'pf-season', 'pf-year', 'pf-base', 'pf-selling', 'pf-from', 'pf-to'];
+  const required = ['pf-category', 'pf-crop', 'pf-variety', 'pf-season', 'pf-year', 'pf-selling', 'pf-from', 'pf-to'];
   for (const id of required) {
     if (!get(id)) { alert('Please fill all required fields.'); document.getElementById(id)?.focus(); return; }
   }
@@ -535,7 +528,7 @@ App.savePriceForm = function (action, mode) {
     id: mode === 'add' ? `PRC-${String(this.state.beejPrices.length + 1).padStart(3, '0')}` : this.state.selectedPriceId,
     category: get('pf-category'), crop: get('pf-crop'), variety: get('pf-variety'),
     seedClass: '', season: get('pf-season'), cropYear: get('pf-year'),
-    unit: get('pf-unit'), basePrice: +get('pf-base'), subsidy: 0,
+    unit: get('pf-unit'), basePrice: 0, subsidy: 0,
     sellingPrice: +get('pf-selling'), effectiveFrom: get('pf-from'), effectiveTo: get('pf-to'),
     status: action === 'publish' ? 'Active' : 'Draft',
     createdBy: this.state.currentUser?.name || 'Admin',
@@ -582,7 +575,6 @@ App.renderPriceView = function () {
         </div>
         <div>
           <p style="font-size:0.78rem;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Pricing</p>
-          ${row('Base Price', `₹${p.basePrice.toLocaleString()}`)}
           ${row('Selling Price', `<b style="color:#2E7D32;font-size:1.1rem;">₹${p.sellingPrice.toLocaleString()}</b>`)}
           ${row('Effective From', p.effectiveFrom)}
           ${row('Effective To', p.effectiveTo)}

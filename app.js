@@ -25,6 +25,28 @@ const App = {
       { code: 'SOC-003', name: 'Bargaon Beej Samiti', district: 'Narsinghpur', members: 48, status: 'Active' },
       { code: 'SOC-004', name: 'Patan Krishi Vikas Samiti', district: 'Chhindwara', members: 91, status: 'Active' },
     ],
+    // Society-wise members (admin view). Keyed by society code.
+    socMembers: {
+      'SOC-001': [
+        { id: 'MBR-001', name: 'Ramesh Kumar', father: 'Suresh Kumar', mobile: '9876543210', gender: 'Male', category: 'General', email: 'ramesh@example.com', village: 'Rampur', block: 'Patan', district: 'Chhindwara', pincode: '480001', totalLand: 4.5, status: 'Active', joiningDate: '2023-04-15' },
+        { id: 'MBR-004', name: 'Geeta Yadav', father: 'Ram Yadav', mobile: '9876500004', gender: 'Female', category: 'OBC', email: 'geeta@example.com', village: 'Rampur', block: 'Patan', district: 'Chhindwara', pincode: '480001', totalLand: 2.8, status: 'Active', joiningDate: '2023-05-02' },
+        { id: 'MBR-005', name: 'Mohan Lal', father: 'Shyam Lal', mobile: '9876500005', gender: 'Male', category: 'General', email: 'mohan@example.com', village: 'Rau', block: 'Patan', district: 'Chhindwara', pincode: '480001', totalLand: 5.1, status: 'Active', joiningDate: '2023-07-18' }
+      ],
+      'SOC-002': [
+        { id: 'MBR-002', name: 'Sunita Devi', father: 'Mohan Lal', mobile: '9876543211', gender: 'Female', category: 'OBC', email: 'sunita@example.com', village: 'Sehora', block: 'Patan', district: 'Seoni', pincode: '480002', totalLand: 3.2, status: 'Active', joiningDate: '2023-06-20' },
+        { id: 'MBR-006', name: 'Rakesh Sahu', father: 'Bihari Sahu', mobile: '9876500006', gender: 'Male', category: 'OBC', email: 'rakesh@example.com', village: 'Sehora', block: 'Seoni', district: 'Seoni', pincode: '480002', totalLand: 4.0, status: 'Active', joiningDate: '2023-08-11' }
+      ],
+      'SOC-003': [
+        { id: 'MBR-003', name: 'Dinesh Patel', father: 'Kailash Patel', mobile: '9876543212', gender: 'Male', category: 'SC', email: 'dinesh@example.com', village: 'Bargaon', block: 'Harrai', district: 'Narsinghpur', pincode: '480003', totalLand: 6.0, status: 'Active', joiningDate: '2023-03-10' }
+      ],
+      'SOC-004': [
+        { id: 'MBR-007', name: 'Pooja Verma', father: 'Rajesh Verma', mobile: '9876500007', gender: 'Female', category: 'General', email: 'pooja@example.com', village: 'Patan', block: 'Patan', district: 'Chhindwara', pincode: '480004', totalLand: 3.6, status: 'Active', joiningDate: '2023-09-01' },
+        { id: 'MBR-008', name: 'Anil Kushwaha', father: 'Hari Kushwaha', mobile: '9876500008', gender: 'Male', category: 'OBC', email: 'anil@example.com', village: 'Patan', block: 'Patan', district: 'Chhindwara', pincode: '480004', totalLand: 2.2, status: 'Active', joiningDate: '2023-10-05' }
+      ]
+    },
+    // UI: which society is open in the admin society-members view, and which member's details modal is open
+    adminSocViewCode: null,
+    adminSocMemberViewId: null,
     adminDemands: [
       { id: 'DEM-2024-001', society: 'Rampur Krishi Samiti', socCode: 'SOC-001', district: 'Chhindwara', date: '2024-06-15', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', requestedQty: 120, approvedQty: 120, pendingQty: 0, members: 65, payStatus: 'Paid', approvalStatus: 'Approved', remarks: '' },
       { id: 'DEM-2024-004', society: 'Sehora Kisan Sabha', socCode: 'SOC-002', district: 'Seoni', date: '2024-11-20', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', requestedQty: 180, approvedQty: 0, pendingQty: 180, members: 72, payStatus: 'Paid', approvalStatus: 'Pending', remarks: '' },
@@ -501,13 +523,12 @@ const App = {
       'payment': 'Payment', 'demand-history': 'Breeder Seed Demand History',
       'seed-allocation': 'Seed Allocation', 'distribution-register': 'Distribution Register',
       'payment-history': 'Payment History', 'society-reports': 'Society Reports',
-      'admin-societies': 'Society Management', 'admin-demands': 'Demand Management',
+      'admin-societies': 'Society Members', 'admin-demands': 'Demand Management',
       'admin-stock': 'Stock Management', 'admin-distribution': 'Distribution Management',
       'admin-reports': 'Reports', 'demand-review': 'Demand Review',
       'profile': 'My Profile',
       'reset-password': 'Reset Password',
       // New pages
-      'admin-society-allocation': 'Society Allocation',
       'admin-dispatch-orders': 'Dispatch Orders',
       'admin-dist-tracking': 'Distribution Tracking',
       'admin-dist-tracking': 'Distribution Tracking',
@@ -668,7 +689,6 @@ const App = {
         </div>
         <div class="nav-section">
           <div class="nav-section-title">Distribution Management</div>
-          ${ni('assignment_turned_in', 'Society Allocation', 'admin-society-allocation')}
           ${ni('local_shipping', 'Dispatch Orders', 'admin-dispatch-orders')}
           ${ni('track_changes', 'Distribution Tracking', 'admin-dist-tracking')}
         </div>
@@ -2346,9 +2366,14 @@ const App = {
   // ============================
   // SCREEN 10: ADMIN SOCIETIES
   // ============================
+  // Society-wise member list. If a society is selected, show its members.
   renderAdminSocieties() {
+    if (this.state.adminSocViewCode) {
+      return this.renderAdminSocietyMembers(this.state.adminSocViewCode);
+    }
+    const memCount = code => (this.state.socMembers[code] || []).length;
     return `
-    <div class="page-header"><h1>Society Management</h1><p>Manage all registered societies</p></div>
+    <div class="page-header"><h1>Society Members</h1><p>View society-wise member data and details</p></div>
     <div class="search-bar">
       <div class="search-field">
         <label>Society Name / Code</label>
@@ -2358,27 +2383,23 @@ const App = {
         <label>District</label>
         <select class="form-control"><option>All Districts</option><option>Chhindwara</option><option>Seoni</option><option>Narsinghpur</option></select>
       </div>
-      <div class="search-field">
-        <label>Status</label>
-        <select class="form-control"><option>All</option><option>Active</option><option>Inactive</option></select>
-      </div>
     </div>
     <div class="card">
+      <div class="card-header"><h3>Societies (${this.state.societies.length})</h3></div>
       <div class="card-body" style="padding:0;">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Society Code</th><th>Society Name</th><th>District</th><th>Members</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Society Code</th><th>Society Name</th><th>District</th><th>Members</th><th>Actions</th></tr></thead>
             <tbody>
               ${this.state.societies.map(s => `<tr>
                 <td><b>${s.code}</b></td>
                 <td>${s.name}</td>
                 <td>${s.district}</td>
-                <td>${s.members} <span style="font-size:0.75rem;color:#666;">${s.members >= 50 ? '✓' : '⚠ <50'}</span></td>
-                <td><span class="badge ${s.status === 'Active' ? 'badge-success' : 'badge-danger'}">${s.status}</span></td>
+                <td>${memCount(s.code)}</td>
                 <td>
                   <div class="action-btns">
-                    <button class="btn ${s.status === 'Active' ? 'btn-danger' : 'btn-success'} btn-sm" onclick="App.toggleSociety('${s.code}')">
-                      ${s.status === 'Active' ? 'Deactivate' : 'Activate'}
+                    <button class="btn btn-info btn-sm" title="View Members" onclick="App.openAdminSociety('${s.code}')">
+                      <span class="material-icons" style="font-size:16px;">visibility</span> View
                     </button>
                   </div>
                 </td>
@@ -2390,11 +2411,93 @@ const App = {
     </div>`;
   },
 
-  toggleSociety(code) {
-    const s = this.state.societies.find(x => x.code === code);
-    if (s) s.status = s.status === 'Active' ? 'Inactive' : 'Active';
-    this.showToast(`Society ${code} status updated`);
-    this.render();
+  openAdminSociety(code) { this.state.adminSocViewCode = code; this.state.adminSocMemberViewId = null; this.render(); },
+  closeAdminSociety() { this.state.adminSocViewCode = null; this.state.adminSocMemberViewId = null; this.render(); },
+
+  // Members of a single society + per-member details (View) action.
+  renderAdminSocietyMembers(code) {
+    const soc = this.state.societies.find(s => s.code === code) || { code: code, name: code, district: '—' };
+    const members = this.state.socMembers[code] || [];
+    return `
+    <div class="page-header">
+      <h1>${soc.name} — Members</h1>
+      <p>${soc.code} • ${soc.district} • ${members.length} member${members.length === 1 ? '' : 's'}</p>
+    </div>
+    <div style="margin-bottom:14px;">
+      <button class="btn btn-gray btn-sm" onclick="App.closeAdminSociety()">
+        <span class="material-icons" style="font-size:16px;">arrow_back</span> Back to Societies
+      </button>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Member List</h3></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Member ID</th><th>Name</th><th>Gender</th><th>Category</th><th>Mobile</th><th>Village</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${members.length === 0 ? '<tr><td colspan="8" style="text-align:center;padding:30px;color:#9E9E9E;">No members found for this society.</td></tr>'
+        : members.map(m => `<tr>
+                <td><b>${m.id}</b></td>
+                <td>${m.name}</td>
+                <td>${m.gender}</td>
+                <td>${m.category}</td>
+                <td>${m.mobile}</td>
+                <td>${m.village}</td>
+                <td><span class="badge ${m.status === 'Active' ? 'badge-success' : 'badge-danger'}">${m.status}</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-info btn-sm" title="View Details" onclick="App.openAdminSocMember('${m.id}')">
+                      <span class="material-icons" style="font-size:16px;">visibility</span> View
+                    </button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    ${this.state.adminSocMemberViewId ? this.renderAdminSocMemberModal() : ''}`;
+  },
+
+  openAdminSocMember(id) { this.state.adminSocMemberViewId = id; this.render(); },
+  closeAdminSocMember() { this.state.adminSocMemberViewId = null; this.render(); },
+
+  renderAdminSocMemberModal() {
+    const members = this.state.socMembers[this.state.adminSocViewCode] || [];
+    const m = members.find(x => x.id === this.state.adminSocMemberViewId);
+    if (!m) return '';
+    const row = (label, val) => `
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
+        <span style="color:#757575;">${label}</span><span style="font-weight:600;color:#212121;">${val != null && val !== '' ? val : '—'}</span>
+      </div>`;
+    return `
+    <div class="modal-overlay" onclick="if(event.target===this)App.closeAdminSocMember()">
+      <div class="modal-box" style="max-width:480px;">
+        <div class="modal-header">
+          <h3>Member Details — ${m.id}</h3>
+          <button class="modal-close" onclick="App.closeAdminSocMember()">✕</button>
+        </div>
+        <div class="modal-body">
+          ${row('Name', m.name)}
+          ${row("Father's Name", m.father)}
+          ${row('Gender', m.gender)}
+          ${row('Category', m.category)}
+          ${row('Mobile', m.mobile)}
+          ${row('Email', m.email)}
+          ${row('Village', m.village)}
+          ${row('Block', m.block)}
+          ${row('District', m.district)}
+          ${row('Pincode', m.pincode)}
+          ${row('Total Land (acres)', m.totalLand)}
+          ${row('Status', m.status)}
+          ${row('Joining Date', m.joiningDate)}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-gray" onclick="App.closeAdminSocMember()">Close</button>
+        </div>
+      </div>
+    </div>`;
   },
 
   // ============================
@@ -2431,7 +2534,7 @@ const App = {
           <table id="admin-demand-table">
             <thead>
               <tr>
-                <th>Demand ID</th><th>Society</th><th>Crop / Variety</th>
+                <th>Society</th><th>Crop / Variety</th>
                 <th>Requested</th><th>Approved</th><th>Pending</th>
                 <th>Payment</th><th>Approval</th><th>Actions</th>
               </tr>
@@ -2441,9 +2544,8 @@ const App = {
       const stk = this.state.stock.find(s => s.crop === dem.crop && s.variety === dem.variety);
       const avail = stk ? (stk.available - stk.allocated) : 0;
       return `<tr>
-                  <td><b>${dem.id}</b><div style="font-size:0.7rem;color:#9E9E9E;">${dem.date}</div></td>
                   <td><div style="font-weight:500;font-size:0.85rem;">${dem.society}</div>
-                      <div style="font-size:0.72rem;color:#9E9E9E;">${dem.socCode} | ${dem.season}</div></td>
+                      <div style="font-size:0.72rem;color:#9E9E9E;">${dem.socCode} | ${dem.season} | ${dem.date}</div></td>
                   <td>${dem.crop}<div style="font-size:0.72rem;color:#9E9E9E;">${dem.variety}</div></td>
                   <td style="font-weight:600;">${dem.requestedQty} Qt</td>
                   <td style="color:#2E7D32;font-weight:600;">${dem.approvedQty > 0 ? dem.approvedQty + ' Qt' : '—'}</td>
@@ -4162,7 +4264,6 @@ const App = {
       case 'profile': return this.renderProfile();
       case 'reset-password': return this.renderResetPasswordPage();
       // ── Admin Distribution Management ──
-      case 'admin-society-allocation': return this.renderAdminSocietyAllocation();
       case 'admin-dispatch-orders': return this.renderAdminDispatchOrders();
       case 'admin-dist-tracking': return this.renderAdminDistTracking();
       // ── Society Seed Distribution Workflow ──
@@ -4545,31 +4646,15 @@ const App = {
       <h1>Dispatch Orders</h1>
       <p>Manage and track seed dispatch to societies</p>
     </div>
-    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-bottom:20px;">
-      <div class="stat-card"><div class="stat-icon"><span class="material-icons">receipt_long</span></div>
-        <div class="stat-info"><div class="value">${orders.length}</div><div class="label">Total Orders</div></div></div>
-      <div class="stat-card orange"><div class="stat-icon"><span class="material-icons">pending</span></div>
-        <div class="stat-info"><div class="value">${orders.filter(o => o.status === 'Pending' || o.status === 'Allocated').length}</div><div class="label">Allocated / Pending</div></div></div>
-      <div class="stat-card blue"><div class="stat-icon"><span class="material-icons">local_shipping</span></div>
-        <div class="stat-info"><div class="value">${orders.filter(o => o.status === 'Dispatched').length}</div><div class="label">Dispatched</div></div></div>
-      <div class="stat-card teal"><div class="stat-icon"><span class="material-icons">check_circle</span></div>
-        <div class="stat-info"><div class="value">${orders.filter(o => o.status === 'Received').length}</div><div class="label">Received</div></div></div>
-    </div>
     <div class="card">
       <div class="card-header">
         <h3>Dispatch Order List</h3>
-        <button class="btn btn-outline btn-sm" onclick="App.navigate('admin-society-allocation')">
-          ← Back to Allocation
-        </button>
       </div>
       <div class="card-body" style="padding:0;">
         ${orders.length === 0 ? `
         <div style="padding:48px;text-align:center;color:#9E9E9E;">
           <span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">local_shipping</span>
           <p>No dispatch orders yet.</p>
-          <button class="btn btn-primary" style="margin-top:12px;" onclick="App.navigate('admin-society-allocation')">
-            Create Allocation First
-          </button>
         </div>` : `
         <div class="table-wrap">
           <table>

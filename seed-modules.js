@@ -89,12 +89,11 @@
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Management</div>',
-      ni('business', 'Society Management', 'admin-societies'),
+      ni('groups', 'Society Members', 'admin-societies'),
       ni('receipt_long', 'Demand Management', 'admin-demands'),
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Distribution Workflow</div>',
-      ni('assignment_turned_in', 'Society Allocation', 'admin-society-allocation'),
       ni('local_shipping', 'Dispatch Orders', 'admin-dispatch-orders'),
       '</div>',
 
@@ -349,32 +348,31 @@ App.smRenderHybridList = function () {
     + '<button class="btn btn-danger btn-sm"><span class="material-icons">picture_as_pdf</span> PDF</button>'
     + '</div></div>'
     + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>ID</th><th>Season</th><th>Variety</th><th>Parent Variety</th>'
-    + '<th>Society</th><th>Alloc Qty</th><th>Exp. Prod.</th><th>Alloc Date</th>'
-    + '<th>Last Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    + '<thead><tr><th>ID</th><th>Season</th><th>Variety</th>'
+    + '<th>Society</th><th>Alloc Qty</th><th>Exp. Prod.</th><th>Alloc / Last Date</th>'
+    + '<th>Status</th><th>Actions</th></tr></thead><tbody>';
 
   if (rows.length === 0) {
-    html += '<tr><td colspan="11" style="text-align:center;padding:40px;color:#9E9E9E;">No records found.</td></tr>';
+    html += '<tr><td colspan="9" style="text-align:center;padding:40px;color:#9E9E9E;">No records found.</td></tr>';
   } else {
     rows.forEach(function (r) {
+      var act = (r.activeStatus || 'Active');
       html += '<tr>'
         + '<td><b>' + r.id + '</b></td>'
         + '<td>' + r.season + '</td>'
-        + '<td>' + r.variety + '</td>'
-        + '<td style="color:#757575;">' + (r.parentVariety || '—') + '</td>'
+        + '<td><div style="font-weight:500;">' + r.variety + '</div>'
+        + (r.parentVariety ? '<div style="font-size:.72rem;color:#9E9E9E;">Parent: ' + r.parentVariety + '</div>' : '') + '</td>'
         + '<td>' + r.society + '</td>'
         + '<td style="font-weight:600;color:#2E7D32;">' + r.allocQty + ' Qt</td>'
         + '<td>' + r.expectedProd + ' Qt</td>'
-        + '<td style="font-size:.8rem;">' + r.allocDate + '</td>'
-        + '<td style="font-size:.8rem;">' + r.lastDate + '</td>'
-        + '<td>' + App._smBadge(r.status) + '</td>'
-        + '<td><div class="action-btns">'
+        + '<td style="font-size:.78rem;"><div>' + r.allocDate + '</div><div style="color:#9E9E9E;">to ' + r.lastDate + '</div></td>'
+        + '<td><span class="badge ' + (act === 'Active' ? 'badge-success' : 'badge-danger') + '">' + act + '</span></td>'
         + '<td><div class="action-btns">'
         + '<button class="btn btn-info btn-sm" title="View" onclick="App.state.hybridSelId=\'' + r.id + '\';App.navigate(\'admin-hybrid-view\')">'
         + '<span class="material-icons" style="font-size:14px;">visibility</span></button>'
         + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.state.hybridSelId=\'' + r.id + '\';App.navigate(\'admin-hybrid-edit\')">'
         + '<span class="material-icons" style="font-size:14px;">edit</span></button>'
-        + '<button class="btn ' + ((r.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smHybridToggleActive(\'' + r.id + '\')">' + ((r.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
+        + '<button class="btn ' + (act === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smHybridToggleActive(\'' + r.id + '\')">' + (act === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
         + '</div></td></tr>';
     });
   }

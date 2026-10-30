@@ -2273,3 +2273,61 @@ input[type="text"][id*="OTP"] {
 .header-right {
   position: relative;
 }
+
+/* ── Stock Dashboard: compact stat cards ───────────────────── */
+.sm-stats-compact {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.stat-card.sm-stat-sm {
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.stat-card.sm-stat-sm .stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+}
+
+.stat-card.sm-stat-sm .stat-icon .material-icons {
+  font-size: 22px;
+}
+
+.stat-card.sm-stat-sm .stat-info .value {
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.stat-card.sm-stat-sm .stat-info .label {
+  font-size: 0.74rem;
+}
+
+/* ── Compact table action buttons ──────────────────────────── */
+.action-btns {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.action-btns .btn,
+.action-btns .btn.btn-sm {
+  padding: 5px 9px;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  min-height: 0;
+  border-radius: 6px;
+}
+
+.action-btns .btn .material-icons {
+  font-size: 15px !important;
+}
+
+/* Icon-only action buttons (View/Edit) — keep them small and square */
+.action-btns .btn.btn-outline,
+.action-btns .btn.btn-info,
+.action-btns .btn.btn-warning {
+  padding: 5px 7px;
+}

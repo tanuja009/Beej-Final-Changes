@@ -92,6 +92,18 @@ App._smSeasonOpts = function (sel) { return SM.seasons.filter(function (s) { ret
 App._smFinYearOpts = function (sel) { return SM.financialYears.filter(function (fy) { return fy.status === 'Active'; }).map(function (fy) { return '<option value="' + fy.name + '"' + (sel === fy.name ? ' selected' : '') + '>' + fy.name + '</option>'; }).join(''); };
 App._smCropOpts = function (season, sel) { return App._smCropsForSeason(season).map(function (c) { return '<option value="' + c.name + '"' + (sel === c.name ? ' selected' : '') + '>' + c.name + '</option>'; }).join(''); };
 App._smCropCode = function (name) { var c = SM.crops.find(function (x) { return x.name === name; }); return c ? c.code : ''; };
+// Crop Name dropdown options (common crops). Keeps the current value selected when editing.
+App._smCropNameOpts = function (sel) {
+  var names = ['Paddy', 'Wheat', 'Soybean', 'Gram', 'Mustard', 'Maize', 'Bajra', 'Jowar', 'Cotton', 'Groundnut', 'Lentil (Masoor)', 'Pigeon Pea (Arhar)'];
+  if (sel && names.indexOf(sel) === -1) names.unshift(sel);
+  return names.map(function (n) { return '<option' + (sel === n ? ' selected' : '') + '>' + n + '</option>'; }).join('');
+};
+// Variety Name dropdown options (common seed varieties). Keeps the current value selected when editing.
+App._smVarietyNameOpts = function (sel) {
+  var names = ['IR-64', 'MTU-7029', 'GW-322', 'HD-2967', 'JS-335', 'JG-315', 'Pusa Bold', 'Swarna', 'Pusa Basmati-1'];
+  if (sel && names.indexOf(sel) === -1) names.unshift(sel);
+  return names.map(function (n) { return '<option' + (sel === n ? ' selected' : '') + '>' + n + '</option>'; }).join('');
+};
 // Financial Year options from 2021-2022 up to the current FY (Indian FY: Apr-Mar), newest first.
 App._smFinYearRangeOpts = function (sel) {
   var now = new Date();
@@ -209,22 +221,20 @@ App.smDashboard = function () {
     dispatched += r.outward;
   });
   return '<div class="page-header"><h1>Stock Dashboard</h1><p>Monitor stock summary and movements</p></div>'
-    + '<div class="stats-grid">'
-    + '<div class="stat-card"><div class="stat-icon"><span class="material-icons">warehouse</span></div><div class="stat-info"><div class="value">' + total.toLocaleString() + ' KG</div><div class="label">Total Stock</div></div></div>'
-    + '<div class="stat-card"><div class="stat-icon"><span class="material-icons">inventory</span></div><div class="stat-info"><div class="value">' + avail.toLocaleString() + ' KG</div><div class="label">Available Stock</div></div></div>'
-    + '<div class="stat-card blue"><div class="stat-icon"><span class="material-icons">lock</span></div><div class="stat-info"><div class="value">' + allocated + ' KG</div><div class="label">Allocated Stock</div></div></div>'
-    + '<div class="stat-card teal"><div class="stat-icon"><span class="material-icons">local_shipping</span></div><div class="stat-info"><div class="value">' + dispatched.toLocaleString() + ' KG</div><div class="label">Dispatched Stock</div></div></div>'
-    + '<div class="stat-card orange"><div class="stat-icon"><span class="material-icons">undo</span></div><div class="stat-info"><div class="value">' + returned + ' KG</div><div class="label">Returned Stock</div></div></div>'
-    + '<div class="stat-card red"><div class="stat-icon"><span class="material-icons">broken_image</span></div><div class="stat-info"><div class="value">' + damaged + ' KG</div><div class="label">Damaged Stock</div></div></div>'
+    + '<div class="stats-grid sm-stats-compact">'
+    + '<div class="stat-card sm-stat-sm"><div class="stat-icon"><span class="material-icons">warehouse</span></div><div class="stat-info"><div class="value">' + total.toLocaleString() + ' Quintal</div><div class="label">Total Stock</div></div></div>'
+    + '<div class="stat-card sm-stat-sm"><div class="stat-icon"><span class="material-icons">inventory</span></div><div class="stat-info"><div class="value">' + avail.toLocaleString() + ' Quintal</div><div class="label">Available Stock</div></div></div>'
+    + '<div class="stat-card blue sm-stat-sm"><div class="stat-icon"><span class="material-icons">lock</span></div><div class="stat-info"><div class="value">' + allocated + ' Quintal</div><div class="label">Allocated Stock</div></div></div>'
+    + '<div class="stat-card teal sm-stat-sm"><div class="stat-icon"><span class="material-icons">local_shipping</span></div><div class="stat-info"><div class="value">' + dispatched.toLocaleString() + ' Quintal</div><div class="label">Dispatched Stock</div></div></div>'
     + '</div>'
     + '<div class="card" style="margin-top:20px;"><div class="card-header"><h3>Stock Summary</h3></div>'
     + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Season</th><th>Crop</th><th>Variety</th><th>Sub-Variety</th><th>Opening</th><th>Inward</th><th>Outward</th><th>Available</th></tr></thead><tbody>'
+    + '<thead><tr><th>Season</th><th>Crop</th><th>Variety</th><th>Opening</th><th>Available</th></tr></thead><tbody>'
     + inv.map(function (r) {
       var a = App._smAvail(r);
-      return '<tr><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td><td>' + (r.subVariety || '—') + '</td>'
-        + '<td>' + r.opening + '</td><td style="color:#2E7D32;">' + r.inward + '</td><td style="color:#C62828;">' + r.outward + '</td>'
-        + '<td style="font-weight:700;color:' + (a > 0 ? '#2E7D32' : '#C62828') + ';">' + a + ' ' + r.unit + '</td></tr>';
+      return '<tr><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td>'
+        + '<td>' + r.opening + '</td>'
+        + '<td style="font-weight:700;color:' + (a > 0 ? '#2E7D32' : '#C62828') + ';">' + a + ' Quintal</td></tr>';
     }).join('')
     + '</tbody></table></div></div></div>';
 };
@@ -486,7 +496,7 @@ App.smVarietyForm = function () {
     + '<div class="form-grid">'
     + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" id="vf-season"><option value="">Select</option>' + App._smSeasonOpts(r ? r.season : '') + '</select></div>'
     + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="vf-crop"><option value="">Select</option>' + App._smCropOpts('', r ? r.crop : '') + '</select></div>'
-    + '<div class="form-group"><label>Variety Name <span style="color:#F44336">*</span></label><input class="form-control" id="vf-name" value="' + (r ? r.name : '') + '" placeholder="e.g. IR-64"></div>'
+    + '<div class="form-group"><label>Variety Name <span style="color:#F44336">*</span></label><select class="form-control" id="vf-name"><option value="">Select Variety</option>' + App._smVarietyNameOpts(r ? r.name : '') + '</select></div>'
     + '<div class="form-group"><label>Variety Code <span style="color:#F44336">*</span></label><input class="form-control" id="vf-code" value="' + (r ? r.code : '') + '" placeholder="e.g. IR64" style="text-transform:uppercase;"></div>'
     + '<div class="form-group" style="grid-column:1/-1;"><label>Description</label><textarea class="form-control" id="vf-desc" rows="2">' + (r ? r.desc : '') + '</textarea></div>'
     + '<div class="form-group"><label>Status</label><select class="form-control" id="vf-status"><option value="Active"' + (r && r.status === 'Active' ? ' selected' : '') + '>Active</option><option value="Inactive"' + (r && r.status === 'Inactive' ? ' selected' : '') + '>Inactive</option></select></div>'
@@ -701,7 +711,7 @@ App.smCropForm = function () {
     + '<div class="card"><div class="card-body">'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">grass</span> Crop Details</div>'
     + '<div class="form-grid">'
-    + '<div class="form-group"><label>Crop Name <span style="color:#F44336">*</span></label><input class="form-control" id="cf-name" value="' + (r ? r.name : '') + '" placeholder="e.g. Paddy"></div>'
+    + '<div class="form-group"><label>Crop Name <span style="color:#F44336">*</span></label><select class="form-control" id="cf-name"><option value="">Select Crop</option>' + App._smCropNameOpts(r ? r.name : '') + '</select></div>'
     + '<div class="form-group"><label>Crop Code <span style="color:#F44336">*</span></label><input class="form-control" id="cf-code" value="' + (r ? r.code : '') + '" placeholder="e.g. PDY" style="text-transform:uppercase;"></div>'
     + '<div class="form-group" style="grid-column:1/-1;"><label>Applicable Seasons</label><div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 0;">' + (seasonChecks || '<span style="color:#9E9E9E;font-size:0.82rem;">No active seasons</span>') + '</div></div>'
     + '<div class="form-group" style="grid-column:1/-1;"><label>Description</label><textarea class="form-control" id="cf-desc" rows="2">' + (r ? (r.desc || '') : '') + '</textarea></div>'

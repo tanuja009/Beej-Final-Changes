@@ -6,6 +6,7 @@ const App = {
     currentUser: null,
     currentPage: 'login',
     currentRole: 'society',  // 'society' | 'admin'
+    loginMethod: 'password', // 'password' | 'mobile-otp' | 'email-otp'
     sidebarOpen: false,
     // Mock data
     members: [
@@ -21,7 +22,7 @@ const App = {
     societies: [
       { code: 'SOC-001', name: 'Rampur Krishi Samiti', district: 'Chhindwara', members: 65, status: 'Active' },
       { code: 'SOC-002', name: 'Sehora Kisan Sabha', district: 'Seoni', members: 72, status: 'Active' },
-      { code: 'SOC-003', name: 'Bargaon Beej Samiti', district: 'Narsinghpur', members: 48, status: 'Inactive' },
+      { code: 'SOC-003', name: 'Bargaon Beej Samiti', district: 'Narsinghpur', members: 48, status: 'Active' },
       { code: 'SOC-004', name: 'Patan Krishi Vikas Samiti', district: 'Chhindwara', members: 91, status: 'Active' },
     ],
     adminDemands: [
@@ -186,29 +187,38 @@ const App = {
 
   // ---- LOGIN ----
   renderLogin() {
-    return `
-    <div class="login-page">
-      <div class="login-header">
-        <div class="emblem">🌾</div>
-        <h1>Beej Sangh Procurement Portal</h1>
-        <p>Madhya Pradesh State Agriculture Department</p>
-      </div>
-      <div class="login-card">
-        <h2>🔐 Sign In to Portal</h2>
-        <div class="role-tabs">
-          <button class="role-tab ${this.state.currentRole === 'society' ? 'active' : ''}" onclick="App.setRole('society')">
-            🧑‍🌾 Society Head
-          </button>
-          <button class="role-tab ${this.state.currentRole === 'admin' ? 'active' : ''}" onclick="App.setRole('admin')">
-            🏛️ Beej Sangh Admin
-          </button>
+    const method = this.state.loginMethod || 'password';
+    const roleLabel = this.state.currentRole === 'admin' ? 'Beej Sangh Admin' : 'Society Head';
+
+    // Login-method selector (available for BOTH roles)
+    const methodBtn = (val, icon, label) => `
+      <button type="button"
+        onclick="App.setLoginMethod('${val}')"
+        style="flex:1;min-width:0;padding:9px 6px;border:1px solid ${method === val ? '#4CAF50' : '#E0E0E0'};
+               background:${method === val ? '#E8F5E9' : '#fff'};color:${method === val ? '#1B5E20' : '#666'};
+               border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;
+               display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <span class="material-icons" style="font-size:18px;">${icon}</span>${label}
+      </button>`;
+
+    const methodSelector = `
+      <div style="margin-bottom:18px;">
+        <label style="font-size:0.82rem;font-weight:600;color:#555;display:block;margin-bottom:8px;">Login Method</label>
+        <div style="display:flex;gap:8px;">
+          ${methodBtn('password', 'password', 'NCD ID &amp; Password')}
+          ${methodBtn('mobile-otp', 'phone_android', 'Mobile OTP')}
+          ${methodBtn('email-otp', 'mail', 'Email OTP')}
         </div>
+      </div>`;
+
+    // ── Method 1: NCD ID + Password ──
+    const passwordForm = `
         ${this.state.currentRole === 'society' ? `
         <div class="form-group">
-          <label>Society Code</label>
+          <label>NCD ID</label>
           <div class="input-icon-wrap">
-            <span class="material-icons">business</span>
-            <input type="text" class="form-control" placeholder="e.g. SOC-001" value="SOC-001"/>
+            <span class="material-icons">badge</span>
+            <input type="text" class="form-control" placeholder="e.g. NCD123456" value="NCD123456"/>
           </div>
         </div>` : ''}
         <div class="form-group">
@@ -230,11 +240,36 @@ const App = {
           <span class="material-icons">login</span> Login to Portal
         </button>
         <div class="forgot-link">
-          <a href="#" onclick="App.navigate('forgot-password');return false" style="color:#2E7D32;font-weight:500;">Forgot Password</a> &nbsp;|&nbsp;
-          <a href="#" onclick="App.startOtpLogin();return false" style="color:#2E7D32;font-weight:500;">Login with OTP</a>
+          <a href="#" onclick="App.navigate('forgot-password');return false" style="color:#2E7D32;font-weight:500;">Forgot Password</a>
+        </div>`;
+
+    // ── Method 2 & 3: OTP (mobile / email) — reuses the OTP module ──
+    const otpForm = this.renderLoginOtpSection(method === 'email-otp' ? 'email' : 'mobile');
+
+    return `
+    <div class="login-page">
+      <div class="login-header">
+        <div class="emblem">🌾</div>
+        <h1>Beej Sangh Procurement Portal</h1>
+        <p>Madhya Pradesh State Agriculture Department</p>
+      </div>
+      <div class="login-card">
+        <h2>🔐 Sign In to Portal</h2>
+        <div class="role-tabs">
+          <button class="role-tab ${this.state.currentRole === 'society' ? 'active' : ''}" onclick="App.setRole('society')">
+            🧑‍🌾 Society Head
+          </button>
+          <button class="role-tab ${this.state.currentRole === 'admin' ? 'active' : ''}" onclick="App.setRole('admin')">
+            🏛️ Beej Sangh Admin
+          </button>
         </div>
+
+        ${methodSelector}
+
+        ${method === 'password' ? passwordForm : otpForm}
+
         <div style="margin-top:16px;padding:12px;background:#f5f5f5;border-radius:8px;font-size:0.78rem;color:#666;text-align:center;">
-          Demo: Click <b>Login</b> for ${this.state.currentRole === 'admin' ? 'Admin' : 'Society Head'} Dashboard
+          Demo: ${method === 'password' ? 'Click <b>Login</b>' : 'Send &amp; verify OTP'} to enter the ${roleLabel} Dashboard
         </div>
         <div style="margin-top:14px;text-align:center;padding-top:14px;border-top:1px solid #e8f5e9;">
           <span style="font-size:0.85rem;color:#757575;">New Society? &nbsp;</span>
@@ -248,6 +283,18 @@ const App = {
         </div>
       </div>
     </div>`;
+  },
+
+  setLoginMethod(method) {
+    this.state.loginMethod = method;
+    // Reset the OTP sub-flow whenever the method changes.
+    if (this.state.otpLogin) {
+      this.state.otpLogin.step = 1;
+      this.state.otpLogin.mobile = '';
+      this.state.otpLogin.email = '';
+      this.state.otpLogin.otp = '';
+    }
+    this.render();
   },
 
   setRole(role) {
@@ -837,21 +884,30 @@ const App = {
         </div>
         <div class="form-grid">
           ${this._moField('Samagra ID', 'm-samagra-display', mo.details.samagraId)}
+          ${this._moField('Family ID', 'm-familyid', mo.details.familyId)}
           ${this._moSelect('Title', 'm-title', mo.details.title, ['Mr', 'Mrs', 'Miss'])}
           ${this._moField('First Name', 'm-firstname', mo.details.firstName)}
           ${this._moField('Middle Name', 'm-middlename', mo.details.middleName)}
           ${this._moField('Last Name', 'm-lastname', mo.details.lastName)}
+          ${this._moField("Father's Name", 'm-father', mo.details.father)}
+          ${this._moField("Mother's Name", 'm-mother', mo.details.mother)}
           ${this._moField('Date of Birth', 'm-dob', mo.details.dob)}
           ${this._moField('Gender', 'm-gender', mo.details.gender)}
+          ${this._moField('Marital Status', 'm-marital', mo.details.maritalStatus)}
           ${this._moField('Nationality', 'm-nationality', mo.details.nationality)}
+          ${this._moField('Profession', 'm-profession', mo.details.profession)}
           ${this._moField('Email', 'm-email', mo.details.email)}
           ${this._moField('Category', 'm-category', mo.details.category)}
           ${this._moField('Mobile Number', 'm-mobile', mo.details.mobile)}
           ${this._moField('Address', 'm-address', mo.details.address, true)}
           ${this._moField('District', 'm-district', mo.details.district)}
           ${this._moField('Block', 'm-block', mo.details.block)}
-          ${this._moField('Village', 'm-village', mo.details.village)}
+          ${this._moField('Local Body', 'm-localbody', mo.details.localBody)}
+          ${this._moField('Village / Ward', 'm-village', mo.details.village)}
           ${this._moField('Pincode', 'm-pincode', mo.details.pincode)}
+          ${this._moField('Aadhaar Name', 'm-aadhaar-name', mo.details.aadhaarName)}
+          ${this._moField('Aadhaar (last 4)', 'm-aadhaar-id', mo.details.aadhaarId)}
+          ${this._moField('eKYC Date', 'm-ekyc-date', mo.details.ekycDate)}
           ${this._moSelect('Member Status', 'm-status', mo.details.memberStatus || 'Active', ['Active', 'Inactive'], true)}
           ${this._moDate('Joining Date', 'm-joining-date', mo.details.joiningDate, true)}
           <div class="form-group">
@@ -1015,8 +1071,8 @@ const App = {
       return;
     }
 
-    // 3) Move to OTP stage — an OTP is "sent" to the registered mobile.
-    const registeredMobile = '9876543210';  // mock; would come from Samagra lookup
+    // 3) Move to OTP stage — an OTP is "sent" to the Samagra-registered mobile.
+    const registeredMobile = (this.getSamagraRecord(samagraId).mobileNumber) || '9876543210';
     this.state.memberOnboarding = {
       samagraId,
       stage: 'otp',
@@ -1117,33 +1173,127 @@ const App = {
 
     // Simulate verify + fetch latency, then reveal details.
     setTimeout(() => {
-      const details = {
-        name: 'Priya Sharma',
-        samagraId: mo.samagraId,
-        title: 'Miss',
-        firstName: 'Priya',
-        middleName: '',
-        lastName: 'Sharma',
-        father: 'Ramesh Sharma',
-        dob: '12/08/1990',
-        gender: 'Female',
-        nationality: 'Indian',
-        email: 'priya.sharma@example.com',
-        mobile: mo.otpMobile || '9876543210',
-        address: 'H.No. 12, Ward 4, Main Bazaar, Sehora',
-        district: 'Chhindwara',
-        block: 'Patan',
-        village: 'Sehora',
-        pincode: '480002',
-        category: 'General',
-        memberStatus: 'Active',
-        joiningDate: new Date().toISOString().split('T')[0],
-        ekyc: 'Verified'
-      };
-      this.state.memberOnboarding = { samagraId: mo.samagraId, stage: 'verified', fetched: true, details };
+      // Fetch the Samagra record and map it to the Member Details form fields.
+      const samagra = this.getSamagraRecord(mo.samagraId);
+      const details = this.mapSamagraToMember(samagra);
+      this.state.memberOnboarding = { samagraId: mo.samagraId, stage: 'verified', fetched: true, details: details, samagra: samagra };
       this.render();
       this.showToast('Mobile number verified successfully.');
     }, 600);
+  },
+
+  // ── Samagra API response (mock for wireframe) ──────────────────
+  // Mirrors the real Samagra member-lookup payload. In production this
+  // comes from the Samagra API call for the entered Samagra/Member ID.
+  getSamagraRecord(samagraId) {
+    return {
+      MemberID: samagraId || '136065755',
+      FamilyID: '37515320',
+      firstName: 'Anujkumar',
+      MiddleName: '',
+      lastName: '',
+      Name: 'Anujkumar',
+      NameHi: 'स्वप्निल',
+      firstNameHi: 'स्वप्निल',
+      middleNameHi: '',
+      lastNameHi: '',
+      fatherName: 'Maddulal Mahor',
+      father_id: '136063890',
+      motherName: 'Pyari Bai',
+      mother_id: '136064642',
+      maritalStatusCode: '1',
+      maritalStatus: 'Unmarried',
+      spouse_id: '0',
+      spouseName: '---',
+      relationCode: '3',
+      relationWithHead: 'Son',
+      Gender: 'Male',
+      DOB: '06/06/1992',
+      homeAddress: '403, म.न-403 अमराई वार्ड :Ward No. 55 जोन   :जोन 13, नगर निगम Bhopal नगर निगम, भोपाल जिला :भोपाल ',
+      district: 'BHOPAL',
+      DistrictID: '32',
+      Zone_GP: 'Zone 13, Nagar Nigam Bhopal',
+      GpzoneID: '24734',
+      LocalBody: 'Nagar Nigam',
+      LocalBodyID: '23599',
+      emailAddress: '',
+      Village_Ward: 'Ward No. 55',
+      VillageWardID: '118341',
+      mobileNumber: '9826580983',
+      isHead: 'No',
+      profession: 'Student',
+      caste: 'GEN',
+      isDisabled: 'NO',
+      isBpl: 'NO',
+      education: 'अध्‍ययनरत हैं',
+      Pincode: '462043',
+      member_count: '8',
+      IsRural: '2',
+      gender_id: '1',
+      category_id: '4',
+      R: 'Hindu',
+      Block_Name: null,
+      Annual_Income: '0',
+      is_deleted: 'False',
+      is_Death: 'False',
+      CreatedOn: '3/24/2013 12:00:00 AM',
+      EkycStatus: 'Yes',
+      Refkey: '428022736383111111',
+      EkycDate: '13/08/2026',
+      AadhaarName: 'Swapnil',
+      dob: '06/06/1992',
+      gender: 'M',
+      landmark: '',
+      locality: 'Rampura',
+      street: 'Tehsil seoni malwa,',
+      building: 'Gram rampura, post rupadeh, Rampura  Narmadapuram Madhya Pradesh',
+      pincode: '461223',
+      aadhaarId: '6383'
+    };
+  },
+
+  // Map a Samagra API record to the Member Details form fields.
+  mapSamagraToMember(s) {
+    s = s || {};
+    // Title from gender (Samagra does not return a title).
+    var title = (s.Gender === 'Female') ? (s.maritalStatus === 'Married' ? 'Mrs' : 'Miss') : 'Mr';
+    // Category from caste code.
+    var casteMap = { GEN: 'General', OBC: 'OBC', SC: 'SC', ST: 'ST' };
+    var category = casteMap[(s.caste || '').toUpperCase()] || (s.caste || '');
+    // Prefer the structured address fields; fall back to homeAddress.
+    var addr = [s.building, s.street, s.locality, s.landmark].filter(Boolean).join(', ') || (s.homeAddress || '').trim();
+    return {
+      name: s.Name || [s.firstName, s.MiddleName, s.lastName].filter(Boolean).join(' '),
+      samagraId: s.MemberID || '',
+      familyId: s.FamilyID || '',
+      title: title,
+      firstName: s.firstName || '',
+      middleName: s.MiddleName || '',
+      lastName: s.lastName || '',
+      father: s.fatherName || '',
+      mother: s.motherName || '',
+      maritalStatus: s.maritalStatus || '',
+      dob: s.DOB || s.dob || '',
+      gender: s.Gender || (s.gender === 'M' ? 'Male' : s.gender === 'F' ? 'Female' : ''),
+      nationality: 'Indian',
+      email: s.emailAddress || '',
+      mobile: s.mobileNumber || '',
+      address: addr,
+      district: s.district || '',
+      block: s.Block_Name || '',
+      village: s.Village_Ward || '',
+      pincode: s.pincode || s.Pincode || '',
+      localBody: s.LocalBody || '',
+      category: category,
+      profession: s.profession || '',
+      relationWithHead: s.relationWithHead || '',
+      memberStatus: 'Active',
+      joiningDate: new Date().toISOString().split('T')[0],
+      ekyc: (s.EkycStatus === 'Yes' ? 'Verified' : 'Not Verified'),
+      ekycDate: s.EkycDate || '',
+      aadhaarName: s.AadhaarName || '',
+      aadhaarId: s.aadhaarId || ''
+    };
   },
 
   submitMemberOnboarding() {
@@ -1280,7 +1430,7 @@ const App = {
                   <div class="action-btns">
                     <button class="btn btn-info btn-sm" title="View" onclick="App.openMemberView('${m.id}')"><span class="material-icons" style="font-size:16px;">visibility</span></button>
                     <button class="btn btn-warning btn-sm" title="Edit" onclick="App.openMemberEdit('${m.id}')"><span class="material-icons" style="font-size:16px;">edit</span></button>
-                    <button class="btn btn-danger btn-sm" title="Delete" onclick="App.openMemberDelete('${m.id}')"><span class="material-icons" style="font-size:16px;">delete</span></button>
+                    <button class="btn ${(m.status || 'Active') === 'Active' ? 'btn-danger' : 'btn-success'} btn-sm" onclick="App.toggleMemberActive('${m.id}')">${(m.status || 'Active') === 'Active' ? 'Deactivate' : 'Activate'}</button>
                   </div>
                 </td>
               </tr>`).join('')}
@@ -1306,6 +1456,13 @@ const App = {
   openMemberView(id) { this.state.memberViewId = id; this.navigate('member-view'); },
   openMemberEdit(id) { this.state.memberEditId = id; this.navigate('member-edit'); },
   openMemberDelete(id) { this.state.memberDeleteId = id; this.render(); },
+  toggleMemberActive(id) {
+    const m = this.state.members.find(x => x.id === id);
+    if (!m) return;
+    m.status = (m.status || 'Active') === 'Active' ? 'Inactive' : 'Active';
+    this.showToast('Member marked ' + m.status + '.');
+    this.render();
+  },
   closeMemberDelete() { this.state.memberDeleteId = null; this.render(); },
 
   confirmMemberDelete() {
@@ -1547,10 +1704,6 @@ const App = {
                 <option>Certified Seed</option>
               </select>
             </div>
-            <div class="form-group">
-              <label>Available Stock</label>
-              <input type="text" class="form-control" id="d-avail-stock" placeholder="Check stock" readonly style="background:#f5f5f5;"/>
-            </div>
           </div>
         </div>
 
@@ -1578,29 +1731,6 @@ const App = {
             <div class="form-group">
               <label>Expected Date of Delivery *</label>
               <input type="date" class="form-control" id="d-expected-delivery" value="${new Date().toISOString().slice(0, 10)}"/>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 5: Demand Approval Letter -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="material-icons">attach_file</span> Demand Approval Letter</div>
-          <div class="form-group">
-            <label>Upload Demand Approval Letter *</label>
-            <input type="file" class="form-control" id="d-approval-letter"
-              accept=".pdf,.jpg,.jpeg,.png" style="padding:10px;"/>
-            <span style="font-size:0.75rem;color:#757575;margin-top:4px;display:block;">
-              Upload the demand approval letter issued/approved by the competent authority - PDF, JPG up to 5MB
-            </span>
-          </div>
-        </div>
-
-        <!-- SECTION 6: Demand Status -->
-        <div class="form-section">
-          <div class="form-section-title"><span class="material-icons">flag</span> Demand Status</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Status * Draft</label>
             </div>
           </div>
         </div>
@@ -4059,8 +4189,8 @@ const App = {
       this.startResendCountdown();
     }
 
-    // Start the resend OTP countdown on the OTP-login page (step 2)
-    if (this.state.currentPage === 'otp-login' &&
+    // Start the resend OTP countdown on the OTP step (login page inline OR the OTP-login page)
+    if ((this.state.currentPage === 'otp-login' || this.state.currentPage === 'login') &&
       document.getElementById('otpl-resend-link') && typeof this.otpLoginStartCountdown === 'function') {
       this.otpLoginStartCountdown();
     }

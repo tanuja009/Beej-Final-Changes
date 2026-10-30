@@ -374,8 +374,7 @@ App.smRenderHybridList = function () {
         + '<span class="material-icons" style="font-size:14px;">visibility</span></button>'
         + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.state.hybridSelId=\'' + r.id + '\';App.navigate(\'admin-hybrid-edit\')">'
         + '<span class="material-icons" style="font-size:14px;">edit</span></button>'
-        + '<button class="btn btn-danger btn-sm" title="Delete" onclick="App.smHybridDelete(\'' + r.id + '\')">'
-        + '<span class="material-icons" style="font-size:14px;">delete</span></button>'
+        + '<button class="btn ' + ((r.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smHybridToggleActive(\'' + r.id + '\')">' + ((r.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
         + '</div></td></tr>';
     });
   }
@@ -530,6 +529,14 @@ App.smHybridDelete = function (id) {
   App.render();
 };
 
+App.smHybridToggleActive = function (id) {
+  var r = (App.state.hybridAllocs || []).find(function (x) { return x.id === id; });
+  if (!r) return;
+  r.activeStatus = (r.activeStatus || 'Active') === 'Active' ? 'Inactive' : 'Active';
+  App._smToast('Allocation marked ' + r.activeStatus + '.');
+  App.render();
+};
+
 // ══════════════════════════════════════════════
 // 11. FOUNDATION & CERTIFIED — LIST
 // ══════════════════════════════════════════════
@@ -611,8 +618,7 @@ App.smRenderFCList = function () {
         + '<span class="material-icons" style="font-size:14px;">visibility</span></button>'
         + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.state.fcSelId=\'' + r.id + '\';App.navigate(\'soc-fc-edit\')">'
         + '<span class="material-icons" style="font-size:14px;">edit</span></button>'
-        + '<button class="btn btn-danger btn-sm" title="Delete" onclick="App.smFCDelete(\'' + r.id + '\')">  '
-        + '<span class="material-icons" style="font-size:14px;">delete</span></button>'
+        + '<button class="btn ' + ((r.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smFCToggleActive(\'' + r.id + '\')">' + ((r.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
         + '</div></td></tr>';
     });
   }
@@ -1003,5 +1009,13 @@ App.smFCDelete = function (id) {
   if (!confirm('Delete seed stock record ' + id + '? This cannot be undone.')) return;
   App.state.fcSeedStock = App.state.fcSeedStock.filter(function (r) { return r.id !== id; });
   App._smToast('Record deleted.');
+  App.render();
+};
+
+App.smFCToggleActive = function (id) {
+  var r = (App.state.fcSeedStock || []).find(function (x) { return x.id === id; });
+  if (!r) return;
+  r.activeStatus = (r.activeStatus || 'Active') === 'Active' ? 'Inactive' : 'Active';
+  App._smToast('Record marked ' + r.activeStatus + '.');
   App.render();
 };

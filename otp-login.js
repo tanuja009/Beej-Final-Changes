@@ -18,8 +18,10 @@
 // ── Session state for OTP login ───────────────────────────────
 if (!App.state.otpLogin) {
   App.state.otpLogin = {
-    step: 1,          // 1 = mobile+captcha, 2 = enter OTP
+    step: 1,          // 1 = enter mobile/email + captcha, 2 = enter OTP
+    channel: 'mobile',// 'mobile' | 'email'
     mobile: '',
+    email: '',
     otp: '',          // dynamic mock OTP
     otpExpiry: 0,
     resendAt: 0,
@@ -32,6 +34,123 @@ App.OTP_LOGIN_CONFIG = {
   OTP_TTL_MS: 30 * 1000,        // valid for 30s (tied to countdown)
   RESEND_COOLDOWN_MS: 30 * 1000, // 30-second resend countdown
   MAX_ATTEMPTS: 5
+};
+
+// ── Masking helpers for the confirmation message ──────────────
+App._otplMaskMobile = function (m) {
+  const d = String(m || '').replace(/\D/g, '');
+  return d.length >= 4 ? 'X'.repeat(d.length - 4) + d.slice(-4) : d;
+};
+App._otplMaskEmail = function (e) {
+  const s = String(e || '');
+  const at = s.indexOf('@');
+  if (at <= 0) return s;
+  const name = s.slice(0, at), dom = s.slice(at);
+  const shown = name.slice(0, Math.min(2, name.length));
+  return shown + 'X'.repeat(Math.max(1, name.length - shown.length)) + dom;
+};
+
+// ── Inline OTP section rendered INSIDE the login card ─────────
+// channel: 'mobile' | 'email'. Supports both roles (role tabs live
+// on the login page itself). Reuses the same OTP state + verify logic.
+App.renderLoginOtpSection = function (channel) {
+  const s = App.state.otpLogin;
+  s.channel = channel;
+
+  if (s.step === 1) {
+    if (channel === 'email') {
+      return `
+        <div class="form-group" style="margin-bottom:18px;">
+          <label>Email Address <span style="color:#F44336;">*</span></label>
+          <div class="input-icon-wrap">
+            <span class="material-icons">mail</span>
+            <input type="email" id="otpl-email" class="form-control"
+                   placeholder="Enter your registered email" value="${s.email || ''}"
+                   oninput="App.otplClearError('otpl-email-error')"
+                   onkeypress="if(event.key==='Enter') App.otpLoginSendOTP()"/>
+          </div>
+          <div id="otpl-email-error" class="otpl-error" style="display:none;">
+            <span class="material-icons" style="font-size:14px;">error_outline</span>
+            <span class="otpl-error-text"></span>
+          </div>
+        </div>
+        ${BeejCaptcha.getHtml()}
+        <button class="btn btn-primary btn-full btn-lg" style="margin-top:6px;" onclick="App.otpLoginSendOTP()">
+          <span class="material-icons">sms</span> Send OTP
+        </button>`;
+    }
+    return `
+        <div class="form-group" style="margin-bottom:18px;">
+          <label>Mobile Number <span style="color:#F44336;">*</span></label>
+          <div class="input-icon-wrap">
+            <span class="material-icons">phone_android</span>
+            <input type="tel" id="otpl-mobile" class="form-control" inputmode="numeric" maxlength="10"
+                   placeholder="Enter 10-digit mobile number" value="${s.mobile || ''}"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'');App.otplClearError('otpl-mobile-error')"
+                   onkeypress="if(event.key==='Enter') App.otpLoginSendOTP()"/>
+          </div>
+          <div id="otpl-mobile-error" class="otpl-error" style="display:none;">
+            <span class="material-icons" style="font-size:14px;">error_outline</span>
+            <span class="otpl-error-text"></span>
+          </div>
+        </div>
+        ${BeejCaptcha.getHtml()}
+        <button class="btn btn-primary btn-full btn-lg" style="margin-top:6px;" onclick="App.otpLoginSendOTP()">
+          <span class="material-icons">sms</span> Send OTP
+        </button>`;
+  }
+
+  // Step 2 — enter OTP
+  const dest = channel === 'email'
+    ? App._otplMaskEmail(s.email)
+    : '+91 ' + App._otplMaskMobile(s.mobile);
+  return `
+    <div style="background:#E8F5E9;border-left:4px solid #4CAF50;border-radius:8px;
+         padding:12px 16px;margin-bottom:14px;color:#1B5E20;font-size:0.85rem;
+         display:flex;align-items:center;gap:8px;">
+      <span class="material-icons" style="color:#2E7D32;font-size:20px;">mark_email_read</span>
+      <span>OTP sent successfully to <strong>${dest}</strong></span>
+    </div>
+    <div style="background:#FFF8E1;border:1px dashed #FFB300;border-radius:8px;
+         padding:12px 16px;margin-bottom:18px;color:#8D6E00;font-size:0.85rem;
+         display:flex;align-items:center;gap:8px;">
+      <span class="material-icons" style="color:#F9A825;font-size:20px;">bug_report</span>
+      <span>Demo OTP (development only): <strong id="otpl-demo-value"
+            style="letter-spacing:2px;font-size:1rem;color:#E65100;">${s.otp || '------'}</strong></span>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Enter OTP <span style="color:#F44336;">*</span></label>
+      <div class="input-icon-wrap">
+        <span class="material-icons">password</span>
+        <input type="text" id="otpl-otp" class="form-control" inputmode="numeric" maxlength="6"
+               placeholder="Enter 6-digit OTP"
+               style="letter-spacing:8px;font-size:1.15rem;text-align:center;"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'');App.otplClearError('otpl-otp-error')"
+               onkeypress="if(event.key==='Enter') App.otpLoginVerify()"/>
+      </div>
+      <div id="otpl-otp-error" class="otpl-error" style="display:none;">
+        <span class="material-icons" style="font-size:14px;">error_outline</span>
+        <span class="otpl-error-text"></span>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-size:0.82rem;">
+      <span style="color:#757575;">Didn't receive the OTP?</span>
+      <span>
+        <a href="#" id="otpl-resend-link" onclick="App.otpLoginResend();return false;"
+           style="color:#2E7D32;font-weight:600;text-decoration:none;">Resend OTP</a>
+        <span id="otpl-resend-timer" style="color:#9E9E9E;"></span>
+      </span>
+    </div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="App.otpLoginVerify()">
+      <span class="material-icons">verified_user</span> Verify &amp; Login
+    </button>
+    <div style="margin-top:14px;text-align:center;">
+      <a href="#" onclick="App.state.otpLogin.step=1;App.render();return false;"
+         style="color:#666;font-size:0.85rem;text-decoration:none;">
+        <span class="material-icons" style="font-size:16px;vertical-align:middle;">arrow_back</span>
+        Change ${channel === 'email' ? 'Email' : 'Mobile Number'}
+      </a>
+    </div>`;
 };
 
 // ── Entry point (called by the "Login with OTP" link) ─────────
@@ -188,12 +307,30 @@ App.otpLoginIssueOTP = function () {
   s.otpExpiry = Date.now() + cfg.OTP_TTL_MS;
   s.resendAt = Date.now() + cfg.RESEND_COOLDOWN_MS;
   s.attempts = 0;
-  console.log(`[DEMO OTP - LOGIN] Sent to +91 ${s.mobile}: ${s.otp} (valid ${cfg.OTP_TTL_MS / 1000}s)`);
+  const dest = s.channel === 'email' ? s.email : ('+91 ' + s.mobile);
+  console.log(`[DEMO OTP - LOGIN] Sent to ${dest}: ${s.otp} (valid ${cfg.OTP_TTL_MS / 1000}s)`);
 };
 
 // ── Send OTP: validate mobile + CAPTCHA, then issue OTP ───────
 App.otpLoginSendOTP = function () {
   const s = App.state.otpLogin;
+
+  if (s.channel === 'email') {
+    const emailEl = document.getElementById('otpl-email');
+    const email = emailEl ? emailEl.value.trim() : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      App.otplShowError('otpl-email-error', 'Please enter a valid email address.');
+      return;
+    }
+    const captchaE = BeejCaptcha.validate();
+    if (!captchaE.valid) { BeejCaptcha.showError(captchaE.message); return; }
+    s.email = email;
+    App.otpLoginIssueOTP();
+    s.step = 2;
+    App.render();
+    return;
+  }
+
   const mobileEl = document.getElementById('otpl-mobile');
   const mobile = mobileEl ? mobileEl.value.trim() : '';
 
@@ -288,7 +425,7 @@ App.otpLoginVerify = function () {
   App.state.currentUser = App.state.currentRole === 'admin'
     ? { name: 'Admin User', role: 'Beej Sangh Admin', initials: 'AU' }
     : { name: 'Ramesh Verma', role: 'Society Head - SOC-001', initials: 'RV' };
-  App.showToast('Mobile number verified. Logged in successfully.');
+  App.showToast((s.channel === 'email' ? 'Email' : 'Mobile number') + ' verified. Logged in successfully.');
   App.navigate(App.state.currentRole === 'admin' ? 'admin-dashboard' : 'dashboard');
 };
 

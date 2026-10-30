@@ -387,6 +387,16 @@ App._socRegFiltered = function () {
   );
 };
 
+// ── Toggle a society's Active/Inactive status ──────────────────
+App.socRegToggleStatus = function (id) {
+  const s = this.state.regSocieties.find(x => x.societyId === id);
+  if (!s) return;
+  s.activeStatus = ((s.activeStatus || 'Active') === 'Active') ? 'Inactive' : 'Active';
+  s.updatedAt = new Date().toISOString().slice(0, 10);
+  if (typeof this.showToast === 'function') this.showToast('Society marked ' + s.activeStatus + '.');
+  this.render();
+};
+
 
 // ─────────────────────────────────────────────────────────────
 // 7-A  DASHBOARD  (admin-soc-reg)
@@ -666,7 +676,7 @@ App.renderSocRegList = function () {
                     <div style="font-size:0.75rem;color:#757575;">${s.emailId || ''}</div>
                   </td>
                   <td>${s.mobileNumber}</td>
-                  <td>${this._socRegBadge(s.status)}</td>
+                  <td>${this._socRegBadge(s.activeStatus || 'Active')}</td>
                   <td style="font-size:0.8rem;">${s.createdAt}</td>
                   <td>
                     <div class="action-btns">
@@ -684,18 +694,9 @@ App.renderSocRegList = function () {
                           edit
                         </span>
                       </button>
-                      <button class="btn btn-${s.status === 'Active' ? 'danger' : 'success'} btn-sm"
-                        title="${s.status === 'Active' ? 'Deactivate' : 'Activate'}"
+                      <button class="btn btn-${(s.activeStatus || 'Active') === 'Active' ? 'danger' : 'success'} btn-sm"
                         onclick="App.socRegToggleStatus('${s.societyId}')">
-                        <span class="material-icons" style="font-size:14px;">
-                          ${s.status === 'Active' ? 'toggle_off' : 'toggle_on'}
-                        </span>
-                      </button>
-                      <button class="btn btn-danger btn-sm" title="Delete"
-                        onclick="App.socRegDelete('${s.societyId}')">
-                        <span class="material-icons" style="font-size:14px;">
-                          delete
-                        </span>
+                        ${(s.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate'}
                       </button>
                     </div>
                   </td>

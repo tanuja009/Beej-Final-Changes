@@ -1446,7 +1446,7 @@ App.renderAdminApplicationDetails = function () {
     };
     docs = [
       { name: 'Society Registration Certificate', fileName: 'Registration_Certificate.pdf', format: 'PDF', _demo: true },
-      { name: 'RCS Registration Document', fileName: 'RCS_Document.pdf', format: 'PDF', _demo: true }
+      { name: 'RCS Membership Document', fileName: 'RCS_Membership_Document.pdf', format: 'PDF', _demo: true }
     ];
     submittedDate = s.date;
     appId = selectedId;

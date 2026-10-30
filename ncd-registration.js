@@ -872,10 +872,10 @@ App.renderNCDRegistrationForm = function () {
           ${fieldsHtml}
         </div>
 
-        <!-- Upload RCS Document -->
+        <!-- Upload RCS Membership Document -->
         <div style="margin-top:8px;">
           <label style="display:block;font-size:0.82rem;font-weight:600;color:#555;margin-bottom:6px;">
-            Upload RCS Document <span style="color:#F44336;">*</span>
+            Upload RCS Membership Document <span style="color:#F44336;">*</span>
           </label>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;
                       border:1px dashed #A5D6A7;background:#F1F8E9;border-radius:8px;padding:14px 16px;">
@@ -886,7 +886,7 @@ App.renderNCDRegistrationForm = function () {
             <span id="rcs-doc-name" style="font-size:0.8rem;color:#2E7D32;font-weight:600;"></span>
           </div>
           <small style="color:#757575;font-size:0.76rem;margin-top:6px;display:block;">
-            Accepted formats: PDF, JPG, PNG (max 2MB). Upload the RCS registration document.
+            Accepted formats: PDF, JPG, PNG (max 2MB). Upload the RCS membership document.
           </small>
         </div>
 
@@ -936,8 +936,8 @@ App.onRcsDocSelected = function (input) {
   const reader = new FileReader();
   reader.onload = function (e) {
     App._pendingRegDocs = [{
-      name: 'RCS Registration Document',
-      type: 'RCS Document',
+      name: 'RCS Membership Document',
+      type: 'RCS Membership Document',
       fileName: file.name,
       format: (file.name.split('.').pop() || '').toUpperCase(),
       mimeType: file.type || 'application/octet-stream',

@@ -8,11 +8,11 @@
 (function injectState() {
   // Beej Price Management data
   App.state.beejPrices = [
-    { id: 'PRC-001', category: 'Breeder Seed', crop: 'Wheat', variety: 'GW-322', seedClass: 'Foundation I', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 5200, subsidy: 800, sellingPrice: 4400, effectiveFrom: '2024-10-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Admin Sharma', remarks: 'Revised for Rabi 2024-25' },
-    { id: 'PRC-002', category: 'Foundation Seed', crop: 'Soybean', variety: 'JS-335', seedClass: 'Certified', season: 'Kharif', cropYear: '2024-25', unit: 'Quintal', basePrice: 7800, subsidy: 1200, sellingPrice: 6600, effectiveFrom: '2024-06-01', effectiveTo: '2024-09-30', status: 'Expired', createdBy: 'Admin Sharma', remarks: '' },
-    { id: 'PRC-003', category: 'Certified Seed', crop: 'Gram', variety: 'JG-315', seedClass: 'Foundation II', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 9200, subsidy: 1500, sellingPrice: 7700, effectiveFrom: '2024-11-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Dept User', remarks: 'New variety pricing' },
-    { id: 'PRC-004', category: 'Breeder Seed', crop: 'Mustard', variety: 'Pusa Bold', seedClass: 'Breeder', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 8400, subsidy: 1000, sellingPrice: 7400, effectiveFrom: '2024-11-15', effectiveTo: '2025-02-28', status: 'Active', createdBy: 'Admin Sharma', remarks: '' },
-    { id: 'PRC-005', category: 'Foundation Seed', crop: 'Paddy', variety: 'MTU-7029', seedClass: 'Foundation I', season: 'Kharif', cropYear: '2025-26', unit: 'Quintal', basePrice: 6500, subsidy: 900, sellingPrice: 5600, effectiveFrom: '2025-06-01', effectiveTo: '2025-09-30', status: 'Upcoming', createdBy: 'Dept User', remarks: 'Pre-approved for next Kharif' },
+    { id: 'PRC-001', category: 'Breeder Seed', crop: 'Wheat', variety: 'GW-322', seedClass: 'Foundation I', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 5200, subsidy: 800, sellingPrice: 4400, effectiveFrom: '2024-10-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Admin Sharma', createdDate: '2024-09-25', remarks: 'Revised for Rabi 2024-25' },
+    { id: 'PRC-002', category: 'Foundation Seed', crop: 'Soybean', variety: 'JS-335', seedClass: 'Certified', season: 'Kharif', cropYear: '2024-25', unit: 'Quintal', basePrice: 7800, subsidy: 1200, sellingPrice: 6600, effectiveFrom: '2024-06-01', effectiveTo: '2024-09-30', status: 'Expired', createdBy: 'Admin Sharma', createdDate: '2024-05-20', remarks: '' },
+    { id: 'PRC-003', category: 'Certified Seed', crop: 'Gram', variety: 'JG-315', seedClass: 'Foundation II', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 9200, subsidy: 1500, sellingPrice: 7700, effectiveFrom: '2024-11-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Dept User', createdDate: '2024-10-28', remarks: 'New variety pricing' },
+    { id: 'PRC-004', category: 'Breeder Seed', crop: 'Mustard', variety: 'Pusa Bold', seedClass: 'Breeder', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 8400, subsidy: 1000, sellingPrice: 7400, effectiveFrom: '2024-11-15', effectiveTo: '2025-02-28', status: 'Active', createdBy: 'Admin Sharma', createdDate: '2024-11-10', remarks: '' },
+    { id: 'PRC-005', category: 'Foundation Seed', crop: 'Paddy', variety: 'MTU-7029', seedClass: 'Foundation I', season: 'Kharif', cropYear: '2025-26', unit: 'Quintal', basePrice: 6500, subsidy: 900, sellingPrice: 5600, effectiveFrom: '2025-06-01', effectiveTo: '2025-09-30', status: 'Upcoming', createdBy: 'Dept User', createdDate: '2025-05-15', remarks: 'Pre-approved for next Kharif' },
   ];
 
   App.state.priceHistory = [
@@ -315,27 +315,25 @@ App.renderPriceList = function () {
     <div class="card-body" style="padding:0;">
       <div class="table-wrap"><table>
         <thead><tr>
-          <th>Category</th><th>Crop</th><th>Variety</th><th>Class</th>
-          <th>Season</th><th>Unit</th><th>Base Price</th><th>Subsidy</th><th>Selling Price</th>
-          <th>Effective From</th><th>Effective To</th><th>Status</th><th>Created By</th><th>Actions</th>
+          <th>Category</th><th>Crop</th><th>Variety</th>
+          <th>Season</th><th>Unit</th><th>Base Price</th><th>Selling Price</th>
+          <th>Effective From</th><th>Effective To</th><th>Status</th><th>Created Date</th><th>Actions</th>
         </tr></thead>
         <tbody>
           ${rows.length === 0
-      ? `<tr><td colspan="15" style="text-align:center;padding:40px;color:#9E9E9E;">No records found</td></tr>`
+      ? `<tr><td colspan="13" style="text-align:center;padding:40px;color:#9E9E9E;">No records found</td></tr>`
       : rows.map(p => `<tr>
             <td>${p.category}</td>
             <td>${p.crop}</td>
             <td>${p.variety}</td>
-            <td><span style="font-size:0.78rem;color:#555;">${p.seedClass}</span></td>
             <td>${p.season} ${p.cropYear}</td>
             <td>${p.unit}</td>
             <td>₹${p.basePrice.toLocaleString()}</td>
-            <td style="color:#E65100;">₹${p.subsidy.toLocaleString()}</td>
             <td style="font-weight:700;color:#2E7D32;">₹${p.sellingPrice.toLocaleString()}</td>
             <td>${p.effectiveFrom}</td>
             <td>${p.effectiveTo}</td>
-            <td>${this._priceBadge(p.status)}</td>
-            <td style="font-size:0.8rem;">${p.createdBy}</td>
+            <td>${this._priceBadge(p.activeStatus || 'Active')}</td>
+            <td style="font-size:0.8rem;">${p.createdDate || '—'}</td>
             <td>
               <div class="action-btns">
                 <button class="btn btn-outline btn-sm" title="View"
@@ -346,17 +344,9 @@ App.renderPriceList = function () {
                   onclick="App.state.selectedPriceId='${p.id}';App.navigate('admin-price-edit')">
                   <span class="material-icons">edit</span>
                 </button>
-                <button class="btn btn-gray btn-sm" title="History"
-                  onclick="App.state.selectedPriceId='${p.id}';App.navigate('admin-price-history')">
-                  <span class="material-icons">history</span>
-                </button>
-                <button class="btn ${p.status === 'Active' ? 'btn-danger' : 'btn-success'} btn-sm" title="${p.status === 'Active' ? 'Deactivate' : 'Activate'}"
+                <button class="btn ${(p.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success'} btn-sm"
                   onclick="App.togglePriceStatus('${p.id}')">
-                  <span class="material-icons">${p.status === 'Active' ? 'toggle_off' : 'toggle_on'}</span>
-                </button>
-                <button class="btn btn-danger btn-sm" title="Delete"
-                  onclick="App.deletePrice('${p.id}')">
-                  <span class="material-icons">delete</span>
+                  ${(p.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate'}
                 </button>
               </div>
             </td>
@@ -379,10 +369,10 @@ App.renderPriceList = function () {
 App.togglePriceStatus = function (id) {
   const p = this.state.beejPrices.find(x => x.id === id);
   if (!p) return;
-  const next = p.status === 'Active' ? 'Inactive' : 'Active';
+  const next = (p.activeStatus || 'Active') === 'Active' ? 'Inactive' : 'Active';
   if (confirm(`${next === 'Inactive' ? 'Deactivate' : 'Activate'} price ${id}?`)) {
-    p.status = next;
-    this.state.priceAuditLog.unshift({ action: next === 'Active' ? 'Publish' : 'Update', priceId: id, performedBy: this.state.currentUser.name, date: new Date().toISOString().slice(0, 10), detail: `Status changed to ${next}` });
+    p.activeStatus = next;
+    this.state.priceAuditLog.unshift({ action: next === 'Active' ? 'Activate' : 'Deactivate', priceId: id, performedBy: (this.state.currentUser && this.state.currentUser.name) || 'Admin', date: new Date().toISOString().slice(0, 10), detail: `Active status changed to ${next}` });
     this.render();
   }
 };
@@ -393,6 +383,25 @@ App.deletePrice = function (id) {
     this.state.priceAuditLog.unshift({ action: 'Delete', priceId: id, performedBy: this.state.currentUser.name, date: new Date().toISOString().slice(0, 10), detail: `Price ${id} soft-deleted` });
     this.render();
   }
+};
+
+// Build <option>s for the Seed Variety dropdown. Uses the Variety Master
+// (App.state.sm.varieties) if available; falls back to a known list.
+App._priceVarietyOptions = function (sel) {
+  var names = [];
+  if (this.state.sm && Array.isArray(this.state.sm.varieties)) {
+    names = this.state.sm.varieties
+      .filter(function (vr) { return (vr.status || 'Active') === 'Active'; })
+      .map(function (vr) { return vr.name; });
+  }
+  if (!names.length) {
+    names = ['GW-322', 'HD-2967', 'JS-335', 'JG-315', 'Pusa Bold', 'IR-64', 'MTU-7029'];
+  }
+  // Ensure the current value is present (e.g. when editing an older record).
+  if (sel && names.indexOf(sel) === -1) names.unshift(sel);
+  return names.map(function (n) {
+    return '<option' + (sel === n ? ' selected' : '') + '>' + n + '</option>';
+  }).join('');
 };
 
 // ── 4c. Add / Edit Price Form ─────────────────────────────────
@@ -433,15 +442,12 @@ App.renderPriceForm = function (mode) {
           </div>
           <div class="form-group">
             <label>Seed Variety <span style="color:#F44336">*</span></label>
-            <input type="text" class="form-control" id="pf-variety" placeholder="e.g. GW-322" value="${v('variety')}">
-          </div>
-          <div class="form-group">
-            <label>Seed Class <span style="color:#F44336">*</span></label>
-            <select class="form-control" id="pf-class">
-              <option value="">Select Class</option>
-              ${['Breeder', 'Foundation I', 'Foundation II', 'Certified'].map(c => `<option ${v('seedClass') === c ? 'selected' : ''}>${c}</option>`).join('')}
+            <select class="form-control" id="pf-variety">
+              <option value="">Select Variety</option>
+              ${this._priceVarietyOptions(v('variety'))}
             </select>
           </div>
+
         </div>
       </div>
       <div class="form-section">
@@ -478,18 +484,12 @@ App.renderPriceForm = function (mode) {
           </div>
           <div class="form-group">
             <label>Base Price (₹) <span style="color:#F44336">*</span></label>
-            <input type="number" class="form-control" id="pf-base" placeholder="e.g. 5200" value="${v('basePrice')}"
-              oninput="App._calcSellingPrice()">
-          </div>
-          <div class="form-group">
-            <label>Subsidy (₹) <span style="color:#F44336">*</span></label>
-            <input type="number" class="form-control" id="pf-subsidy" placeholder="e.g. 800" value="${v('subsidy')}"
-              oninput="App._calcSellingPrice()">
+            <input type="number" class="form-control" id="pf-base" placeholder="e.g. 5200" value="${v('basePrice')}">
           </div>
           <div class="form-group">
             <label>Selling Price (₹) <span style="color:#F44336">*</span></label>
-            <input type="number" class="form-control" id="pf-selling" placeholder="Auto calculated" value="${v('sellingPrice')}"
-              style="background:#f9fbe7;font-weight:600;" readonly>
+            <input type="number" class="form-control" id="pf-selling" placeholder="e.g. 4400" value="${v('sellingPrice')}"
+              style="font-weight:600;">
           </div>
         </div>
       </div>
@@ -526,18 +526,20 @@ App._calcSellingPrice = function () {
 
 App.savePriceForm = function (action, mode) {
   const get = id => document.getElementById(id)?.value?.trim() || '';
-  const required = ['pf-category', 'pf-crop', 'pf-variety', 'pf-class', 'pf-season', 'pf-year', 'pf-base', 'pf-subsidy', 'pf-from', 'pf-to'];
+  const p = mode === 'edit' ? this.state.beejPrices.find(x => x.id === this.state.selectedPriceId) : null;
+  const required = ['pf-category', 'pf-crop', 'pf-variety', 'pf-season', 'pf-year', 'pf-base', 'pf-selling', 'pf-from', 'pf-to'];
   for (const id of required) {
     if (!get(id)) { alert('Please fill all required fields.'); document.getElementById(id)?.focus(); return; }
   }
   const newPrice = {
     id: mode === 'add' ? `PRC-${String(this.state.beejPrices.length + 1).padStart(3, '0')}` : this.state.selectedPriceId,
     category: get('pf-category'), crop: get('pf-crop'), variety: get('pf-variety'),
-    seedClass: get('pf-class'), season: get('pf-season'), cropYear: get('pf-year'),
-    unit: get('pf-unit'), basePrice: +get('pf-base'), subsidy: +get('pf-subsidy'),
+    seedClass: '', season: get('pf-season'), cropYear: get('pf-year'),
+    unit: get('pf-unit'), basePrice: +get('pf-base'), subsidy: 0,
     sellingPrice: +get('pf-selling'), effectiveFrom: get('pf-from'), effectiveTo: get('pf-to'),
     status: action === 'publish' ? 'Active' : 'Draft',
     createdBy: this.state.currentUser?.name || 'Admin',
+    createdDate: (mode === 'edit' && p && p.createdDate) ? p.createdDate : new Date().toISOString().slice(0, 10),
     remarks: get('pf-remarks'),
   };
   if (mode === 'add') {
@@ -575,18 +577,16 @@ App.renderPriceView = function () {
           ${row('Seed Category', p.category)}
           ${row('Crop', p.crop)}
           ${row('Variety', p.variety)}
-          ${row('Seed Class', p.seedClass)}
           ${row('Season', `${p.season} ${p.cropYear}`)}
           ${row('Unit', p.unit)}
         </div>
         <div>
           <p style="font-size:0.78rem;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Pricing</p>
           ${row('Base Price', `₹${p.basePrice.toLocaleString()}`)}
-          ${row('Subsidy', `<span style="color:#E65100;">₹${p.subsidy.toLocaleString()}</span>`)}
           ${row('Selling Price', `<b style="color:#2E7D32;font-size:1.1rem;">₹${p.sellingPrice.toLocaleString()}</b>`)}
           ${row('Effective From', p.effectiveFrom)}
           ${row('Effective To', p.effectiveTo)}
-          ${row('Created By', p.createdBy)}
+          ${row('Created Date', p.createdDate || '—')}
           ${row('Remarks', p.remarks || '—')}
         </div>
       </div>

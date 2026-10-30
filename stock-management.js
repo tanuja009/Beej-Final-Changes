@@ -43,7 +43,7 @@ if (!App.state.sm) {
     financialYears: [
       { id: 'FY-01', name: '2025-2026', code: 'FY2526', startDate: '2025-04-01', endDate: '2026-03-31', status: 'Active', created: '2025-04-01' },
       { id: 'FY-02', name: '2026-2027', code: 'FY2627', startDate: '2026-04-01', endDate: '2027-03-31', status: 'Active', created: '2026-04-01' },
-      { id: 'FY-03', name: '2024-2025', code: 'FY2425', startDate: '2024-04-01', endDate: '2025-03-31', status: 'Inactive', created: '2024-04-01' }
+      { id: 'FY-03', name: '2024-2025', code: 'FY2425', startDate: '2024-04-01', endDate: '2025-03-31', status: 'Active', created: '2024-04-01' }
     ],
     inventory: [
       { id: 'INV-001', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1000, inward: 500, outward: 200, adjustment: 0, unit: 'KG', updated: '2026-03-01' },

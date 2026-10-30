@@ -529,7 +529,6 @@ App._seFiltered = function () {
       && (!f.variety || e.variety === f.variety)
       && (!f.lot || (e.lot || '').toLowerCase().indexOf(f.lot.toLowerCase()) >= 0)
       && (!f.location || e.storage === f.location || e.warehouse === f.location)
-      && (!f.quality || e.quality === f.quality)
       && (!f.from || (e.entryDate && e.entryDate >= f.from))
       && (!f.to || (e.entryDate && e.entryDate <= f.to))
       && (!f.search || (e.id + ' ' + e.seedType + ' ' + e.crop + ' ' + e.variety + ' ' + e.lot).toLowerCase().indexOf(f.search.toLowerCase()) >= 0);
@@ -552,7 +551,6 @@ App.seRenderList = function () {
     + '<div class="search-field"><label>Seed Type</label><select class="form-control" onchange="App.state.stockEntry.filter.seedType=this.value;App.render()">' + seOpt(App._seSeedTypes, f.seedType, 'All') + '</select></div>'
     + '<div class="search-field"><label>Season</label><select class="form-control" onchange="App.state.stockEntry.filter.season=this.value;App.render()">' + seOpt(seasons, f.season, 'All') + '</select></div>'
     + '<div class="search-field"><label>Crop</label><select class="form-control" onchange="App.state.stockEntry.filter.crop=this.value;App.render()">' + seOpt(App._seCrops(f.season), f.crop, 'All') + '</select></div>'
-    + '<div class="search-field"><label>Quality</label><select class="form-control" onchange="App.state.stockEntry.filter.quality=this.value;App.render()">' + seOpt(['Pending Testing', 'Tested', 'Approved', 'Rejected'], f.quality, 'All') + '</select></div>'
     + '<div class="search-field"><label>From</label><input type="date" class="form-control" value="' + (f.from || '') + '" onchange="App.state.stockEntry.filter.from=this.value;App.render()"></div>'
     + '<div class="search-field"><label>To</label><input type="date" class="form-control" value="' + (f.to || '') + '" onchange="App.state.stockEntry.filter.to=this.value;App.render()"></div>'
     + '<div class="search-field"><label>&nbsp;</label><button class="btn btn-gray btn-sm" onclick="App.seResetFilter()"><span class="material-icons">clear</span> Reset</button></div>'
@@ -561,16 +559,16 @@ App.seRenderList = function () {
     + '<div class="card"><div class="card-header"><h3>Stock Entries <span style="color:#757575;font-weight:400;font-size:0.85rem;">(' + rows.length + ' records)</span></h3>'
     + '<div style="display:flex;gap:8px;"><button class="btn btn-success btn-sm" onclick="App.showToast(\'Exported to Excel\')"><span class="material-icons">table_chart</span> Export</button></div>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Seed Type</th><th>Season</th><th>Crop</th><th>Variety</th><th>Qty</th><th>Unit</th><th>Source</th><th>Quality</th><th>Entry Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>'
-    + (rows.length === 0 ? '<tr><td colspan="11" style="text-align:center;padding:30px;color:#9E9E9E;">No stock entries found.</td></tr>'
+    + '<thead><tr><th>Seed Type</th><th>Season</th><th>Crop</th><th>Variety</th><th>Qty</th><th>Unit</th><th>Source</th><th>Entry Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>'
+    + (rows.length === 0 ? '<tr><td colspan="10" style="text-align:center;padding:30px;color:#9E9E9E;">No stock entries found.</td></tr>'
       : rows.map(function (e) {
         return '<tr><td>' + e.seedType + '</td><td>' + e.season + '</td><td>' + e.crop + '</td><td>' + e.variety + '</td>'
           + '<td style="font-weight:700;color:#2E7D32;">' + e.addQty + '</td><td>' + e.unit + '</td><td>' + e.sourceType + '</td>'
-          + '<td>' + App._seBadge(e.quality) + '</td><td style="font-size:0.78rem;">' + e.entryDate + '</td><td>' + App._seBadge(e.status) + '</td>'
+          + '<td style="font-size:0.78rem;">' + e.entryDate + '</td><td>' + App._seBadge(e.status) + '</td>'
           + '<td><div class="action-btns">'
           + '<button class="btn btn-outline btn-sm" title="View" onclick="App.seViewEntry(\'' + e.id + '\')"><span class="material-icons" style="font-size:14px;">visibility</span></button>'
           + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.seEditEntry(\'' + e.id + '\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
-          + '<button class="btn btn-danger btn-sm" title="Delete" onclick="App.seDeleteEntry(\'' + e.id + '\')"><span class="material-icons" style="font-size:14px;">delete</span></button>'
+          + '<button class="btn ' + ((e.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.seToggleActive(\'' + e.id + '\')">' + ((e.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
           + '</div></td></tr>';
       }).join(''))
     + '</tbody></table></div></div></div>';
@@ -596,6 +594,13 @@ App.seEditEntry = function (id) {
     specific: Object.assign({}, e.specific), documents: (e.documents || []).slice(), remarks: e.remarks
   };
   App.navigate('se-form');
+};
+App.seToggleActive = function (id) {
+  var e = SEList().find(function (x) { return x.id === id; });
+  if (!e) return;
+  e.activeStatus = (e.activeStatus || 'Active') === 'Active' ? 'Inactive' : 'Active';
+  App.showToast('Stock entry marked ' + e.activeStatus + '.');
+  App.render();
 };
 App.seDeleteEntry = function (id) {
   var e = SEList().find(function (x) { return x.id === id; });

@@ -93,9 +93,11 @@
       ni('receipt_long', 'Demand Management', 'admin-demands'),
       '</div>',
 
-      '<div class="nav-section"><div class="nav-section-title">Distribution Workflow</div>',
-      ni('local_shipping', 'Dispatch Orders', 'admin-dispatch-orders'),
+      '<div class="nav-section"><div class="nav-section-title">Trade Lines</div>',
+      ni('swap_horiz', 'Buying/Selling Line', 'admin-seed-lines'),
       '</div>',
+
+
 
       // REMOVED: Registration section commented out
       // '<div class="nav-section"><div class="nav-section-title">Registration</div>',
@@ -149,23 +151,17 @@
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Demand Management</div>',
-      ni('add_shopping_cart', 'Raise Breeder Seed Demand', 'raise-demand'),
-      ni('history', 'Breeder Seed Demand History', 'demand-history'),
+      ni('add_shopping_cart', 'Breeder Seed Demand', 'raise-demand'),
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Seed Distribution</div>',
       ni('inventory_2', 'Available Stock', 'soc-available-stock'),
       ni('how_to_reg', 'Breeder Seeds Distribution to Member', 'soc-member-distribution'),
-      ni('receipt_long', 'Distribution Register', 'soc-dist-register'),
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Seed Stock</div>',
       ni('inventory_2', 'Foundation &amp; Certified Seed', 'soc-fc-list'),
       ni('add_circle', 'Foundation and Certified Seed Management', 'soc-fc-add', true),
-      '</div>',
-
-      '<div class="nav-section"><div class="nav-section-title">Payments</div>',
-      ni('payment', 'Payment History', 'payment-history'),
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Reports</div>',
@@ -197,6 +193,7 @@
       case 'soc-fc-add': return App.smRenderFCForm('add');
       case 'soc-fc-edit': return App.smRenderFCForm('edit');
       case 'soc-fc-view': return App.smRenderFCView();
+      case 'admin-seed-lines': return App.renderSeedLines();
       default: return _prev();
     }
   };
@@ -216,6 +213,7 @@
     'soc-fc-add': 'Foundation and Certified Seed Management',
     'soc-fc-edit': 'Foundation and Certified Seed Management',
     'soc-fc-view': 'Seed Stock Details',
+    'admin-seed-lines': 'Seed Buying/Selling Line Management',
   };
   App.renderHeader = function () {
     var html = _prev();
@@ -293,6 +291,27 @@ App._smFld = function (label, id, type, opts, val, req, ph) {
     + inp
     + '<div id="smerr-' + id + '" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div>'
     + '</div>';
+};
+
+// Map a seed variety name to its code (used to auto-populate Variety Code on the FC form).
+App._fcVarietyCode = function (variety) {
+  if (!variety) return '';
+  var map = {
+    'GW-322': 'GW322', 'JS-335': 'JS335', 'JG-315': 'JG315', 'Pusa Bold': 'PBOLD', 'MTU-7029': 'MTU7029',
+    'IR-36': 'IR36', 'DHM-117': 'DHM117', 'HHB-67': 'HHB67', 'CSH-16': 'CSH16', 'UPAS-120': 'UPAS120',
+    'TAG-24': 'TAG24', 'KBSH-1': 'KBSH1', 'Suraj (H-777)': 'H777', 'CO-86032': 'CO86032', 'K-851': 'K851',
+    'T-9': 'T9', 'L-4076': 'L4076', 'RD-2035': 'RD2035', 'OS-6': 'OS6'
+  };
+  // Fall back: strip non-alphanumerics and uppercase.
+  return map[variety] || variety.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+};
+
+// When the Variety select changes, auto-fill the Variety Code field.
+App._fcVarietyChanged = function (variety) {
+  var el = document.getElementById('ff-varietycode');
+  if (el) el.value = App._fcVarietyCode(variety);
+  var err = document.getElementById('smerr-ff-variety');
+  if (err) err.style.display = 'none';
 };
 
 // ══════════════════════════════════════════════
@@ -661,9 +680,11 @@ App.smRenderFCForm = function (mode) {
     + App._smFld('Seed Class', 'ff-seedclass', 'select', seedClasses, v('seedClass'), true)
     + App._smFld('Season', 'ff-season', 'select', seasons, v('season'), true)
     + App._smFld('Crop', 'ff-crop', 'select', crops, v('crop'), true)
-    + App._smFld('Variety', 'ff-variety', 'select', varieties, v('variety'), true)
-    + App._smFld('Variety Code', 'ff-varietycode', 'text', null, v('varietyCode'), false, 'Auto-populated or enter manually')
-    + App._smFld('Seed Lot Number', 'ff-lotno', 'text', null, v('seedLotNo'), true, 'e.g. LOT-2024-W01')
+    + ('<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>'
+      + '<select id="ff-variety" class="form-control" onchange="App._fcVarietyChanged(this.value)">'
+      + '<option value="">Select...</option>'
+      + varieties.map(function (o) { return '<option value="' + o + '"' + (v('variety') === o ? ' selected' : '') + '>' + o + '</option>'; }).join('')
+      + '</select><div id="smerr-ff-variety" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div></div>')
     + App._smFld('Production Year', 'ff-prodyear', 'number', null, v('productionYear', new Date().getFullYear()), true, 'e.g. 2024')
     + '</div></div>'
 
@@ -679,62 +700,9 @@ App.smRenderFCForm = function (mode) {
     /* Section 3: Production & Area Details */
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">landscape</span> Production & Area Details</div>'
     + '<div class="form-grid">'
-    + App._smFld('Area Under Seed Production (Hectare)', 'ff-prodarea', 'number', null, v('productionArea'), true, 'Must be > 0')
     + App._smFld('Expected Production Quantity (Quintal)', 'ff-expectedqty', 'number', null, v('expectedQty'), true, 'Estimated yield')
     + App._smFld('Actual Production Quantity (Quintal)', 'ff-actualqty', 'number', null, v('actualQty'), true, 'Actual harvested quantity')
     + App._smFld('Processing Quantity (Quintal)', 'ff-processingqty', 'number', null, v('processingQty'), false, 'Quantity sent for processing')
-    + '</div></div>'
-
-    /* Section 4: Quality & Approval Status */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">verified</span> Quality & Approval Status</div>'
-    + '<div class="form-grid">'
-    + App._smFld('Approved Quantity (Quintal)', 'ff-approvedqty', 'number', null, v('approvedQty'), true, 'Quantity approved for sale')
-    + App._smFld('Rejected Quantity (Quintal)', 'ff-rejectedqty', 'number', null, v('rejectedQty', '0'), false, 'Quantity rejected due to quality')
-    + App._smFld('Available Stock Quantity (Quintal)', 'ff-availqty', 'number', null, v('availableQty'), true, 'Current available stock')
-    + '</div></div>'
-
-    /* Section 5: Certification Details */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">workspace_premium</span> Certification Details</div>'
-    + '<div class="form-grid">'
-    + App._smFld('Certification Agency', 'ff-certagency', 'select', certAgencies, v('certAgency'), true)
-    + App._smFld('Certification / Tag Number', 'ff-certno', 'text', null, v('certNumber'), true, 'e.g. CERT-MP-2024-001')
-    + App._smFld('Certification Date', 'ff-certdate', 'date', null, v('certDate'), true)
-    + '</div></div>'
-
-    /* Section 6: Quality Parameters */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">science</span> Quality Parameters</div>'
-    + '<div class="form-grid">'
-    + App._smFld('Germination %', 'ff-germination', 'number', null, v('germination'), true, 'e.g. 85.5')
-    + App._smFld('Physical Purity %', 'ff-purity', 'number', null, v('physicalPurity'), true, 'e.g. 98.0')
-    + App._smFld('Moisture %', 'ff-moisture', 'number', null, v('moisture'), true, 'e.g. 12.5')
-    + '</div></div>'
-
-    /* Section 7: Storage & Packaging Details */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">warehouse</span> Storage & Packaging Details</div>'
-    + '<div class="form-grid">'
-    + App._smFld('Storage Warehouse', 'ff-warehouse', 'select', warehouses, v('storageWarehouse'), true)
-    + App._smFld('Storage Location / Bin No.', 'ff-storage', 'text', null, v('storageLocation'), false, 'e.g. Rack A-3, Bin 15')
-    + App._smFld('Bag Size (Kg)', 'ff-bagsize', 'number', null, v('bagSize', '40'), true, 'e.g. 40')
-    + App._smFld('Number of Bags', 'ff-numbags', 'number', null, v('numberOfBags'), true, 'e.g. 250')
-    + '<div class="form-group">'
-    + '<label>Total Quantity (Kg) <span style="color:#2E7D32;font-size:0.8rem;">(Auto-calculated)</span></label>'
-    + '<input type="text" id="ff-totalkg" class="form-control" value="' + v('totalQuantityKg', '0') + '" readonly style="background:#E8F5E9;font-weight:600;color:#2E7D32;"/>'
-    + '</div>'
-    + '</div></div>'
-
-    /* Section 8: Supporting Documents */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">upload_file</span> Supporting Documents</div>'
-    + '<div class="form-grid">'
-    + '<div class="form-group" style="grid-column:1/-1;">'
-    + '<label>Supporting Document (Certification Certificate, Test Report)</label>'
-    + '<div class="upload-zone" style="cursor:pointer;" onclick="document.getElementById(\'ff-upload\').click()">'
-    + '<span class="material-icons">cloud_upload</span>'
-    + '<p>Click to Upload Document</p>'
-    + '<span>PDF, JPG, PNG up to 5MB</span>'
-    + '</div>'
-    + '<input type="file" id="ff-upload" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="App.smHandleFileUpload(this)"/>'
-    + '<div id="ff-filename" style="margin-top:8px;font-size:0.85rem;color:#2E7D32;"></div>'
-    + '</div>'
     + '</div></div>'
 
     /* Section 9: Remarks */
@@ -749,13 +717,7 @@ App.smRenderFCForm = function (mode) {
     + '<button class="btn btn-outline" onclick="App.smFCSave(\'' + mode + '\',\'draft\')"><span class="material-icons">save</span> Save Draft</button>'
     + '<button class="btn btn-primary" onclick="App.smFCSave(\'' + mode + '\',\'final\')"><span class="material-icons">' + (isEdit ? 'update' : 'check_circle') + '</span> ' + (isEdit ? 'Update Record' : 'Submit Record') + '</button>'
     + '</div>'
-    + '</div></div>'
-
-    /* Auto-calculation script */
-    + '<script>'
-    + 'document.getElementById("ff-bagsize").addEventListener("input", function() { App.smCalculateTotalKg(); });'
-    + 'document.getElementById("ff-numbags").addEventListener("input", function() { App.smCalculateTotalKg(); });'
-    + '</script>';
+    + '</div></div>';
 };
 
 // ══════════════════════════════════════════════
@@ -931,26 +893,13 @@ App.smFCSave = function (mode, submitType) {
   if (!season) { App._smErr('ff-season', 'Season is required'); return; }
   if (!crop) { App._smErr('ff-crop', 'Crop is required'); return; }
   if (!variety) { App._smErr('ff-variety', 'Variety is required'); return; }
-  if (!seedLotNo.trim()) { App._smErr('ff-lotno', 'Seed lot number is required'); return; }
   if (!productionYear || productionYear < 2000 || productionYear > 2100) { App._smErr('ff-prodyear', 'Valid production year is required'); return; }
   if (!producerName.trim()) { App._smErr('ff-producername', 'Producer name is required'); return; }
   if (!producerRegNo.trim()) { App._smErr('ff-producerreg', 'Producer registration no. is required'); return; }
   if (!productionDistrict) { App._smErr('ff-proddistrict', 'Production district is required'); return; }
   if (!productionBlock) { App._smErr('ff-prodblock', 'Production block is required'); return; }
-  if (!productionArea || productionArea <= 0) { App._smErr('ff-prodarea', 'Production area must be > 0'); return; }
   if (!expectedQty || expectedQty <= 0) { App._smErr('ff-expectedqty', 'Expected quantity must be > 0'); return; }
   if (!actualQty || actualQty <= 0) { App._smErr('ff-actualqty', 'Actual quantity must be > 0'); return; }
-  if (!approvedQty || approvedQty < 0) { App._smErr('ff-approvedqty', 'Approved quantity is required'); return; }
-  if (!availableQty || availableQty < 0) { App._smErr('ff-availqty', 'Available quantity is required'); return; }
-  if (!certAgency) { App._smErr('ff-certagency', 'Certification agency is required'); return; }
-  if (!certNumber.trim()) { App._smErr('ff-certno', 'Certification number is required'); return; }
-  if (!certDate) { App._smErr('ff-certdate', 'Certification date is required'); return; }
-  if (!germination || germination < 0 || germination > 100) { App._smErr('ff-germination', 'Germination % must be 0-100'); return; }
-  if (!physicalPurity || physicalPurity < 0 || physicalPurity > 100) { App._smErr('ff-purity', 'Physical purity % must be 0-100'); return; }
-  if (!moisture || moisture < 0 || moisture > 100) { App._smErr('ff-moisture', 'Moisture % must be 0-100'); return; }
-  if (!storageWarehouse) { App._smErr('ff-warehouse', 'Storage warehouse is required'); return; }
-  if (!bagSize || bagSize <= 0) { App._smErr('ff-bagsize', 'Bag size must be > 0'); return; }
-  if (!numberOfBags || numberOfBags <= 0) { App._smErr('ff-numbags', 'Number of bags must be > 0'); return; }
 
   var newRec = {
     id: isEdit ? App.state.fcSelId : 'FC-' + Date.now(),
@@ -965,31 +914,31 @@ App.smFCSave = function (mode, submitType) {
     producerRegNo: producerRegNo,
     productionDistrict: productionDistrict,
     productionBlock: productionBlock,
-    productionArea: parseFloat(productionArea),
+    productionArea: parseFloat(productionArea) || 0,
     expectedQty: parseFloat(expectedQty),
     actualQty: parseFloat(actualQty),
     processingQty: parseFloat(processingQty || 0),
-    approvedQty: parseFloat(approvedQty),
+    approvedQty: parseFloat(approvedQty) || 0,
     rejectedQty: parseFloat(rejectedQty || 0),
-    availableQty: parseFloat(availableQty),
+    availableQty: parseFloat(availableQty) || parseFloat(actualQty) || 0,
     certAgency: certAgency,
     certNumber: certNumber,
     certDate: certDate,
-    germination: parseFloat(germination),
-    physicalPurity: parseFloat(physicalPurity),
-    moisture: parseFloat(moisture),
+    germination: parseFloat(germination) || 0,
+    physicalPurity: parseFloat(physicalPurity) || 0,
+    moisture: parseFloat(moisture) || 0,
     storageWarehouse: storageWarehouse,
     storageLocation: storageLocation,
-    bagSize: parseFloat(bagSize),
-    numberOfBags: parseInt(numberOfBags),
-    totalQuantityKg: parseFloat(bagSize) * parseInt(numberOfBags),
+    bagSize: parseFloat(bagSize) || 0,
+    numberOfBags: parseInt(numberOfBags) || 0,
+    totalQuantityKg: (parseFloat(bagSize) || 0) * (parseInt(numberOfBags) || 0),
     remarks: remarks,
     category: seedClass.includes('Foundation') ? 'Foundation' : (seedClass.includes('Certified') ? 'Certified' : seedClass),
     qualityStatus: 'Passed',
     breederLotNo: seedLotNo,
     producedQty: parseFloat(actualQty),
     processingDate: certDate,
-    packagingQty: parseFloat(bagSize)
+    packagingQty: parseFloat(bagSize) || 0
   };
 
   if (isEdit) {
@@ -1017,3 +966,164 @@ App.smFCToggleActive = function (id) {
   App._smToast('Record marked ' + r.activeStatus + '.');
   App.render();
 };
+
+
+// ════════════════════════════════════════════════════════════
+// MODULE — SEED BUYING / SELLING LINE MANAGEMENT (Admin)
+// A "line" is an open window during which the portal buys seed from
+// or sells seed to societies for a given seed type / season / crop / variety.
+// ════════════════════════════════════════════════════════════
+(function () {
+  // ── State ──
+  App.state.seedLines = [
+    { id: 'LINE-001', lineType: 'Buying', seedType: 'Breeder', finYear: '2024-2025', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', startDate: '2024-06-01', endDate: '2024-07-31' },
+    { id: 'LINE-002', lineType: 'Selling', seedType: 'Certified', finYear: '2024-2025', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', startDate: '2024-10-01', endDate: '2024-11-30' },
+    { id: 'LINE-003', lineType: 'Buying', seedType: 'Foundation', finYear: '2024-2025', season: 'Rabi', crop: 'Gram', variety: 'JG-315', startDate: '2024-10-15', endDate: '2024-12-15' },
+  ];
+  App.state.showSeedLineForm = false;
+
+  // ── Current Indian financial year (Apr–Mar), e.g. "2024-2025". ──
+  App._lineFinYear = function () {
+    var now = new Date();
+    var y = now.getFullYear();
+    var startY = now.getMonth() >= 3 ? y : y - 1;
+    return startY + '-' + (startY + 1);
+  };
+
+  // ── A line's status, derived from today's date vs its window. ──
+  App._lineStatus = function (line) {
+    var today = new Date().toISOString().split('T')[0];
+    if (line.endDate && today > line.endDate) return 'Closed';
+    if (line.startDate && today < line.startDate) return 'Scheduled';
+    return 'Open';
+  };
+  App._lineStatusBadge = function (s) {
+    var c = s === 'Open' ? 'badge-success' : s === 'Scheduled' ? 'badge-info' : 'badge-gray';
+    return '<span class="badge ' + c + '">' + s + '</span>';
+  };
+
+  // ── Dropdown option helpers (reuse stock-management option builders where present). ──
+  App._lineCropOpts = function (sel) {
+    if (App._smCropNameOpts) return App._smCropNameOpts(sel);
+    var names = ['Paddy', 'Wheat', 'Soybean', 'Gram', 'Mustard', 'Maize'];
+    return names.map(function (n) { return '<option value="' + n + '"' + (n === sel ? ' selected' : '') + '>' + n + '</option>'; }).join('');
+  };
+  App._lineVarietyOpts = function (sel) {
+    if (App._smVarietyNameOpts) return App._smVarietyNameOpts(sel);
+    var names = ['IR-64', 'GW-322', 'HD-2967', 'JS-335', 'JG-315', 'Pusa Bold'];
+    return names.map(function (n) { return '<option value="' + n + '"' + (n === sel ? ' selected' : '') + '>' + n + '</option>'; }).join('');
+  };
+
+  // ── Open / close the form ──
+  App.openSeedLineForm = function () { this.state.showSeedLineForm = true; this.render(); };
+  App.closeSeedLineForm = function () { this.state.showSeedLineForm = false; this.render(); };
+
+  // ── Save a new line from the form ──
+  App.saveSeedLine = function () {
+    var g = function (id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+    var lineType = g('sl-type');
+    var seedType = g('sl-seedtype');
+    var finYear = g('sl-finyear') || this._lineFinYear();
+    var season = g('sl-season');
+    var crop = g('sl-crop');
+    var variety = g('sl-variety');
+    var startDate = g('sl-start');
+    var endDate = g('sl-end');
+    if (!crop || !variety) { this.showToast('Please select crop and variety'); return; }
+    if (!startDate || !endDate) { this.showToast('Please set line start and end dates'); return; }
+    if (endDate < startDate) { this.showToast('End date cannot be before start date'); return; }
+    var id = 'LINE-' + String(this.state.seedLines.length + 1).padStart(3, '0');
+    this.state.seedLines.unshift({ id: id, lineType: lineType, seedType: seedType, finYear: finYear, season: season, crop: crop, variety: variety, startDate: startDate, endDate: endDate });
+    this.state.showSeedLineForm = false;
+    this.showToast('Seed ' + lineType.toLowerCase() + ' line ' + id + ' created.');
+    this.render();
+  };
+
+  // ── Page: list or form ──
+  App.renderSeedLines = function () {
+    if (this.state.showSeedLineForm) return this.renderSeedLineForm();
+    var lines = this.state.seedLines;
+    var typeBadge = function (t) { return '<span class="badge ' + (t === 'Buying' ? 'badge-info' : 'badge-purple') + '">' + t + '</span>'; };
+    var rows = lines.map(function (l) {
+      var st = App._lineStatus(l);
+      return '<tr>'
+        + '<td><b style="color:#2E7D32;">' + l.id + '</b></td>'
+        + '<td>' + typeBadge(l.lineType) + '</td>'
+        + '<td>' + l.seedType + '</td>'
+        + '<td>' + l.finYear + '</td>'
+        + '<td>' + l.season + '</td>'
+        + '<td>' + l.crop + '</td>'
+        + '<td>' + l.variety + '</td>'
+        + '<td>' + l.startDate + '</td>'
+        + '<td>' + l.endDate + '</td>'
+        + '<td>' + App._lineStatusBadge(st) + '</td>'
+        + '</tr>';
+    }).join('');
+    return [
+      '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">',
+      '<div><h1>Seed Buying/Selling Line Management</h1><p>Open and manage seed buying and selling lines for societies</p></div>',
+      '<button class="btn btn-primary" onclick="App.openSeedLineForm()"><span class="material-icons">add</span> New Line</button>',
+      '</div>',
+      '<div class="card"><div class="card-header"><h3>All Trade Lines</h3></div>',
+      '<div class="card-body" style="padding:0;">',
+      lines.length === 0
+        ? '<div style="padding:48px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">swap_horiz</span><p>No lines yet.</p></div>'
+        : '<div class="table-wrap"><table><thead><tr>'
+        + '<th>Line ID</th><th>Type</th><th>Seed Type</th><th>Fin. Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Start Date</th><th>End Date</th><th>Status</th>'
+        + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
+      '</div></div>'
+    ].join('');
+  };
+
+  // ── Form ──
+  App.renderSeedLineForm = function () {
+    var fy = this._lineFinYear();
+    var today = new Date().toISOString().split('T')[0];
+    return [
+      '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">',
+      '<div><h1>New Trade Line</h1><p>Open a new seed buying or selling line</p></div>',
+      '<button class="btn btn-gray" onclick="App.closeSeedLineForm()"><span class="material-icons">arrow_back</span> Back to List</button>',
+      '</div>',
+      '<div class="card" style="max-width:860px;"><div class="card-body">',
+      '<div class="form-grid">',
+
+      '<div class="form-group"><label>Line Type <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="sl-type"><option value="Buying">Buying (Procure from societies)</option><option value="Selling">Selling (Supply to societies)</option></select></div>',
+
+      '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="sl-seedtype"><option>Breeder</option><option>Foundation</option><option>Certified</option></select></div>',
+
+      '<div class="form-group"><label>Financial Year</label>',
+      '<input type="text" class="form-control" id="sl-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
+
+      '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="sl-season"><option>Kharif</option><option>Rabi</option><option>Summer</option></select></div>',
+
+      '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="sl-crop"><option value="">Select Crop</option>' + App._lineCropOpts('') + '</select></div>',
+
+      '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="sl-variety"><option value="">Select Variety</option>' + App._lineVarietyOpts('') + '</select></div>',
+
+      '<div class="form-group"><label>Line Start Date <span style="color:#F44336">*</span></label>',
+      '<input type="date" class="form-control" id="sl-start" value="' + today + '"/></div>',
+
+      '<div class="form-group"><label>Line End Date <span style="color:#F44336">*</span></label>',
+      '<input type="date" class="form-control" id="sl-end"/></div>',
+
+      '</div>',
+      '<div style="display:flex;gap:12px;margin-top:20px;">',
+      '<button class="btn btn-gray" onclick="App.closeSeedLineForm()">Cancel</button>',
+      '<button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.saveSeedLine()"><span class="material-icons">check_circle</span> Save Line</button>',
+      '</div>',
+      '</div></div>'
+    ].join('');
+  };
+
+  // Always land on the list (not the form) when opening the page.
+  var _navPrev = App.navigate.bind(App);
+  App.navigate = function (page) {
+    if (page === 'admin-seed-lines') this.state.showSeedLineForm = false;
+    return _navPrev(page);
+  };
+}());

@@ -15,9 +15,14 @@ const App = {
       { id: 'MBR-003', name: 'Dinesh Patel', father: 'Kailash Patel', mobile: '9876543212', aadhaar: '3456-7890-1234', gender: 'Male', category: 'SC', email: 'dinesh@example.com', address: 'Ward 5, Bargaon Chowk', village: 'Bargaon', gp: 'Bargaon GP', block: 'Harrai', district: 'Chhindwara', pincode: '480003', state: 'MP', totalLand: 6.0, irrigated: 3.0, nonIrrigated: 3.0, status: 'Active', joiningDate: '2023-03-10' },
     ],
     demands: [
-      { id: 'DEM-2024-001', date: '2024-06-15', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', qty: 120, payStatus: 'Paid', approvalStatus: 'Approved' },
-      { id: 'DEM-2024-002', date: '2024-10-10', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', qty: 200, payStatus: 'Pending', approvalStatus: 'Under Review' },
-      { id: 'DEM-2024-003', date: '2024-11-05', season: 'Rabi', crop: 'Gram', variety: 'JG-315', qty: 80, payStatus: 'Paid', approvalStatus: 'Approved' },
+      { id: 'DEM-2024-001', date: '2024-06-15', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', qty: 120, rate: 2400, payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Approved' },
+      { id: 'DEM-2024-002', date: '2024-10-10', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', qty: 200, rate: 2400, payStatus: 'Pending', fullyPaid: false, approvalStatus: 'Pending' },
+      { id: 'DEM-2024-003', date: '2024-11-05', season: 'Rabi', crop: 'Gram', variety: 'JG-315', qty: 80, rate: 2400, payStatus: 'Fully Paid', fullyPaid: true, approvalStatus: 'Approved' },
+      { id: 'DEM-2024-008', date: '2024-11-12', season: 'Rabi', crop: 'Mustard', variety: 'Pusa Bold', qty: 60, rate: 2600, payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Hold' },
+      { id: 'DEM-2024-009', date: '2024-11-18', season: 'Rabi', crop: 'Wheat', variety: 'HD-2967', qty: 150, approvedQty: 90, pendingQty: 60, rate: 2400, payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Partially Approved' },
+      { id: 'DEM-2024-010', date: '2024-07-01', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', qty: 100, rate: 2400, payStatus: 'Fully Paid', fullyPaid: true, approvalStatus: 'Approved' },
+      { id: 'DEM-2024-011', date: '2024-07-05', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', qty: 90, rate: 2200, payStatus: 'Fully Paid', fullyPaid: true, approvalStatus: 'Approved' },
+      { id: 'DEM-2024-012', date: '2024-11-28', season: 'Rabi', crop: 'Wheat', variety: 'HD-2967', qty: 70, rate: 2400, payStatus: 'Pending', fullyPaid: false, approvalStatus: 'Rejected' },
     ],
     societies: [
       { code: 'SOC-001', name: 'Rampur Krishi Samiti', district: 'Chhindwara', members: 65, status: 'Active' },
@@ -58,6 +63,8 @@ const App = {
     reviewDemandId: null,
     // UI: which popup is open — null | 'partial' | 'reject' | 'hold'
     demandActionPopup: null,
+    // UI: refund flow for a rejected demand — { demandId, step:'invoice'|'mode', mode, receipt }
+    refundFlow: null,
     stock: [
       { crop: 'Wheat', variety: 'GW-322', available: 850, allocated: 320, distributed: 180 },
       { crop: 'Soybean', variety: 'JS-335', available: 600, allocated: 240, distributed: 120 },
@@ -87,16 +94,22 @@ const App = {
     // Admin: dispatch orders
     dispatchOrders: [
       { id: 'DO-2024-001', society: 'Rampur Krishi Samiti', crop: 'Soybean', variety: 'JS-335', qty: 120, dispatchDate: '2024-07-01', vehicleNo: 'MP-09-AB-1234', status: 'Received', allocId: 'ALLOC-001' },
+      { id: 'DO-2024-002', society: 'Rampur Krishi Samiti', crop: 'Soybean', variety: 'JS-335', qty: 100, dispatchDate: '2024-07-08', vehicleNo: 'MP-09-CD-5678', status: 'Dispatched', demandId: 'DEM-2024-010' },
+      { id: 'DO-2024-003', society: 'Rampur Krishi Samiti', crop: 'Paddy', variety: 'IR-64', qty: 90, dispatchDate: '2024-07-12', vehicleNo: 'MP-09-EF-9012', status: 'Received', demandId: 'DEM-2024-011' },
     ],
 
-    // Society: received stock
+    // Society: received stock (seed-type wise: Breeder / Foundation / Certified)
     receivedStock: [
-      { id: 'RS-001', crop: 'Soybean', variety: 'JS-335', allocatedQty: 120, distributedQty: 2.5, season: 'Kharif', receivedDate: '2024-07-03', dispatchOrderId: 'DO-2024-001' },
+      { id: 'RS-001', crop: 'Soybean', variety: 'JS-335', seedType: 'Breeder', allocatedQty: 120, distributedQty: 2.5, season: 'Kharif', receivedDate: '2024-07-03', dispatchOrderId: 'DO-2024-001' },
+      { id: 'RS-002', crop: 'Wheat', variety: 'GW-322', seedType: 'Foundation', allocatedQty: 80, distributedQty: 20, season: 'Rabi', receivedDate: '2024-10-15' },
+      { id: 'RS-003', crop: 'Gram', variety: 'JG-315', seedType: 'Certified', allocatedQty: 60, distributedQty: 15, season: 'Rabi', receivedDate: '2024-10-20' },
+      { id: 'RS-004', crop: 'Mustard', variety: 'Pusa Bold', seedType: 'Breeder', allocatedQty: 40, distributedQty: 0, season: 'Rabi', receivedDate: '2024-11-01' },
+      { id: 'RS-005', crop: 'Paddy', variety: 'IR-64', seedType: 'Certified', allocatedQty: 90, distributedQty: 30, season: 'Kharif', receivedDate: '2024-07-12' },
     ],
 
     // Society: member distribution records
     distributionRecords: [
-      { receiptNo: 'RCP-001', memberId: 'MBR-001', memberName: 'Ramesh Kumar', village: 'Rampur', crop: 'Soybean', variety: 'JS-335', qty: 2.5, date: '2024-07-05', status: 'Completed', stockId: 'RS-001' },
+      { receiptNo: 'RCP-001', memberId: 'MBR-001', memberName: 'Ramesh Kumar', mobile: '9876543210', village: 'Rampur', finYear: '2024-2025', season: 'Kharif', seedType: 'Breeder', crop: 'Soybean', variety: 'JS-335', qty: 2.5, rate: 2400, amount: 6000, date: '2024-07-05', status: 'Completed', stockId: 'RS-001' },
     ],
 
     // UI helpers
@@ -106,6 +119,7 @@ const App = {
     activeSocDistTab: 'stock',
     distributionPopup: null,
     receiptPopup: null,
+    showNewDistForm: false,  // toggles the combined distribution list vs new-distribution form
 
     // ── Forgot Password & Profile Update OTP State ──
     forgotPwdStep: 1, // 1: Enter Mobile, 2: Verify OTP, 3: Reset Password
@@ -172,6 +186,10 @@ const App = {
     // Reset the Member Onboarding flow whenever the page is opened fresh
     if (page === 'add-member' && this.state.currentPage !== 'add-member') {
       this.state.memberOnboarding = { samagraId: '', stage: 'idle', fetched: false, details: null };
+    }
+    // Always land on the distribution list (not the form) when opening the page.
+    if (page === 'soc-member-distribution' || page === 'soc-dist-register') {
+      this.state.showNewDistForm = false;
     }
     this.state.currentPage = page;
     this.render();
@@ -519,7 +537,7 @@ const App = {
       'dashboard': 'Society Head Dashboard', 'admin-dashboard': 'Admin Dashboard',
       'add-member': 'Add New Member', 'member-list': 'Society Member List',
       'member-view': 'Member Details', 'member-edit': 'Edit Member',
-      'raise-demand': 'Raise Breeder Seed Demand', 'demand-preview': 'Demand Preview',
+      'raise-demand': 'Breeder Seed Demand', 'raise-demand-form': 'Raise Breeder Seed Demand', 'demand-preview': 'Demand Preview',
       'payment': 'Payment', 'demand-history': 'Breeder Seed Demand History',
       'seed-allocation': 'Seed Allocation', 'distribution-register': 'Distribution Register',
       'payment-history': 'Payment History', 'society-reports': 'Society Reports',
@@ -529,8 +547,6 @@ const App = {
       'profile': 'My Profile',
       'reset-password': 'Reset Password',
       // New pages
-      'admin-dispatch-orders': 'Dispatch Orders',
-      'admin-dist-tracking': 'Distribution Tracking',
       'admin-dist-tracking': 'Distribution Tracking',
       'soc-available-stock': 'Available Stock',
       'soc-member-distribution': 'Breeder Seeds Distribution to Member',
@@ -639,7 +655,6 @@ const App = {
           <div class="nav-section-title">Seed Distribution</div>
           ${ni('inventory_2', 'Available Stock', 'soc-available-stock')}     
           ${ni('how_to_reg', 'Breeder Seeds Distribution to Member', 'soc-member-distribution')}
-          ${ni('receipt_long', 'Distribution Register', 'soc-dist-register')}
         </div>
         <div class="nav-section">
           <div class="nav-section-title">Distribution (Legacy)</div>
@@ -689,7 +704,6 @@ const App = {
         </div>
         <div class="nav-section">
           <div class="nav-section-title">Distribution Management</div>
-          ${ni('local_shipping', 'Dispatch Orders', 'admin-dispatch-orders')}
           ${ni('track_changes', 'Distribution Tracking', 'admin-dist-tracking')}
         </div>
         <div class="nav-section">
@@ -1711,18 +1725,14 @@ const App = {
             </div>
             <div class="form-group">
               <label>Crop Variety *</label>
-              <select class="form-control" id="d-variety">
+              <select class="form-control" id="d-variety" onchange="App.updateMaxDemand()">
                 <option value="">Select Crop First</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Seed Class *</label>
-              <select class="form-control" id="d-seed-class">
-                <option value="">Select Seed Class</option>
-                <option>Breeder Seed</option>
-                <option>Foundation Seed</option>
-                <option>Certified Seed</option>
-              </select>
+              <label>Max Demand Quantity (for this variety)</label>
+              <input type="text" class="form-control" id="d-max-demand" value="—" readonly
+                     style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/>
             </div>
           </div>
         </div>
@@ -1736,8 +1746,7 @@ const App = {
               <select class="form-control" id="d-unit">
                 <option value="">Select Unit</option>
                 <option selected>Quintal</option>
-                <option>Kilogram</option>
-                <option>Metric Ton</option>
+                <option>Kg</option>
               </select>
             </div>
             <div class="form-group">
@@ -1805,6 +1814,37 @@ const App = {
       const mockStock = Math.floor(Math.random() * 500) + 100;
       stockEl.value = mockStock + ' Qt';
     }
+
+    // Refresh the Max Demand Quantity for the (first) variety now selected.
+    this.updateMaxDemand();
+  },
+
+  // Look up the Max Demand Quantity set by the admin (on Stock Entry) for the
+  // selected crop + variety, and show it in the read-only field. Variety names
+  // on the demand form may include extra text (e.g. "Paddy (Rice)"), so match
+  // on the variety value and crop loosely.
+  _maxDemandFor(crop, variety) {
+    const entries = this.state.stockEntries || [];
+    // Normalise crop (demand form uses "Paddy (Rice)"; stock uses "Paddy").
+    const cropKey = (crop || '').split('(')[0].trim().toLowerCase();
+    const match = entries.find(e =>
+      e.variety === variety &&
+      (!cropKey || (e.crop || '').toLowerCase().indexOf(cropKey) === 0 || cropKey.indexOf((e.crop || '').toLowerCase()) === 0)
+    ) || entries.find(e => e.variety === variety);
+    if (match && Number(match.maxDemandQty) > 0) {
+      return Number(match.maxDemandQty) + ' ' + (match.maxDemandUnit || 'Quintal');
+    }
+    return null;
+  },
+
+  updateMaxDemand() {
+    const el = document.getElementById('d-max-demand');
+    if (!el) return;
+    const crop = document.getElementById('d-crop') ? document.getElementById('d-crop').value : '';
+    const variety = document.getElementById('d-variety') ? document.getElementById('d-variety').value : '';
+    const max = this._maxDemandFor(crop, variety);
+    el.value = max || 'Not set for this variety';
+    el.style.color = max ? '#2E7D32' : '#9E9E9E';
   },
 
   calculateEstPrice(qty) {
@@ -1850,39 +1890,49 @@ const App = {
   // ============================
   renderDemandPreview() {
     const d = this.state.currentDemand || { season: 'Rabi', crop: 'Wheat', variety: 'GW-322', qty: 200, cost: 480000, advance: 120000 };
+    const isFull = d.mode === 'full';
+    const rate = d.rate || 2400;
+    const balance = d.balance != null ? d.balance : (d.cost - d.advance);
+    const dueNow = isFull ? balance : d.advance;
+    const backPage = isFull ? 'raise-demand' : 'raise-demand';
     return `
     <div class="page-header">
-      <h1>Demand Preview</h1>
-      <p>Review your demand before generating invoice</p>
+      <h1>${isFull ? 'Full Payment Preview' : 'Demand Preview'}</h1>
+      <p>${isFull ? 'Review the balance payment before generating the full invoice' : 'Review your demand before generating invoice'}</p>
     </div>
     <div style="max-width:700px;margin:0 auto;">
       <div class="preview-card">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
           <div style="width:48px;height:48px;background:#4CAF50;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;">🌾</div>
-          <div><h3 style="font-size:1.1rem;font-weight:700;color:#2E7D32;">Demand Application Summary</h3><p style="font-size:0.82rem;color:#666;">Rampur Krishi Samiti (SOC-001)</p></div>
-          <div style="margin-left:auto;"><span class="badge badge-warning">Draft</span></div>
+          <div><h3 style="font-size:1.1rem;font-weight:700;color:#2E7D32;">${isFull ? 'Full Payment Summary' : 'Demand Application Summary'}</h3><p style="font-size:0.82rem;color:#666;">Rampur Krishi Samiti (SOC-001)</p></div>
+          <div style="margin-left:auto;"><span class="badge ${isFull ? 'badge-info' : 'badge-warning'}">${isFull ? d.id : 'Draft'}</span></div>
         </div>
         <div class="preview-grid">
           <div class="preview-item"><label>Season</label><span>${d.season} 2024-25</span></div>
           <div class="preview-item"><label>Crop</label><span>${d.crop}</span></div>
           <div class="preview-item"><label>Variety</label><span>${d.variety}</span></div>
-          <div class="preview-item"><label>Requested Quantity</label><span>${d.qty} Quintal</span></div>
+          <div class="preview-item"><label>${isFull ? 'Quantity' : 'Requested Quantity'}</label><span>${d.qty} Quintal</span></div>
           <div class="preview-item"><label>Available Stock</label><span style="color:#2E7D32;">850 Qt ✓</span></div>
-          <div class="preview-item"><label>Rate per Quintal</label><span>₹2,400/-</span></div>
+          <div class="preview-item"><label>Rate per Quintal</label><span>₹${rate.toLocaleString()}/-</span></div>
           <div class="preview-item"><label>Total Members</label><span>65</span></div>
           <div class="preview-item"><label>Total Land Area</label><span>185.4 Ha</span></div>
         </div>
         <div class="preview-total">
           <div><div class="label">Estimated Total Cost</div><div class="value">₹${d.cost.toLocaleString()}</div></div>
-          <div><div class="label">Advance Payment Required (25%)</div><div class="value" style="color:#FFD54F;">₹${d.advance.toLocaleString()}</div></div>
+          ${isFull
+        ? `<div><div class="label">Advance Already Paid (25%)</div><div class="value" style="color:#A5D6A7;">₹${d.advance.toLocaleString()}</div></div>
+             <div><div class="label">Balance Payment Due (75%)</div><div class="value" style="color:#FFD54F;">₹${balance.toLocaleString()}</div></div>`
+        : `<div><div class="label">Advance Payment Required (25%)</div><div class="value" style="color:#FFD54F;">₹${d.advance.toLocaleString()}</div></div>`}
         </div>
       </div>
       <div class="alert alert-info">
         <span class="material-icons">info</span>
-        <div>By submitting this demand, you agree to pay the advance amount of <b>₹${d.advance.toLocaleString()}</b> within 7 working days. Remaining payment to be made on delivery.</div>
+        <div>${isFull
+        ? `This is the <b>final balance payment (75%)</b> of <b>₹${balance.toLocaleString()}</b> for demand <b>${d.id}</b>. On payment, the full invoice (100%) will be available for download.`
+        : `By submitting this demand, you agree to pay the advance amount of <b>₹${d.advance.toLocaleString()}</b> within 7 working days. Remaining payment to be made on delivery.`}</div>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <button class="btn btn-gray" onclick="App.navigate('raise-demand')"><span class="material-icons">arrow_back</span> Back</button>
+        <button class="btn btn-gray" onclick="App.navigate('${backPage}')"><span class="material-icons">arrow_back</span> Back</button>
         <button class="btn btn-primary btn-lg" onclick="App.navigate('payment')"><span class="material-icons">receipt</span> Generate Invoice & Pay</button>
       </div>
     </div>`;
@@ -1894,18 +1944,23 @@ const App = {
   renderPayment() {
     const d = this.state.currentDemand || { season: 'Rabi', crop: 'Wheat', variety: 'GW-322', qty: 200, cost: 480000, advance: 120000 };
     const pm = this.state.paymentMode;
+    const isFull = d.mode === 'full';
+    const rate = d.rate || 2400;
+    const balance = d.balance != null ? d.balance : (d.cost - d.advance);
+    const dueNow = isFull ? balance : d.advance;
+    const invNo = isFull ? ('INV-FULL-' + (d.id || 'DEM-2024-006')) : 'INV-2024-0089';
     return `
     <div class="page-header">
       <h1>Payment</h1>
-      <p>Pay advance amount to confirm your demand</p>
+      <p>${isFull ? 'Pay the balance amount (75%) to complete this demand' : 'Pay advance amount to confirm your demand'}</p>
     </div>
     <div class="payment-wrap">
       <div class="invoice-box">
         <div class="invoice-header">
           <div>
-            <div class="invoice-title">🌾 INVOICE</div>
-            <div class="invoice-no">Invoice #INV-2024-0089</div>
-            <div class="invoice-no">Demand #DEM-2024-006</div>
+            <div class="invoice-title">🌾 ${isFull ? 'FULL INVOICE' : 'INVOICE'}</div>
+            <div class="invoice-no">Invoice #${invNo}</div>
+            <div class="invoice-no">Demand #${d.id || 'DEM-2024-006'}</div>
           </div>
           <div style="text-align:right;">
             <div style="font-size:0.78rem;color:#666;">Date: ${new Date().toLocaleDateString('en-IN')}</div>
@@ -1915,12 +1970,14 @@ const App = {
         <div class="invoice-row"><span class="label">Society</span><span class="value">Rampur Krishi Samiti</span></div>
         <div class="invoice-row"><span class="label">Crop / Variety</span><span class="value">${d.crop} / ${d.variety}</span></div>
         <div class="invoice-row"><span class="label">Quantity</span><span class="value">${d.qty} Quintal</span></div>
-        <div class="invoice-row"><span class="label">Rate</span><span class="value">₹2,400 per Qt</span></div>
+        <div class="invoice-row"><span class="label">Rate</span><span class="value">₹${rate.toLocaleString()} per Qt</span></div>
         <div class="invoice-row"><span class="label">Total Amount</span><span class="value">₹${d.cost.toLocaleString()}</span></div>
-        <div class="invoice-row"><span class="label">Balance (75% on delivery)</span><span class="value">₹${(d.cost - d.advance).toLocaleString()}</span></div>
+        ${isFull
+        ? `<div class="invoice-row"><span class="label">Advance Paid (25%)</span><span class="value">₹${d.advance.toLocaleString()}</span></div>`
+        : `<div class="invoice-row"><span class="label">Balance (75% on delivery)</span><span class="value">₹${balance.toLocaleString()}</span></div>`}
         <div class="invoice-total-row">
-          <span class="label">Advance Payment (25%) Due Now</span>
-          <span class="value">₹${d.advance.toLocaleString()}</span>
+          <span class="label">${isFull ? 'Balance Payment (75%) Due Now' : 'Advance Payment (25%) Due Now'}</span>
+          <span class="value">₹${dueNow.toLocaleString()}</span>
         </div>
       </div>
       <div class="card" style="margin-top:16px;">
@@ -1952,7 +2009,7 @@ const App = {
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
             <button class="btn btn-gray" onclick="App.navigate('demand-preview')"><span class="material-icons">arrow_back</span> Back</button>
             <button class="btn btn-primary btn-lg" onclick="App.processPayment()" style="flex:1;">
-              <span class="material-icons">payment</span> Pay ₹${d.advance.toLocaleString()} Now
+              <span class="material-icons">payment</span> Pay ₹${dueNow.toLocaleString()} Now
             </button>
           </div>
         </div>
@@ -1968,30 +2025,43 @@ const App = {
   processPayment() {
     if (!this.state.paymentMode) { this.showToast('Please select a payment mode'); return; }
     const d = this.state.currentDemand || { season: 'Rabi', crop: 'Wheat', variety: 'GW-322', qty: 200 };
+    if (d.mode === 'full') {
+      // Balance (75%) payment for an existing demand → mark it fully paid.
+      const dem = this.state.demands.find(x => x.id === d.id);
+      if (dem) { dem.fullyPaid = true; dem.payStatus = 'Fully Paid'; }
+      this.showPaymentSuccess('full');
+      return;
+    }
     this.state.demands.unshift({
       id: `DEM-2024-00${this.state.demands.length + 1}`,
       date: new Date().toISOString().split('T')[0],
-      season: d.season, crop: d.crop, variety: d.variety, qty: d.qty,
-      payStatus: 'Paid', approvalStatus: 'Under Review'
+      season: d.season, crop: d.crop, variety: d.variety, qty: d.qty, rate: 2400,
+      payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Under Review'
     });
-    this.showPaymentSuccess();
+    this.showPaymentSuccess('advance');
   },
 
-  showPaymentSuccess() {
+  showPaymentSuccess(mode) {
+    const isFull = mode === 'full';
+    const cd = this.state.currentDemand || {};
+    const dueNow = isFull ? (cd.balance != null ? cd.balance : 0) : (cd.advance || 0);
     const app = document.getElementById('app');
     app.innerHTML = `
     <div style="min-height:100vh;background:#f1f8e9;display:flex;align-items:center;justify-content:center;padding:20px;">
       <div style="background:#fff;border-radius:16px;padding:48px;text-align:center;max-width:480px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
         <div style="width:80px;height:80px;background:#E8F5E9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:40px;">✅</div>
         <h2 style="color:#2E7D32;font-size:1.5rem;margin-bottom:8px;">Payment Successful!</h2>
-        <p style="color:#666;margin-bottom:20px;">Your demand has been submitted successfully. Admin will review and approve shortly.</p>
+        <p style="color:#666;margin-bottom:20px;">${isFull
+        ? 'Your balance (75%) payment is complete. This demand is now <b>Fully Paid</b> and the full invoice is available to download.'
+        : 'Your demand has been submitted successfully. Admin will review and approve shortly.'}</p>
         <div style="background:#F1F8E9;border-radius:8px;padding:16px;margin-bottom:24px;text-align:left;">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;font-size:0.85rem;">Transaction ID</span><span style="font-weight:600;font-size:0.85rem;">TXN-${Math.random().toString(36).substr(2, 9).toUpperCase()}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:#666;font-size:0.85rem;">Payment Status</span><span class="badge badge-success">✓ Paid</span></div>
+          ${dueNow ? `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;font-size:0.85rem;">Amount Paid</span><span style="font-weight:600;font-size:0.85rem;">₹${dueNow.toLocaleString()}</span></div>` : ''}
+          <div style="display:flex;justify-content:space-between;"><span style="color:#666;font-size:0.85rem;">Payment Status</span><span class="badge badge-success">${isFull ? '✓ Fully Paid' : '✓ Advance Paid'}</span></div>
         </div>
         <div style="display:flex;gap:12px;justify-content:center;">
-          <button class="btn btn-outline" onclick="App.showToast('Receipt downloaded!')"><span class="material-icons">download</span> Download Receipt</button>
-          <button class="btn btn-primary" onclick="App.navigate('demand-history')"><span class="material-icons">history</span> View Demands</button>
+          ${isFull && cd.id ? `<button class="btn btn-outline" onclick="App.downloadInvoice('${cd.id}','full')"><span class="material-icons">receipt_long</span> Full Invoice</button>` : `<button class="btn btn-outline" onclick="App.showToast('Receipt downloaded!')"><span class="material-icons">download</span> Download Receipt</button>`}
+          <button class="btn btn-primary" onclick="App.navigate('raise-demand')"><span class="material-icons">history</span> View Demands</button>
         </div>
       </div>
     </div>`;
@@ -2003,9 +2073,14 @@ const App = {
   // ============================
   renderDemandHistory() {
     return `
-    <div class="page-header">
-      <h1>Breeder Seed Demand History</h1>
-      <p>All demands raised by your society</p>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h1>Breeder Seed Demand</h1>
+        <p>All demands raised by your society</p>
+      </div>
+      <button class="btn btn-primary" onclick="App.navigate('raise-demand-form')">
+        <span class="material-icons">add</span> New Demand
+      </button>
     </div>
     <div class="search-bar">
       <div class="search-field">
@@ -2033,15 +2108,26 @@ const App = {
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Crop</th><th>Date</th><th>Season</th><th>Variety</th><th>Requested</th><th>Approved</th><th>Pending</th><th>Payment</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Crop</th><th>Date</th><th>Season</th><th>Variety</th><th>Requested</th><th>Approved</th><th>Pending</th><th>Payment</th><th>Status</th><th>Actions</th><th>Invoices</th></tr>
             </thead>
             <tbody>
               ${this.state.demands.map(d => {
       const adm = this.state.adminDemands.find(x => x.id === d.id);
-      const approved = adm ? adm.approvedQty : (d.approvalStatus === 'Approved' ? d.qty : 0);
-      const pending = adm ? adm.pendingQty : (d.approvalStatus === 'Approved' ? 0 : d.qty);
-      const status = adm ? adm.approvalStatus : d.approvalStatus;
-      const badgeCls = s => s === 'Approved' ? 'badge-success' : s === 'Partially Approved' ? 'badge-info' : s === 'Pending' ? 'badge-warning' : s === 'Rejected' ? 'badge-danger' : 'badge-purple';
+      const approved = adm ? adm.approvedQty : (d.approvedQty != null ? d.approvedQty : (d.approvalStatus === 'Approved' ? d.qty : 0));
+      const pending = adm ? adm.pendingQty : (d.pendingQty != null ? d.pendingQty : (d.approvalStatus === 'Approved' ? 0 : d.qty));
+      // Overall status reflects the full lifecycle (dispatch/receive if applicable).
+      const status = this._demandStatus(d);
+      const badgeCls = s => s === 'Approved' ? 'badge-success' : s === 'Received' ? 'badge-success' : s === 'Partially Approved' ? 'badge-info' : s === 'Dispatched' ? 'badge-info' : s === 'Pending' || s === 'Under Review' ? 'badge-warning' : s === 'Rejected' ? 'badge-danger' : 'badge-purple';
+      // Once the demand is Received, payment is settled; show a dedicated "Received" payment status.
+      const isReceived = status === 'Received';
+      const fullyPaidEff = d.fullyPaid || isReceived;
+      const payStatusEff = status === 'Rejected' ? 'Pending' : (isReceived ? 'Received' : (fullyPaidEff ? 'Fully Paid' : d.payStatus));
+      // Payment badge
+      const payCls = fullyPaidEff ? 'badge-success' : payStatusEff === 'Pending' ? 'badge-warning' : 'badge-info';
+      // Full payment allowed once the demand is beyond "Pending/Under Review"/"Rejected" and advance is paid (not fully paid yet).
+      const advancePaid = !!payStatusEff && payStatusEff !== 'Pending';
+      const demandDecided = d.approvalStatus !== 'Pending' && d.approvalStatus !== 'Under Review' && status !== 'Rejected';
+      const canPayFull = advancePaid && !fullyPaidEff && demandDecided;
       return `<tr>
                 <td>${d.crop}</td>
                 <td>${d.date}</td>
@@ -2050,12 +2136,19 @@ const App = {
                 <td style="font-weight:600;">${d.qty} Qt</td>
                 <td style="color:#2E7D32;font-weight:600;">${approved > 0 ? approved + ' Qt' : '—'}</td>
                 <td style="color:${pending > 0 ? '#E65100' : '#9E9E9E'};font-weight:600;">${pending > 0 ? pending + ' Qt' : '—'}</td>
-                <td><span class="badge ${d.payStatus === 'Paid' ? 'badge-success' : 'badge-warning'}">${d.payStatus}</span></td>
+                <td><span class="badge ${payCls}">${payStatusEff}</span></td>
                 <td><span class="badge ${badgeCls(status)}">${status}</span></td>
                 <td>
                   <div class="action-btns">
                     <button class="btn btn-info btn-sm" title="View" onclick="App.viewDemandHistory('${d.id}')"><span class="material-icons" style="font-size:16px;">visibility</span></button>
-                    <button class="btn btn-gray btn-sm" title="Download" onclick="App.downloadDemandHistory('${d.id}')"><span class="material-icons" style="font-size:16px;">download</span></button>
+                    ${canPayFull ? `<button class="btn btn-success btn-sm" title="Pay Full Payment" onclick="App.payFullPayment('${d.id}')"><span class="material-icons" style="font-size:16px;">payments</span> Pay Full</button>` : ''}
+                  </div>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    ${advancePaid ? `<button class="btn btn-outline btn-sm" title="Download 25% Advance Invoice" onclick="App.downloadInvoice('${d.id}','advance')"><span class="material-icons" style="font-size:15px;">receipt</span> 25%</button>` : ''}
+                    ${fullyPaidEff ? `<button class="btn btn-outline btn-sm" title="Download Full Invoice" onclick="App.downloadInvoice('${d.id}','full')"><span class="material-icons" style="font-size:15px;">receipt_long</span> Full</button>` : ''}
+                    ${!advancePaid ? '<span style="font-size:0.78rem;color:#9E9E9E;">—</span>' : ''}
                   </div>
                 </td>
               </tr>`;
@@ -2075,13 +2168,103 @@ const App = {
     this.showToast('Demand ' + id + ' details downloaded.');
   },
 
+  // Overall demand status including dispatch/receive stage (from admin side).
+  _demandStatus(d) {
+    const adm = this.state.adminDemands.find(x => x.id === d.id);
+    const base = adm ? adm.approvalStatus : d.approvalStatus;
+    const ord = this.state.dispatchOrders.find(o => o.demandId === d.id || (adm && o.id === adm.dispatchOrderId));
+    if (ord && ord.status === 'Received') return 'Received';
+    if (ord && ord.status === 'Dispatched') return 'Dispatched';
+    return base;
+  },
+
+  // Pay the remaining 75% → run the full invoice + payment-mode flow (same as advance).
+  payFullPayment(id) {
+    const d = this.state.demands.find(x => x.id === id);
+    if (!d) return;
+    if (d.approvalStatus === 'Pending' || d.approvalStatus === 'Under Review') {
+      this.showToast('Full payment is available once the demand is approved.');
+      return;
+    }
+    if (d.fullyPaid) { this.showToast('This demand is already fully paid.'); return; }
+    const rate = d.rate || 2400;
+    const cost = (d.qty || 0) * rate;
+    const advance = Math.round(cost * 0.25);
+    // Prepare the demand for the full-payment flow. mode:'full' drives preview/payment/invoice.
+    this.state.currentDemand = {
+      mode: 'full', id: d.id,
+      season: d.season, crop: d.crop, variety: d.variety, qty: d.qty, rate,
+      cost, advance, balance: cost - advance, amountDue: cost - advance
+    };
+    this.state.paymentMode = null;
+    this.navigate('demand-preview');
+  },
+
+  // Build a printable invoice (HTML) for a demand — 'advance' (25%) or 'full'.
+  _invoiceHtml(d, kind) {
+    const rate = d.rate || 2400;
+    const total = (d.qty || 0) * rate;
+    const advance = Math.round(total * 0.25);
+    const balance = total - advance;
+    const isAdv = kind === 'advance';
+    const amount = isAdv ? advance : total;
+    const invNo = (isAdv ? 'INV-ADV-' : 'INV-FULL-') + d.id;
+    const rows = [
+      ['Invoice No', invNo],
+      ['Invoice Type', isAdv ? 'Advance Payment (25%)' : 'Full Payment (100%)'],
+      ['Date', new Date().toLocaleDateString('en-IN')],
+      ['Demand ID', d.id],
+      ['Society', 'Rampur Krishi Samiti (SOC-001)'],
+      ['Crop / Variety', d.crop + ' / ' + d.variety],
+      ['Quantity', d.qty + ' Quintal'],
+      ['Rate', '\u20B9' + rate.toLocaleString() + ' / Qt'],
+      ['Total Amount', '\u20B9' + total.toLocaleString()],
+      ['Advance (25%)', '\u20B9' + advance.toLocaleString()],
+      ['Balance (75%)', '\u20B9' + balance.toLocaleString()]
+    ];
+    return '<!doctype html><html><head><meta charset="utf-8"><title>' + invNo + '</title>'
+      + '<style>body{font-family:Arial,sans-serif;color:#222;padding:32px;}h1{color:#1B5E20;margin:0 0 4px;}'
+      + '.sub{color:#666;margin:0 0 20px;}table{border-collapse:collapse;width:100%;max-width:560px;}'
+      + 'td{padding:9px 12px;border-bottom:1px solid #eee;font-size:14px;}td:first-child{color:#666;width:200px;}'
+      + '.amt{margin-top:20px;font-size:20px;font-weight:700;color:#1B5E20;}</style></head><body>'
+      + '<h1>\uD83C\uDF3E Beej Sangh Procurement Portal</h1>'
+      + '<p class="sub">' + (isAdv ? 'Advance Payment Invoice (25%)' : 'Full Payment Invoice (100%)') + '</p>'
+      + '<table>' + rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td><b>' + r[1] + '</b></td></tr>'; }).join('') + '</table>'
+      + '<div class="amt">Amount ' + (isAdv ? 'Paid (Advance)' : 'Payable (Full)') + ': \u20B9' + amount.toLocaleString() + '</div>'
+      + '<p style="color:#999;font-size:12px;margin-top:28px;">This is a system-generated invoice for demonstration purposes.</p>'
+      + '</body></html>';
+  },
+
+  // Download the invoice as an HTML file (wireframe: real client-side download).
+  downloadInvoice(id, kind) {
+    const d = this.state.demands.find(x => x.id === id);
+    if (!d) return;
+    if (kind === 'advance' && (!d.payStatus || d.payStatus === 'Pending')) { this.showToast('Advance not paid yet.'); return; }
+    if (kind === 'full' && !d.fullyPaid && this._demandStatus(d) !== 'Received') { this.showToast('Full payment not completed yet.'); return; }
+    const html = this._invoiceHtml(d, kind);
+    try {
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (kind === 'advance' ? 'Invoice-Advance-25pct-' : 'Invoice-Full-') + id + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.showToast((kind === 'advance' ? '25% advance' : 'Full') + ' invoice downloaded for ' + id + '.');
+    } catch (e) {
+      this.showToast('Invoice downloaded for ' + id + '.');
+    }
+  },
+
   renderDemandHistoryModal() {
     const d = this.state.demands.find(x => x.id === this.state.demandHistoryViewId);
     if (!d) return '';
     const adm = this.state.adminDemands.find(x => x.id === d.id);
-    const approved = adm ? adm.approvedQty : (d.approvalStatus === 'Approved' ? d.qty : 0);
-    const pending = adm ? adm.pendingQty : (d.approvalStatus === 'Approved' ? 0 : d.qty);
-    const status = adm ? adm.approvalStatus : d.approvalStatus;
+    const approved = adm ? adm.approvedQty : (d.approvedQty != null ? d.approvedQty : (d.approvalStatus === 'Approved' ? d.qty : 0));
+    const pending = adm ? adm.pendingQty : (d.pendingQty != null ? d.pendingQty : (d.approvalStatus === 'Approved' ? 0 : d.qty));
+    const status = this._demandStatus(d);
     const remarks = adm && adm.remarks ? adm.remarks : '—';
     const row = (label, val) => `
       <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
@@ -2109,7 +2292,8 @@ const App = {
         </div>
         <div class="modal-footer">
           <button class="btn btn-gray" onclick="App.closeDemandHistoryView()">Close</button>
-          <button class="btn btn-primary" onclick="App.downloadDemandHistory('${d.id}')"><span class="material-icons" style="font-size:16px;">download</span> Download</button>
+          ${d.payStatus && d.payStatus !== 'Pending' ? `<button class="btn btn-outline" onclick="App.downloadInvoice('${d.id}','advance')"><span class="material-icons" style="font-size:16px;">receipt</span> 25% Invoice</button>` : ''}
+          ${d.fullyPaid ? `<button class="btn btn-primary" onclick="App.downloadInvoice('${d.id}','full')"><span class="material-icons" style="font-size:16px;">receipt_long</span> Full Invoice</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -2507,22 +2691,17 @@ const App = {
   // ============================
   renderAdminDemands() {
     const d = this.state.adminDemands;
-    const counts = {
-      all: d.length,
-      pending: d.filter(x => x.approvalStatus === 'Pending').length,
-      approved: d.filter(x => x.approvalStatus === 'Approved').length,
-      partial: d.filter(x => x.approvalStatus === 'Partially Approved').length,
-      rejected: d.filter(x => x.approvalStatus === 'Rejected').length,
-      hold: d.filter(x => x.approvalStatus === 'Hold').length,
-    };
     const badgeCls = s => s === 'Approved' ? 'badge-success' : s === 'Partially Approved' ? 'badge-info' : s === 'Pending' ? 'badge-warning' : s === 'Rejected' ? 'badge-danger' : 'badge-purple';
+
+    // Resolve the dispatch order (if any) linked to a demand.
+    const dispatchOf = dem => this.state.dispatchOrders.find(o => o.demandId === dem.id || o.id === dem.dispatchOrderId);
+
     return `
-    <!-- Demand Table -->
     <div class="card">
       <div class="card-header">
         <h3>All Society Demands</h3>
         <div style="display:flex;gap:8px;">
-          <select class="form-control" style="padding:6px 10px;font-size:0.82rem;width:160px;" onchange="App.filterAdminDemands(this.value)">
+          <select class="form-control" style="padding:6px 10px;font-size:0.82rem;width:170px;" onchange="App.filterAdminDemands(this.value)">
             <option value="">All Status</option>
             <option>Pending</option><option>Approved</option>
             <option>Partially Approved</option><option>Rejected</option><option>Hold</option>
@@ -2541,8 +2720,39 @@ const App = {
             </thead>
             <tbody>
               ${d.map(dem => {
-      const stk = this.state.stock.find(s => s.crop === dem.crop && s.variety === dem.variety);
-      const avail = stk ? (stk.available - stk.allocated) : 0;
+      const ord = dispatchOf(dem);
+      const isApproved = dem.approvalStatus === 'Approved' || dem.approvalStatus === 'Partially Approved';
+      const canApprove = dem.approvalStatus === 'Pending' || dem.approvalStatus === 'Hold';
+      const isRejected = dem.approvalStatus === 'Rejected';
+      // Payment stage: refunded/refund-due for rejected; delivered → Full Paid; approved/dispatched → Advance Paid; else Pending.
+      let payStage, payCls;
+      if (isRejected) {
+        if (dem.refunded) { payStage = 'Refunded'; payCls = 'badge-success'; }
+        else { payStage = 'Refund Due'; payCls = 'badge-danger'; }
+      }
+      else if (ord && ord.status === 'Received') { payStage = 'Full Paid (100%)'; payCls = 'badge-success'; }
+      else if (isApproved || (ord && ord.status === 'Dispatched')) { payStage = 'Advance Paid (25%)'; payCls = 'badge-info'; }
+      else { payStage = 'Pending'; payCls = 'badge-warning'; }
+      let actions = `<button class="btn btn-info btn-sm" onclick="App.openDemandReview('${dem.id}')" title="View Detail"><span class="material-icons" style="font-size:14px;">visibility</span></button>`;
+      if (canApprove) {
+        actions += `
+          <button class="btn btn-success btn-sm" title="Approve" onclick="App.quickApproveDemand('${dem.id}')"><span class="material-icons" style="font-size:14px;">check_circle</span></button>
+          <button class="btn btn-primary btn-sm" title="Partial Approve" onclick="App.openPartialPopup('${dem.id}')"><span class="material-icons" style="font-size:14px;">rule</span></button>
+          <button class="btn btn-sm" style="background:#9C27B0;color:#fff;" title="Hold" onclick="App.openHoldPopup('${dem.id}')"><span class="material-icons" style="font-size:14px;">pause_circle</span></button>
+          <button class="btn btn-danger btn-sm" title="Reject" onclick="App.openRejectPopup('${dem.id}')"><span class="material-icons" style="font-size:14px;">cancel</span></button>`;
+      } else if (isRejected) {
+        if (dem.refunded) {
+          actions += `<span class="badge badge-success" style="align-self:center;">✓ Refunded</span>`;
+        } else {
+          actions += `<button class="btn btn-sm" style="background:#E65100;color:#fff;" title="Refund Advance Payment" onclick="App.openRefundFlow('${dem.id}')"><span class="material-icons" style="font-size:14px;">currency_rupee</span> Refund Payment</button>`;
+        }
+      } else if (isApproved && !ord) {
+        actions += `<button class="btn btn-primary btn-sm" title="Dispatch" onclick="App.openDispatchForm('${dem.id}')"><span class="material-icons" style="font-size:14px;">local_shipping</span> Dispatch</button>`;
+      } else if (ord && ord.status === 'Dispatched') {
+        actions += `<button class="btn btn-success btn-sm" title="Mark Received" onclick="App.markDemandReceived('${dem.id}')"><span class="material-icons" style="font-size:14px;">inventory</span> Mark Received</button>`;
+      } else if (ord && ord.status === 'Received') {
+        actions += `<span class="badge badge-success" style="align-self:center;">✓ Received</span>`;
+      }
       return `<tr>
                   <td><div style="font-weight:500;font-size:0.85rem;">${dem.society}</div>
                       <div style="font-size:0.72rem;color:#9E9E9E;">${dem.socCode} | ${dem.season} | ${dem.date}</div></td>
@@ -2550,15 +2760,9 @@ const App = {
                   <td style="font-weight:600;">${dem.requestedQty} Qt</td>
                   <td style="color:#2E7D32;font-weight:600;">${dem.approvedQty > 0 ? dem.approvedQty + ' Qt' : '—'}</td>
                   <td style="color:${dem.pendingQty > 0 ? '#E65100' : '#9E9E9E'};font-weight:600;">${dem.pendingQty > 0 ? dem.pendingQty + ' Qt' : '—'}</td>
-                  <td><span class="badge ${dem.payStatus === 'Paid' ? 'badge-success' : 'badge-warning'}">${dem.payStatus}</span></td>
+                  <td><span class="badge ${payCls}">${payStage}</span></td>
                   <td><span class="badge ${badgeCls(dem.approvalStatus)}">${dem.approvalStatus}</span></td>
-                  <td>
-                    <div class="action-btns">
-                      <button class="btn btn-info btn-sm" onclick="App.openDemandReview('${dem.id}')" title="View Detail">
-                        <span class="material-icons" style="font-size:13px;">visibility</span>
-                      </button>
-                    </div>
-                  </td>
+                  <td><div class="action-btns">${actions}</div></td>
                 </tr>`;
     }).join('')}
             </tbody>
@@ -2566,7 +2770,173 @@ const App = {
         </div>
       </div>
     </div>
-    ${this.state.demandActionPopup ? this.renderDemandActionPopup() : ''}`;
+    ${this.state.demandActionPopup ? this.renderDemandActionPopup() : ''}
+    ${this.state.dispatchFormDemandId ? this.renderDispatchFormModal() : ''}
+    ${this.state.refundFlow ? this.renderRefundModal() : ''}`;
+  },
+
+  // ============================
+  // REFUND FLOW (for rejected demands) — invoice → payment mode → receipt
+  // ============================
+  openRefundFlow(demandId) {
+    const dem = this.state.adminDemands.find(d => d.id === demandId);
+    if (!dem) return;
+    if (dem.refunded) { this.showToast('This demand is already refunded.'); return; }
+    this.state.refundFlow = { demandId, step: 'invoice', mode: null, receipt: null };
+    this.render();
+  },
+  closeRefundFlow() { this.state.refundFlow = null; this.render(); },
+  refundGoToMode() {
+    if (!this.state.refundFlow) return;
+    this.state.refundFlow.step = 'mode';
+    this.render();
+  },
+  selectRefundMode(mode) {
+    if (!this.state.refundFlow) return;
+    this.state.refundFlow.mode = mode;
+    this.render();
+  },
+  processRefund() {
+    const rf = this.state.refundFlow;
+    if (!rf) return;
+    if (!rf.mode) { this.showToast('Please select a refund mode'); return; }
+    const dem = this.state.adminDemands.find(d => d.id === rf.demandId);
+    if (!dem) return;
+    dem.refunded = true;
+    dem.refundMode = rf.mode;
+    const txn = 'RFD-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    rf.receipt = {
+      txn, demandId: dem.id, society: dem.society, socCode: dem.socCode,
+      crop: dem.crop, variety: dem.variety,
+      amount: this._refundAmount(dem), mode: rf.mode, date: new Date().toLocaleDateString('en-IN'),
+    };
+    rf.step = 'receipt';
+    this.render();
+  },
+  // Refund = advance (25%) already collected on the requested quantity.
+  _refundAmount(dem) {
+    const rate = 2400;
+    return Math.round((dem.requestedQty || 0) * rate * 0.25);
+  },
+
+  renderRefundModal() {
+    const rf = this.state.refundFlow;
+    const dem = this.state.adminDemands.find(d => d.id === rf.demandId);
+    if (!dem) return '';
+    const amount = this._refundAmount(dem);
+    const mode = rf.mode;
+    // Step 3: receipt
+    if (rf.step === 'receipt' && rf.receipt) {
+      const r = rf.receipt;
+      return `
+      <div class="modal-overlay" onclick="if(event.target===this)App.closeRefundFlow()">
+        <div class="modal-box" style="max-width:480px;">
+          <div class="modal-header">
+            <h3>💸 Refund Receipt</h3>
+            <button class="modal-close" onclick="App.closeRefundFlow()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="text-align:center;margin-bottom:16px;">
+              <div style="width:68px;height:68px;background:#E8F5E9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:34px;">✅</div>
+              <h3 style="color:#2E7D32;margin:0;">Refund Processed</h3>
+              <p style="color:#666;font-size:0.85rem;margin:4px 0 0;">Advance payment refunded to the society.</p>
+            </div>
+            ${[['Transaction ID', r.txn], ['Demand ID', r.demandId], ['Society', r.society + ' (' + r.socCode + ')'], ['Crop / Variety', r.crop + ' / ' + r.variety], ['Refund Mode', r.mode], ['Date', r.date]].map(([l, v]) => `
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:0.86rem;"><span style="color:#757575;">${l}</span><span style="font-weight:600;">${v}</span></div>`).join('')}
+            <div style="display:flex;justify-content:space-between;align-items:center;background:#F1F8E9;border-radius:8px;padding:12px 14px;margin-top:14px;">
+              <span style="color:#1B5E20;font-weight:600;">Refund Amount</span>
+              <span style="color:#1B5E20;font-weight:700;font-size:1.1rem;">₹${r.amount.toLocaleString()}</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline" onclick="App.showToast('Refund receipt downloaded!')"><span class="material-icons" style="font-size:16px;">download</span> Download</button>
+            <button class="btn btn-primary" onclick="App.closeRefundFlow()">Done</button>
+          </div>
+        </div>
+      </div>`;
+    }
+    // Step 2: select refund mode
+    if (rf.step === 'mode') {
+      const m = (id, icon, label) => `
+        <div class="payment-mode-btn ${mode === id ? 'selected' : ''}" onclick="App.selectRefundMode('${id}')">
+          <span class="material-icons">${icon}</span><p>${label}</p>
+        </div>`;
+      return `
+      <div class="modal-overlay" onclick="if(event.target===this)App.closeRefundFlow()">
+        <div class="modal-box" style="max-width:520px;">
+          <div class="modal-header">
+            <h3>Select Refund Mode</h3>
+            <button class="modal-close" onclick="App.closeRefundFlow()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="background:#FFF3E0;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.85rem;color:#5D4037;">
+              Refunding advance payment of <b>₹${amount.toLocaleString()}</b> to <b>${dem.society}</b> for rejected demand <b>${dem.id}</b>.
+            </div>
+            <div class="payment-modes">
+              ${m('upi', 'qr_code_2', 'UPI Transfer')}
+              ${m('netbanking', 'account_balance', 'Bank Transfer (NEFT)')}
+              ${m('cheque', 'receipt', 'Cheque')}
+              ${m('cash', 'payments', 'Cash')}
+            </div>
+            ${mode === 'netbanking' ? `
+            <div class="form-group" style="margin-top:14px;"><label>Beneficiary Bank Account</label><input type="text" class="form-control" value="SBI ••••• 4321" readonly style="background:#f5f5f5;"/></div>` : mode === 'cheque' ? `
+            <div class="form-group" style="margin-top:14px;"><label>Cheque Number</label><input type="text" class="form-control" placeholder="Enter cheque no."/></div>` : ''}
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-gray" onclick="App.refundBackToInvoice()">Back</button>
+            <button class="btn btn-primary" onclick="App.processRefund()"><span class="material-icons" style="font-size:16px;">currency_rupee</span> Refund ₹${amount.toLocaleString()}</button>
+          </div>
+        </div>
+      </div>`;
+    }
+    // Step 1: refund invoice / summary
+    return `
+      <div class="modal-overlay" onclick="if(event.target===this)App.closeRefundFlow()">
+        <div class="modal-box" style="max-width:520px;">
+          <div class="modal-header">
+            <h3>🧾 Refund Invoice</h3>
+            <button class="modal-close" onclick="App.closeRefundFlow()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="invoice-box" style="margin:0;">
+              <div class="invoice-header">
+                <div>
+                  <div class="invoice-title">💸 REFUND</div>
+                  <div class="invoice-no">Ref #RFD-${dem.id}</div>
+                  <div class="invoice-no">Demand #${dem.id}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:0.78rem;color:#666;">Date: ${new Date().toLocaleDateString('en-IN')}</div>
+                  <div style="font-size:0.78rem;color:#666;">Season: ${dem.season}</div>
+                </div>
+              </div>
+              <div class="invoice-row"><span class="label">Society</span><span class="value">${dem.society} (${dem.socCode})</span></div>
+              <div class="invoice-row"><span class="label">Crop / Variety</span><span class="value">${dem.crop} / ${dem.variety}</span></div>
+              <div class="invoice-row"><span class="label">Requested Qty</span><span class="value">${dem.requestedQty} Qt</span></div>
+              <div class="invoice-row"><span class="label">Reason</span><span class="value">${dem.remarks || 'Demand rejected'}</span></div>
+              <div class="invoice-row"><span class="label">Advance Paid (25%)</span><span class="value">₹${amount.toLocaleString()}</span></div>
+              <div class="invoice-total-row">
+                <span class="label">Refund Amount</span>
+                <span class="value">₹${amount.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-gray" onclick="App.closeRefundFlow()">Cancel</button>
+            <button class="btn btn-primary" onclick="App.refundGoToMode()"><span class="material-icons" style="font-size:16px;">arrow_forward</span> Proceed to Refund</button>
+          </div>
+        </div>
+      </div>`;
+  },
+  refundBackToInvoice() { if (this.state.refundFlow) { this.state.refundFlow.step = 'invoice'; this.render(); } },
+
+  // Mark a demand's dispatch order as Received (from the merged Demand Management page).
+  markDemandReceived(demandId) {
+    const dem = this.state.adminDemands.find(d => d.id === demandId);
+    if (!dem) return;
+    const ord = this.state.dispatchOrders.find(o => o.demandId === demandId || o.id === dem.dispatchOrderId);
+    if (!ord) { this.showToast('No dispatch order found for this demand.'); return; }
+    this.markReceived(ord.id);
   },
 
   filterAdminDemands(status) {
@@ -3596,9 +3966,14 @@ const App = {
   // ============================================================
   renderSocAvailableStock() {
     const rs = this.state.receivedStock;
-    const totalAlloc = rs.reduce((s, r) => s + r.allocatedQty, 0);
-    const totalDist = rs.reduce((s, r) => s + r.distributedQty, 0);
-    const totalBal = totalAlloc - totalDist;
+    // Available balance per row and per seed type.
+    const balOf = r => r.allocatedQty - r.distributedQty;
+    const totalBal = rs.reduce((s, r) => s + balOf(r), 0);
+    const typeBal = t => rs.filter(r => r.seedType === t).reduce((s, r) => s + balOf(r), 0);
+    const breederBal = typeBal('Breeder');
+    const foundationBal = typeBal('Foundation');
+    const certifiedBal = typeBal('Certified');
+    const seedTypeBadge = t => t === 'Breeder' ? 'badge-success' : t === 'Foundation' ? 'badge-info' : 'badge-purple';
     return `
     <div class="page-header">
       <h1>Available Stock</h1>
@@ -3608,29 +3983,29 @@ const App = {
       <div class="stat-card blue">
         <div class="stat-icon"><span class="material-icons">inventory_2</span></div>
         <div class="stat-info">
-          <div class="value">${totalAlloc} Qt</div>
-          <div class="label">Total Allocated Stock</div>
+          <div class="value">${totalBal} Qt</div>
+          <div class="label">Total Stock</div>
         </div>
       </div>
       <div class="stat-card teal">
-        <div class="stat-icon"><span class="material-icons">check_circle</span></div>
+        <div class="stat-icon"><span class="material-icons">eco</span></div>
         <div class="stat-info">
-          <div class="value">${totalDist} Qt</div>
-          <div class="label">Distributed Stock</div>
+          <div class="value">${breederBal} Qt</div>
+          <div class="label">Breeder Stock</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon"><span class="material-icons">storefront</span></div>
+        <div class="stat-icon"><span class="material-icons">grass</span></div>
         <div class="stat-info">
-          <div class="value">${totalBal} Qt</div>
-          <div class="label">Available Balance</div>
+          <div class="value">${foundationBal} Qt</div>
+          <div class="label">Foundation Seed Stock</div>
         </div>
       </div>
       <div class="stat-card orange">
-        <div class="stat-icon"><span class="material-icons">pie_chart</span></div>
+        <div class="stat-icon"><span class="material-icons">verified</span></div>
         <div class="stat-info">
-          <div class="value">${totalAlloc > 0 ? Math.round(totalDist / totalAlloc * 100) : 0}%</div>
-          <div class="label">Distribution Progress</div>
+          <div class="value">${certifiedBal} Qt</div>
+          <div class="label">Certified Seed Stock</div>
         </div>
       </div>
     </div>
@@ -3649,7 +4024,7 @@ const App = {
     </div>`}
     <div class="card">
       <div class="card-header">
-        <h3>Stock Details — Crop & Variety Wise</h3>
+        <h3>Seed Availability — Crop / Variety / Seed Type Wise</h3>
         <button class="btn btn-primary btn-sm" onclick="App.navigate('soc-member-distribution')">
           <span class="material-icons">agriculture</span> Distribute to Members
         </button>
@@ -3659,59 +4034,28 @@ const App = {
           <table>
             <thead>
               <tr>
-                <th>Crop</th><th>Variety</th><th>Season</th>
+                <th>Crop</th><th>Variety</th><th>Seed Type</th><th>Season</th>
                 <th>Allocated (Qt)</th><th>Distributed (Qt)</th>
-                <th>Remaining (Qt)</th><th>Progress</th><th>Received On</th>
+                <th>Available (Qt)</th><th>Received On</th>
               </tr>
             </thead>
             <tbody>
               ${rs.map(r => {
-      const bal = r.allocatedQty - r.distributedQty;
-      const pct = r.allocatedQty > 0 ? Math.round(r.distributedQty / r.allocatedQty * 100) : 0;
+      const bal = balOf(r);
       return `<tr>
                   <td><b>${r.crop}</b></td>
                   <td>${r.variety}</td>
+                  <td><span class="badge ${seedTypeBadge(r.seedType)}">${r.seedType}</span></td>
                   <td>${r.season}</td>
                   <td style="color:#1565C0;font-weight:600;">${r.allocatedQty}</td>
                   <td style="color:#2E7D32;font-weight:600;">${r.distributedQty}</td>
                   <td style="color:${bal > 0 ? '#E65100' : '#757575'};font-weight:600;">${bal}</td>
-                  <td style="min-width:120px;">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                      <div style="flex:1;height:8px;background:#E0E0E0;border-radius:4px;overflow:hidden;">
-                        <div style="width:${pct}%;height:100%;background:#4CAF50;border-radius:4px;"></div>
-                      </div>
-                      <span style="font-size:0.75rem;font-weight:600;">${pct}%</span>
-                    </div>
-                  </td>
                   <td>${r.receivedDate}</td>
                 </tr>`;
     }).join('')}
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><h3>Stock Balance Timeline</h3></div>
-      <div class="card-body">
-        ${rs.map(r => {
-      const bal = r.allocatedQty - r.distributedQty;
-      const pct = r.allocatedQty > 0 ? Math.round(r.distributedQty / r.allocatedQty * 100) : 0;
-      return `
-          <div style="margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-weight:600;font-size:0.88rem;">${r.crop} — ${r.variety}</span>
-              <span style="font-size:0.8rem;color:#666;">${r.distributedQty} / ${r.allocatedQty} Qt distributed</span>
-            </div>
-            <div style="background:#E8F5E9;border-radius:6px;height:14px;overflow:hidden;position:relative;">
-              <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#4CAF50,#2E7D32);border-radius:6px;transition:width 0.6s;"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-top:4px;">
-              <span style="font-size:0.72rem;color:#4CAF50;">Distributed: ${r.distributedQty} Qt</span>
-              <span style="font-size:0.72rem;color:#E65100;">Remaining: ${bal} Qt</span>
-            </div>
-          </div>`;
-    }).join('')}
       </div>
     </div>`;
   },
@@ -3722,127 +4066,195 @@ const App = {
   // MEMBER DISTRIBUTION PAGE — 2-step: Select Member → Allot Seed
   // ============================================================
   renderSocMemberDistribution() {
-    const rs = this.state.receivedStock;
-    const totalAvail = rs.reduce((s, r) => s + (r.allocatedQty - r.distributedQty), 0);
-    const popup = this.state.distributionPopup;
-    // Step 2: If a member is selected and we're in allot mode, show allotment form
-    if (this.state.selectedMemberForDist) {
-      return this.renderAllotSeedForm(totalAvail, rs);
+    // Combined page: distribution list first; "+ New Distribution" opens the form.
+    if (this.state.showNewDistForm) return this.renderNewDistributionForm();
+    return this.renderSocDistRegister();
+  },
+
+  // ── Current Indian financial year, e.g. "2024-2025" (Apr–Mar). ──
+  _currentFinYear() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const startY = now.getMonth() >= 3 ? y : y - 1; // Jan–Mar belongs to previous FY
+    return startY + '-' + (startY + 1);
+  },
+
+  // ── Price per quintal by seed type + crop/variety (mock price list). ──
+  _distPrice(seedType, crop, variety) {
+    // Base rate per crop/variety (₹/Qt), then a seed-type multiplier.
+    const base = {
+      'JS-335': 2400, 'GW-322': 2200, 'HD-2967': 2300, 'JG-315': 2600,
+      'Pusa Bold': 2800, 'IR-64': 2100, 'Swarna': 2000, 'Pusa Basmati-1': 3200,
+      'MTU-7029': 2050,
+    };
+    const cropBase = { Soybean: 2400, Wheat: 2200, Gram: 2600, Mustard: 2800, Paddy: 2100, Maize: 1900 };
+    const rate = base[variety] || cropBase[crop] || 2400;
+    const mult = seedType === 'Breeder' ? 1.3 : seedType === 'Foundation' ? 1.15 : 1.0; // Certified = base
+    return Math.round(rate * mult);
+  },
+
+  // ── Dropdown option helpers for the distribution form. ──
+  _distCropOpts(sel) {
+    const crops = ['Soybean', 'Wheat', 'Gram', 'Mustard', 'Paddy', 'Maize'];
+    return crops.map(c => `<option value="${c}" ${c === sel ? 'selected' : ''}>${c}</option>`).join('');
+  },
+  _distVarietyOpts(sel) {
+    const vs = ['JS-335', 'GW-322', 'HD-2967', 'JG-315', 'Pusa Bold', 'IR-64', 'Swarna', 'MTU-7029', 'Pusa Basmati-1'];
+    return vs.map(v => `<option value="${v}" ${v === sel ? 'selected' : ''}>${v}</option>`).join('');
+  },
+
+  // ── Open / close the new-distribution form ──
+  openNewDistForm() {
+    this.state.showNewDistForm = true;
+    this.state.newDistMemberId = this.state.members.find(m => m.status === 'Active')?.id || '';
+    this.render();
+  },
+  closeNewDistForm() {
+    this.state.showNewDistForm = false;
+    this.render();
+  },
+
+  // Member dropdown change → autofill mobile (+ village, district).
+  onDistMemberChange() {
+    const sel = document.getElementById('nd-member');
+    if (!sel) return;
+    const m = this.state.members.find(x => x.id === sel.value);
+    const mob = document.getElementById('nd-mobile');
+    const vil = document.getElementById('nd-village');
+    if (m) {
+      if (mob) mob.value = m.mobile;
+      if (vil) vil.value = m.village;
     }
+  },
+
+  // Recalculate total amount = rate(seedType,crop,variety) × quantity.
+  recalcDistAmount() {
+    const seedType = document.getElementById('nd-seedtype')?.value || 'Breeder';
+    const crop = document.getElementById('nd-crop')?.value || '';
+    const variety = document.getElementById('nd-variety')?.value || '';
+    const qty = parseFloat(document.getElementById('nd-qty')?.value) || 0;
+    const rate = this._distPrice(seedType, crop, variety);
+    const total = Math.round(rate * qty);
+    const rateEl = document.getElementById('nd-rate');
+    const amtEl = document.getElementById('nd-amount');
+    if (rateEl) rateEl.value = '₹' + rate.toLocaleString() + ' / Qt';
+    if (amtEl) amtEl.value = '₹' + total.toLocaleString();
+  },
+
+  // ── NEW DISTRIBUTION FORM ──
+  renderNewDistributionForm() {
+    const members = this.state.members.filter(m => m.status === 'Active');
+    const selId = this.state.newDistMemberId || (members[0] && members[0].id) || '';
+    const sm = members.find(m => m.id === selId) || members[0] || {};
+    const finYear = this._currentFinYear();
+    const today = new Date().toISOString().split('T')[0];
+    const seedType = 'Breeder', crop = 'Soybean', variety = 'JS-335';
+    const rate = this._distPrice(seedType, crop, variety);
     return `
-    <div class="page-header">
-      <h1>Breeder Seeds Distribution to Member</h1>
-      <p>Allocate seed from available stock to registered society members</p>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h1>New Distribution</h1>
+        <p>Distribute breeder / foundation / certified seed to a society member</p>
+      </div>
+      <button class="btn btn-gray" onclick="App.closeNewDistForm()"><span class="material-icons">arrow_back</span> Back to List</button>
     </div>
-    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:20px;">
-      <div class="stat-card blue">
-        <div class="stat-icon"><span class="material-icons">inventory_2</span></div>
-        <div class="stat-info"><div class="value">${rs.reduce((s, r) => s + r.allocatedQty, 0)} Qt</div><div class="label">Total Allocated</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon"><span class="material-icons">storefront</span></div>
-        <div class="stat-info"><div class="value">${totalAvail} Qt</div><div class="label">Available to Distribute</div></div>
-      </div>
-      <div class="stat-card teal">
-        <div class="stat-icon"><span class="material-icons">check_circle</span></div>
-        <div class="stat-info"><div class="value">${rs.reduce((s, r) => s + r.distributedQty, 0)} Qt</div><div class="label">Already Distributed</div></div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-icon"><span class="material-icons">group</span></div>
-        <div class="stat-info"><div class="value">${this.state.members.filter(m => m.status === 'Active').length}</div><div class="label">Active Members</div></div>
-      </div>
-    </div>
-    ${totalAvail <= 0 ? `
-    <div class="alert alert-danger">
-      <span class="material-icons">error</span>
-      <div><b>No stock available.</b> All allocated seed has been distributed or no stock has been received yet.</div>
-    </div>` : `
-    <div class="alert alert-info">
-      <span class="material-icons">info</span>
-      <div><b>${totalAvail} Quintal</b> available. Select a member below and enter the quantity to distribute.</div>
-    </div>`}
-    <div class="search-bar">
-      <div class="search-field">
-        <label>Member Name</label>
-        <input type="text" class="form-control" id="filter-name" placeholder="Search by name..." oninput="App.filterDistMembers()"/>
-      </div>
-      <div class="search-field">
-        <label>Village</label>
-        <input type="text" class="form-control" id="filter-village" placeholder="Search by village..." oninput="App.filterDistMembers()"/>
-      </div>
-      <div class="search-field">
-        <label>Status</label>
-        <select class="form-control" id="filter-status" onchange="App.filterDistMembers()">
-          <option value="">All</option>
-          <option value="Pending">Pending</option>
-          <option value="Distributed">Distributed</option>
-        </select>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <h3>Select Member to Distribute Seed</h3>
-        <span class="badge badge-info">${this.state.members.filter(m => m.status === 'Active').length} Active Members</span>
-      </div>
-      <div class="card-body" style="padding:0;">
-        <div class="table-wrap">
-          <table id="dist-member-table">
-            <thead>
-              <tr>
-                <th>Member ID</th>
-                <th>Member Name</th>
-                <th>Category</th>
-                <th>Mobile</th>
-                <th>District</th>
-                <th>Block</th>
-                <th>Village</th>
-                <th>Pincode</th>
-                <th>Status</th>
-                <th>Joining Date</th>
-                <th>Already Received</th>
-                <th>Eligibility</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.state.members.filter(m => m.status === 'Active').map(m => {
-      const alreadyDist = this.state.distributionRecords
-        .filter(r => r.memberId === m.id)
-        .reduce((s, r) => s + r.qty, 0);
-      const eligible = totalAvail > 0;
-      return `<tr id="mrow-${m.id}" style="${alreadyDist > 0 ? 'background:#F1F8E9;' : ''}">
-                  <td><b>${m.id}</b></td>
-                  <td>
-                    <div style="font-size:0.75rem;color:#757575;">${m.father}</div>
-                  </td>
-                  <td><span class="badge badge-gray">${m.category}</span></td>
-                  <td>${m.mobile}</td>
-                  <td>${m.district}</td>
-                  <td>${m.block}</td>
-                  <td>${m.village}</td>
-                  <td>${m.pincode || 'N/A'}</td>
-                  <td><span class="badge ${m.status === 'Active' ? 'badge-success' : 'badge-danger'}">${m.status}</span></td>
-                  <td style="font-size:0.8rem;">${m.joiningDate || '2024-01-15'}</td>
-                  <td>${alreadyDist > 0
-          ? `<span style="color:#2E7D32;font-weight:600;">${alreadyDist} Qt</span>`
-          : '<span style="color:#bbb;">—</span>'}</td>
-                  <td>${eligible
-          ? '<span style="color:#2E7D32;font-weight:600;font-size:0.8rem;">✓ Eligible</span>'
-          : '<span style="color:#C62828;font-weight:600;font-size:0.8rem;">✗ No Stock</span>'}</td>
-                  <td>
-                    <button class="btn btn-primary btn-sm" ${!eligible ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}
-                      onclick="App.openDistPopup('${m.id}','${m.name}','${m.village}')">
-                      <span class="material-icons" style="font-size:14px;">agriculture</span> Distribute
-                    </button>
-                  </td>
-                </tr>`;
-    }).join('')}
-            </tbody>
-          </table>
+    <div class="card" style="max-width:860px;">
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Society Member *</label>
+            <select class="form-control" id="nd-member" onchange="App.onDistMemberChange()">
+              ${members.map(m => `<option value="${m.id}" ${m.id === selId ? 'selected' : ''}>${m.name} (${m.id})</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Contact Number</label>
+            <input type="text" class="form-control" id="nd-mobile" value="${sm.mobile || ''}" readonly style="background:#f5f5f5;"/>
+          </div>
+          <div class="form-group">
+            <label>Village</label>
+            <input type="text" class="form-control" id="nd-village" value="${sm.village || ''}" readonly style="background:#f5f5f5;"/>
+          </div>
+          <div class="form-group">
+            <label>Financial Year</label>
+            <input type="text" class="form-control" id="nd-finyear" value="${finYear}" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/>
+          </div>
+          <div class="form-group">
+            <label>Season *</label>
+            <select class="form-control" id="nd-season">
+              <option>Kharif</option><option>Rabi</option><option>Summer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Seed Type *</label>
+            <select class="form-control" id="nd-seedtype" onchange="App.recalcDistAmount()">
+              <option>Breeder</option><option>Foundation</option><option>Certified</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Crop *</label>
+            <select class="form-control" id="nd-crop" onchange="App.recalcDistAmount()">
+              ${this._distCropOpts(crop)}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Variety *</label>
+            <select class="form-control" id="nd-variety" onchange="App.recalcDistAmount()">
+              ${this._distVarietyOpts(variety)}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantity (Quintal) *</label>
+            <input type="number" class="form-control" id="nd-qty" min="0.1" step="0.1" placeholder="e.g. 2.5" oninput="App.recalcDistAmount()"/>
+          </div>
+          <div class="form-group">
+            <label>Rate</label>
+            <input type="text" class="form-control" id="nd-rate" value="₹${rate.toLocaleString()} / Qt" readonly style="background:#f5f5f5;"/>
+          </div>
+          <div class="form-group">
+            <label>Total Amount (auto)</label>
+            <input type="text" class="form-control" id="nd-amount" value="₹0" readonly style="background:#FFF9C4;color:#1B5E20;font-weight:700;"/>
+          </div>
+          <div class="form-group">
+            <label>Distribution Date</label>
+            <input type="date" class="form-control" id="nd-date" value="${today}" readonly style="background:#f5f5f5;"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button class="btn btn-gray" onclick="App.closeNewDistForm()">Cancel</button>
+          <button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.saveNewDistribution()">
+            <span class="material-icons">check_circle</span> Save Distribution
+          </button>
         </div>
       </div>
-    </div>
-    ${popup ? this.renderDistPopup(popup) : ''}`;
+    </div>`;
+  },
+
+  // Save the new-distribution form → create a record and show the receipt.
+  saveNewDistribution() {
+    const memId = document.getElementById('nd-member')?.value;
+    const m = this.state.members.find(x => x.id === memId);
+    if (!m) { this.showToast('Please select a member'); return; }
+    const season = document.getElementById('nd-season')?.value || 'Kharif';
+    const seedType = document.getElementById('nd-seedtype')?.value || 'Breeder';
+    const crop = document.getElementById('nd-crop')?.value || 'Soybean';
+    const variety = document.getElementById('nd-variety')?.value || 'JS-335';
+    const qty = parseFloat(document.getElementById('nd-qty')?.value);
+    const finYear = document.getElementById('nd-finyear')?.value || this._currentFinYear();
+    const date = document.getElementById('nd-date')?.value || new Date().toISOString().split('T')[0];
+    if (!qty || qty <= 0) { this.showToast('Please enter a valid quantity'); return; }
+    const rate = this._distPrice(seedType, crop, variety);
+    const amount = Math.round(rate * qty);
+    const rNo = 'RCP-' + String(this.state.distributionRecords.length + 1).padStart(3, '0');
+    const record = {
+      receiptNo: rNo, memberId: m.id, memberName: m.name, mobile: m.mobile, village: m.village,
+      finYear, season, seedType, crop, variety, qty, rate, amount, date,
+      status: 'Completed', societyName: 'Rampur Krishi Samiti', societyCode: 'SOC-001',
+    };
+    this.state.distributionRecords.push(record);
+    this.state.showNewDistForm = false;
+    this.state.receiptPopup = record;
+    this.render();
   },
 
   filterDistMembers() {
@@ -4070,10 +4482,26 @@ const App = {
                 <span class="rl">Member Name</span>
                 <span class="rv">${rec.memberName}</span>
               </div>
+              ${rec.mobile ? `<div class="receipt-row">
+                <span class="rl">Contact Number</span>
+                <span class="rv">${rec.mobile}</span>
+              </div>` : ''}
               <div class="receipt-row">
                 <span class="rl">Village</span>
                 <span class="rv">${rec.village}</span>
               </div>
+              ${rec.finYear ? `<div class="receipt-row">
+                <span class="rl">Financial Year</span>
+                <span class="rv">${rec.finYear}</span>
+              </div>` : ''}
+              ${rec.season ? `<div class="receipt-row">
+                <span class="rl">Season</span>
+                <span class="rv">${rec.season}</span>
+              </div>` : ''}
+              ${rec.seedType ? `<div class="receipt-row">
+                <span class="rl">Seed Type</span>
+                <span class="rv">${rec.seedType}</span>
+              </div>` : ''}
               <div class="receipt-row">
                 <span class="rl">Crop</span>
                 <span class="rv">${rec.crop}</span>
@@ -4082,6 +4510,10 @@ const App = {
                 <span class="rl">Variety</span>
                 <span class="rv">${rec.variety}</span>
               </div>
+              ${rec.amount ? `<div class="receipt-row">
+                <span class="rl">Total Amount</span>
+                <span class="rv">₹${rec.amount.toLocaleString()}</span>
+              </div>` : ''}
               <div class="receipt-total">
                 <span class="rt-label">Quantity Distributed</span>
                 <span class="rt-val">${rec.qty} Quintal</span>
@@ -4107,7 +4539,8 @@ const App = {
 
   closeReceipt() {
     this.state.receiptPopup = null;
-    this.navigate('soc-dist-register');
+    this.state.showNewDistForm = false;
+    this.navigate('soc-member-distribution');
   },
 
   // ============================================================
@@ -4117,59 +4550,29 @@ const App = {
     const records = this.state.distributionRecords;
     const receipt = this.state.receiptPopup;
     return `
-    <div class="page-header">
-      <h1>Distribution Register</h1>
-      <p>Complete record of all seed distributions to members</p>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h1>Breeder Seeds Distribution to Member</h1>
+        <p>All seed distributions to society members — add new or review records</p>
+      </div>
+      <button class="btn btn-primary" onclick="App.openNewDistForm()">
+        <span class="material-icons">add</span> New Distribution
+      </button>
     </div>
     ${receipt ? this.renderReceiptModal(receipt) : ''}
-    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:20px;">
-      <div class="stat-card blue">
-        <div class="stat-icon"><span class="material-icons">receipt_long</span></div>
-        <div class="stat-info">
-          <div class="value">${records.length}</div>
-          <div class="label">Total Distributions</div>
-        </div>
-      </div>
-      <div class="stat-card teal">
-        <div class="stat-icon"><span class="material-icons">check_circle</span></div>
-        <div class="stat-info">
-          <div class="value">${records.filter(r => r.status === 'Completed').length}</div>
-          <div class="label">Completed</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon"><span class="material-icons">grass</span></div>
-        <div class="stat-info">
-          <div class="value">${records.reduce((s, r) => s + r.qty, 0).toFixed(1)} Qt</div>
-          <div class="label">Total Qty Distributed</div>
-        </div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-icon"><span class="material-icons">group</span></div>
-        <div class="stat-info">
-          <div class="value">${new Set(records.map(r => r.memberId)).size}</div>
-          <div class="label">Members Served</div>
-        </div>
-      </div>
-    </div>
     <div class="card">
       <div class="card-header">
         <h3>All Distribution Records</h3>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-sm" onclick="App.navigate('soc-member-distribution')">
-            <span class="material-icons" style="font-size:14px;">add</span> New Distribution
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="App.showToast('Excel downloaded!')">
-            <span class="material-icons" style="font-size:14px;">grid_on</span> Export
-          </button>
-        </div>
+        <button class="btn btn-outline btn-sm" onclick="App.showToast('Excel downloaded!')">
+          <span class="material-icons" style="font-size:14px;">grid_on</span> Export
+        </button>
       </div>
       <div class="card-body" style="padding:0;">
         ${records.length === 0 ? `
         <div style="padding:48px;text-align:center;color:#9E9E9E;">
           <span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">inbox</span>
           <p style="font-size:0.95rem;">No distributions yet.</p>
-          <button class="btn btn-primary" style="margin-top:16px;" onclick="App.navigate('soc-member-distribution')">
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="App.openNewDistForm()">
             <span class="material-icons">agriculture</span> Start Distributing
           </button>
         </div>` : `
@@ -4177,12 +4580,15 @@ const App = {
           <table>
             <thead>
               <tr>
-                <th>Receipt No.</th>
                 <th>Member Name</th>
-                <th>Village</th>
+                <th>Contact</th>
+                <th>Fin. Year</th>
+                <th>Season</th>
+                <th>Seed Type</th>
                 <th>Crop</th>
                 <th>Variety</th>
                 <th>Quantity (Qt)</th>
+                <th>Total Amount</th>
                 <th>Date</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -4191,15 +4597,18 @@ const App = {
             <tbody>
               ${records.slice().reverse().map(r => `
               <tr>
-                <td><b style="color:#2E7D32;">${r.receiptNo}</b></td>
                 <td>
                   <div style="font-weight:500;">${r.memberName}</div>
-                  <div style="font-size:0.72rem;color:#757575;">${r.memberId}</div>
+                  <div style="font-size:0.72rem;color:#757575;">${r.memberId} | ${r.village}</div>
                 </td>
-                <td>${r.village}</td>
+                <td>${r.mobile || '—'}</td>
+                <td>${r.finYear || '—'}</td>
+                <td>${r.season || '—'}</td>
+                <td>${r.seedType ? `<span class="badge badge-info">${r.seedType}</span>` : '—'}</td>
                 <td>${r.crop}</td>
                 <td>${r.variety}</td>
                 <td><b>${r.qty}</b> Qt</td>
+                <td style="font-weight:600;color:#1B5E20;">${r.amount ? '₹' + r.amount.toLocaleString() : '—'}</td>
                 <td>${r.date}</td>
                 <td>
                   <span class="badge ${r.status === 'Completed' ? 'badge-success' : 'badge-warning'}">
@@ -4236,23 +4645,20 @@ const App = {
   // ============================================================
   renderPage() {
     const page = this.state.currentPage;
-    // Show receipt success screen after confirmDistribution
-    if (this.state.receiptPopup && page === 'soc-member-distribution') {
-      return this.renderSocDistRegister();
-    }
     switch (page) {
       case 'dashboard': return this.renderDashboard();
       case 'add-member': return this.renderAddMember();
       case 'member-list': return this.renderMemberList();
       case 'member-view': return this.renderMemberView();
       case 'member-edit': return this.renderMemberEdit();
-      case 'raise-demand': return this.renderRaiseDemand();
+      case 'raise-demand': return this.renderDemandHistory();
+      case 'raise-demand-form': return this.renderRaiseDemand();
       case 'demand-preview': return this.renderDemandPreview();
       case 'payment': return this.renderPayment();
       case 'demand-history': return this.renderDemandHistory();
       case 'seed-allocation': return this.renderSeedAllocation();
       case 'distribution-register': return this.renderDistributionRegister();
-      case 'payment-history': return this.renderPaymentHistory();
+      case 'payment-history': return this.renderDemandHistory();
       case 'society-reports': return this.renderSocietyReports();
       case 'admin-dashboard': return this.renderAdminDashboard();
       case 'admin-societies': return this.renderAdminSocieties();
@@ -4264,12 +4670,12 @@ const App = {
       case 'profile': return this.renderProfile();
       case 'reset-password': return this.renderResetPasswordPage();
       // ── Admin Distribution Management ──
-      case 'admin-dispatch-orders': return this.renderAdminDispatchOrders();
       case 'admin-dist-tracking': return this.renderAdminDistTracking();
       // ── Society Seed Distribution Workflow ──
       case 'soc-available-stock': return this.renderSocAvailableStock();
       case 'soc-member-distribution': return this.renderSocMemberDistribution();
-      case 'soc-dist-register': return this.renderSocDistRegister();
+      // Distribution Register merged into the combined distribution page.
+      case 'soc-dist-register': return this.renderSocMemberDistribution();
       default: return '<p>Page not found</p>';
     }
   },
@@ -4515,8 +4921,9 @@ const App = {
     }
     dem.allocationStatus = 'Dispatched';
     this.state.dispatchFormDemandId = null;
-    this.showToast(`Dispatch order created for ${dem.society}.`);
-    this.navigate('admin-dispatch-orders');
+    this.showToast(`Dispatch order created for ${dem.society}. You can mark it Received once delivered.`);
+    // Stay on the current page (merged Demand Management manages the full lifecycle).
+    this.render();
   },
 
   // Allocate approved demand

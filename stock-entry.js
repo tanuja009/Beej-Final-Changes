@@ -23,7 +23,7 @@ if (!App.state.stockEntry) {
 if (!App.state.stockEntries) {
   App.state.stockEntries = [
     {
-      id: 'SE-2026-001', seedType: 'Breeder Seed', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', seedClass: 'Breeder', sourceType: 'Production', availableQty: 1000, addQty: 500, unit: 'Quintal',
+      id: 'SE-2026-001', seedType: 'Breeder Seed', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', seedClass: 'Breeder', sourceType: 'Production', availableQty: 1000, addQty: 500, unit: 'Quintal', minDemandQty: 50, minDemandUnit: 'Quintal', maxDemandQty: 300, maxDemandUnit: 'Quintal',
       prodYear: '2026', prodDate: '2026-06-15', receiptDate: '2026-06-20', storage: 'Cold Storage A', warehouse: 'Central Warehouse, Bhopal',
       rack: 'R-12', quality: 'Approved', certStatus: 'Certified', germination: 92, purity: 98, moisture: 11,
       lab: 'State Seed Testing Lab, Bhopal', reportNo: 'TR-2026-001', reportDate: '2026-06-18',
@@ -33,7 +33,7 @@ if (!App.state.stockEntries) {
     },
     {
       id: 'SE-2026-002', seedType: 'Foundation Seed', season: 'Rabi 2025-26', crop: 'Wheat', variety: 'GW-322',
-      seedClass: 'Foundation I', sourceType: 'Procurement', availableQty: 800, addQty: 300, unit: 'Quintal',
+      seedClass: 'Foundation I', sourceType: 'Procurement', availableQty: 800, addQty: 300, unit: 'Quintal', minDemandQty: 40, minDemandUnit: 'Quintal', maxDemandQty: 250, maxDemandUnit: 'Quintal',
       prodYear: '2025', prodDate: '2025-11-10', receiptDate: '2025-11-20', storage: 'Godown B', warehouse: 'Divisional Store, Jabalpur',
       rack: 'R-05', quality: 'Tested', certStatus: 'Under Process', germination: 88, purity: 97, moisture: 12,
       lab: 'Regional Seed Lab, Jabalpur', reportNo: 'TR-2025-045', reportDate: '2025-11-15',
@@ -42,7 +42,7 @@ if (!App.state.stockEntries) {
     },
     {
       id: 'SE-2026-003', seedType: 'Certified Seed', season: 'Kharif 2026', crop: 'Soybean', variety: 'JS-335',
-      seedClass: 'Certified', sourceType: 'Production', availableQty: 500, addQty: 250, unit: 'Quintal',
+      seedClass: 'Certified', sourceType: 'Production', availableQty: 500, addQty: 250, unit: 'Quintal', minDemandQty: 30, minDemandUnit: 'Quintal', maxDemandQty: 180, maxDemandUnit: 'Quintal',
       prodYear: '2026', prodDate: '2026-05-20', receiptDate: '2026-05-28', storage: 'Godown C', warehouse: 'Regional Depot, Indore',
       rack: 'R-08', quality: 'Pending Testing', certStatus: 'Not Certified', germination: 0, purity: 0, moisture: 0,
       lab: '', reportNo: '', reportDate: '',
@@ -64,7 +64,7 @@ App._seSeedClasses = function (seedType) {
 };
 App._seSeedTypes = ['Breeder Seed', 'Foundation Seed', 'Certified Seed', 'Hybrid Seed'];
 App._seSourceTypes = ['Production', 'Procurement', 'Return', 'Opening Stock', 'Transfer', 'Other'];
-App._seUnits = ['Kg', 'Quintal', 'Metric Ton'];
+App._seUnits = ['Kg', 'Quintal'];
 App._seWarehouses = ['Central Warehouse, Bhopal', 'Divisional Store, Jabalpur', 'Regional Depot, Indore', 'District Store, Chhindwara'];
 App._seStorageLocations = ['Cold Storage A', 'Godown B', 'Godown C', 'Ambient Store', 'Reserve Store'];
 App._seLabs = ['State Seed Testing Lab, Bhopal', 'Regional Seed Lab, Jabalpur', 'District Seed Lab, Indore'];
@@ -84,6 +84,7 @@ App._seExistingStock = function (f) {
 App._seBlankForm = function () {
   return {
     seedType: '', season: '', crop: '', variety: '', seedClass: '', sourceType: '', addQty: '', unit: 'Quintal', finYear: '', prodDate: '',
+    minDemandQty: '', minDemandUnit: 'Quintal', maxDemandQty: '', maxDemandUnit: 'Quintal',
     prodYear: '', receiptDate: '', warehouse: '', storage: '', rack: '',
     quality: '', certStatus: '', germination: '', purity: '', moisture: '', lab: '', reportNo: '', reportDate: '',
     specific: {}, documents: [], remarks: ''
@@ -295,6 +296,11 @@ App.seRenderForm = function () {
     + '<div class="form-group"><label>Unit <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'unit\',this.value)">' + seOpt(App._seUnits, f.unit, 'Select Unit') + '</select><div class="se-err" id="err-unit"></div></div>'
     + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'finYear\',this.value)">' + seOpt(App._seFinYears(), f.finYear, 'Select Financial Year') + '</select><div class="se-err" id="err-finYear"></div></div>'
     + '<div class="form-group"><label>Production Date</label><input type="date" class="form-control" value="' + (f.prodDate || '') + '" oninput="App.seLive(\'prodDate\',this.value)"><div class="se-err" id="err-prodDate"></div></div>'
+    // Min / Max demand quantity (per crop & variety) at the end of Stock Details
+    + '<div class="form-group"><label>Min Demand Quantity (per crop &amp; variety)</label><input type="number" class="form-control" min="0" value="' + (f.minDemandQty || '') + '" placeholder="e.g. 50" oninput="App.seLive(\'minDemandQty\',this.value)"><div class="se-err" id="err-minDemandQty"></div></div>'
+    + '<div class="form-group"><label>Min Demand Quantity Unit</label><select class="form-control" onchange="App.seLive(\'minDemandUnit\',this.value)">' + seOpt(App._seUnits, f.minDemandUnit, 'Select Unit') + '</select></div>'
+    + '<div class="form-group"><label>Max Demand Quantity (per crop &amp; variety)</label><input type="number" class="form-control" min="0" value="' + (f.maxDemandQty || '') + '" placeholder="e.g. 500" oninput="App.seLive(\'maxDemandQty\',this.value)"><div class="se-err" id="err-maxDemandQty"></div></div>'
+    + '<div class="form-group"><label>Max Demand Quantity Unit</label><select class="form-control" onchange="App.seLive(\'maxDemandUnit\',this.value)">' + seOpt(App._seUnits, f.maxDemandUnit, 'Select Unit') + '</select></div>'
     + '</div></div></div>'
 
     // Section 3: Remarks
@@ -432,6 +438,8 @@ App._sePersist = function (status) {
       Object.assign(r, {
         seedType: f.seedType, season: f.season, crop: f.crop, variety: f.variety, subVariety: f.subVariety,
         seedClass: f.seedClass, sourceType: f.sourceType, addQty: Number(f.addQty) || 0, unit: f.unit, lot: f.lot,
+        minDemandQty: Number(f.minDemandQty) || 0, minDemandUnit: f.minDemandUnit,
+        maxDemandQty: Number(f.maxDemandQty) || 0, maxDemandUnit: f.maxDemandUnit,
         finYear: f.finYear, prodYear: f.prodYear, prodDate: f.prodDate, receiptDate: f.receiptDate, warehouse: f.warehouse, storage: f.storage,
         rack: f.rack, quality: f.quality, certStatus: f.certStatus, germination: f.germination, purity: f.purity,
         moisture: f.moisture, lab: f.lab, reportNo: f.reportNo, reportDate: f.reportDate,
@@ -443,6 +451,8 @@ App._sePersist = function (status) {
   var rec = {
     id: App._seNextId(), seedType: f.seedType, season: f.season, crop: f.crop, variety: f.variety, subVariety: f.subVariety,
     seedClass: f.seedClass, sourceType: f.sourceType, availableQty: App._seExistingStock(f), addQty: Number(f.addQty) || 0,
+    minDemandQty: Number(f.minDemandQty) || 0, minDemandUnit: f.minDemandUnit,
+    maxDemandQty: Number(f.maxDemandQty) || 0, maxDemandUnit: f.maxDemandUnit,
     unit: f.unit, lot: f.lot, finYear: f.finYear, prodYear: f.prodYear, prodDate: f.prodDate, receiptDate: f.receiptDate,
     warehouse: f.warehouse, storage: f.storage, rack: f.rack, quality: f.quality, certStatus: f.certStatus,
     germination: f.germination, purity: f.purity, moisture: f.moisture, lab: f.lab, reportNo: f.reportNo, reportDate: f.reportDate,
@@ -589,6 +599,8 @@ App.seEditEntry = function (id) {
   SE().form = {
     seedType: e.seedType, season: e.season, crop: e.crop, variety: e.variety, subVariety: e.subVariety,
     seedClass: e.seedClass, sourceType: e.sourceType, lot: e.lot, addQty: e.addQty, unit: e.unit,
+    minDemandQty: e.minDemandQty, minDemandUnit: e.minDemandUnit,
+    maxDemandQty: e.maxDemandQty, maxDemandUnit: e.maxDemandUnit,
     finYear: e.finYear, prodYear: e.prodYear, prodDate: e.prodDate, receiptDate: e.receiptDate, warehouse: e.warehouse, storage: e.storage,
     rack: e.rack, quality: e.quality, certStatus: e.certStatus, germination: e.germination, purity: e.purity,
     moisture: e.moisture, lab: e.lab, reportNo: e.reportNo, reportDate: e.reportDate,

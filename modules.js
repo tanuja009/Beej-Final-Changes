@@ -100,7 +100,6 @@
         </div>
         <div class="nav-section">
           <div class="nav-section-title">Distribution Workflow</div>
-          ${ni('local_shipping', 'Dispatch Orders', 'admin-dispatch-orders')}
           ${ni('track_changes', 'Distribution Tracking', 'admin-dist-tracking')}
         </div>
         <div class="nav-section">
@@ -476,7 +475,7 @@ App.renderPriceForm = function (mode) {
           <div class="form-group">
             <label>Unit <span style="color:#F44336">*</span></label>
             <select class="form-control" id="pf-unit">
-              ${['Quintal', 'Kg', 'Bag (40Kg)', 'Bag (50Kg)'].map(u => `<option ${v('unit') === u ? 'selected' : ''}>${u}</option>`).join('')}
+              ${['Quintal', 'Kg'].map(u => `<option ${v('unit') === u ? 'selected' : ''}>${u}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
@@ -1046,7 +1045,7 @@ App.renderStockEntry = function () {
           <div class="form-group">
             <label>Unit <span style="color:#F44336">*</span></label>
             <select class="form-control" id="se-unit">
-              <option>Quintal</option><option>Kg</option><option>Bag (40Kg)</option>
+              <option>Quintal</option><option>Kg</option>
             </select>
           </div>
           <div class="form-group">

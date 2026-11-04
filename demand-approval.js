@@ -22,23 +22,11 @@ App._daBadge = function (s) {
 // ═══════════════════════════════════════════════════════════
 // SIDEBAR — add "Demand Approval" under Management
 // ═══════════════════════════════════════════════════════════
-(function () {
-  var _prev = App.renderAdminSidebar ? App.renderAdminSidebar.bind(App) : null;
-  if (!_prev) return;
-  App.renderAdminSidebar = function () {
-    var html = _prev();
-    var p = this.state.currentPage;
-    var item = '<div class="nav-item' + (p === 'da-list' ? ' active' : '') + '" onclick="App.navigate(\'da-list\')">'
-      + '<span class="material-icons">fact_check</span><span>Demand Approval</span></div>';
-    // Insert right after the "Demand Management" item
-    if (/App\.navigate\('admin-demands'\)/.test(html)) {
-      return html.replace(/(<div class="nav-item[^"]*"[^>]*onclick="App\.navigate\('admin-demands'\)">.*?<\/div>)/,
-        '$1' + item);
-    }
-    // Fallback: before the Management section closes / before sidebar footer
-    return html.replace(/(<div class="sidebar-footer)/, item + '$1');
-  };
-})();
+// NOTE: The separate "Demand Approval" sidebar item has been removed.
+// Demand Management and Demand Approval are now merged into a single page
+// (admin-demands), which manages the full lifecycle: approve/partial/reject/hold
+// → dispatch → mark received. The da-list/da-form pages below are kept only as
+// a harmless fallback redirect to the merged page.
 
 // ═══════════════════════════════════════════════════════════
 // ROUTER
@@ -47,8 +35,11 @@ App._daBadge = function (s) {
   var _prev = App.renderPage.bind(App);
   App.renderPage = function () {
     switch (this.state.currentPage) {
-      case 'da-list': return App.daRenderList();
-      case 'da-form': return App.daRenderForm();
+      // Merged into Demand Management — redirect the old approval pages there.
+      case 'da-list':
+      case 'da-form':
+        this.state.currentPage = 'admin-demands';
+        return this.renderAdminDemands();
       default: return _prev();
     }
   };

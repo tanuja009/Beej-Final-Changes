@@ -400,6 +400,18 @@ App._priceVarietyOptions = function (sel) {
   }).join('');
 };
 
+// Crop-wise variety names for the Price form's multi-select (empty until a crop is chosen).
+App._priceVarietyNames = function (crop) {
+  return crop ? this.varietiesForCrop(crop) : [];
+};
+
+// Crop changed on the Price form (add mode) → rebuild the variety multi-select in place.
+App.onPriceCropChange = function () {
+  var crop = document.getElementById('pf-crop') ? document.getElementById('pf-crop').value : '';
+  this.msRender('pf-variety', this._priceVarietyNames(crop), !crop, 'Select Crop first');
+  this._msRefresh('pf-variety');
+};
+
 // ── 4c. Add / Edit Price Form ─────────────────────────────────
 App.renderPriceForm = function (mode) {
   const isEdit = mode === 'edit';
@@ -426,22 +438,22 @@ App.renderPriceForm = function (mode) {
             <label>Seed Category <span style="color:#F44336">*</span></label>
             <select class="form-control" id="pf-category" ${isEdit && p?.status === 'Expired' ? 'disabled' : ''}>
               <option value="">Select Category</option>
-              ${['Breeder Seed', 'Foundation Seed', 'Certified Seed'].map(c => `<option ${v('category') === c ? 'selected' : ''}>${c}</option>`).join('')}
+              ${['Breeder Seed', 'Foundation Seed', 'Certified Seed', 'Hybrid Seed'].map(c => `<option ${v('category') === c ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
             <label>Crop <span style="color:#F44336">*</span></label>
-            <select class="form-control" id="pf-crop" ${isEdit && p?.status === 'Expired' ? 'disabled' : ''}>
+            <select class="form-control" id="pf-crop" ${isEdit && p?.status === 'Expired' ? 'disabled' : ''} ${isEdit ? '' : 'onchange="App.onPriceCropChange()"'}>
               <option value="">Select Crop</option>
               ${['Wheat', 'Soybean', 'Gram', 'Mustard', 'Paddy', 'Maize'].map(c => `<option ${v('crop') === c ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
             <label>Seed Variety <span style="color:#F44336">*</span></label>
-            <select class="form-control" id="pf-variety">
-              <option value="">Select Variety</option>
-              ${this._priceVarietyOptions(v('variety'))}
-            </select>
+            ${isEdit
+      ? `<select class="form-control" id="pf-variety"><option value="">Select Variety</option>${this._priceVarietyOptions(v('variety'))}</select>`
+      : this.msRender('pf-variety', this._priceVarietyNames(v('crop')), !v('crop'), 'Select Crop first')}
+            ${isEdit ? '' : this.msHint()}
           </div>
 
         </div>
@@ -519,30 +531,41 @@ App._calcSellingPrice = function () {
 App.savePriceForm = function (action, mode) {
   const get = id => document.getElementById(id)?.value?.trim() || '';
   const p = mode === 'edit' ? this.state.beejPrices.find(x => x.id === this.state.selectedPriceId) : null;
-  const required = ['pf-category', 'pf-crop', 'pf-variety', 'pf-season', 'pf-year', 'pf-selling', 'pf-from', 'pf-to'];
+  // Add mode: variety comes from the multi-select (one or more). Edit mode: the single variety select.
+  const varieties = mode === 'edit' ? [get('pf-variety')].filter(Boolean) : this.msValues('pf-variety');
+  const required = ['pf-category', 'pf-crop', 'pf-season', 'pf-year', 'pf-selling', 'pf-from', 'pf-to'];
   for (const id of required) {
     if (!get(id)) { alert('Please fill all required fields.'); document.getElementById(id)?.focus(); return; }
   }
-  const newPrice = {
-    id: mode === 'add' ? `PRC-${String(this.state.beejPrices.length + 1).padStart(3, '0')}` : this.state.selectedPriceId,
-    category: get('pf-category'), crop: get('pf-crop'), variety: get('pf-variety'),
+  if (!varieties.length) { alert('Please fill all required fields.\nSelect at least one Seed Variety.'); return; }
+  const today = new Date().toISOString().slice(0, 10);
+  const buildPrice = (variety, id) => ({
+    id,
+    category: get('pf-category'), crop: get('pf-crop'), variety,
     seedClass: '', season: get('pf-season'), cropYear: get('pf-year'),
     unit: get('pf-unit'), basePrice: 0, subsidy: 0,
     sellingPrice: +get('pf-selling'), effectiveFrom: get('pf-from'), effectiveTo: get('pf-to'),
     status: action === 'publish' ? 'Active' : 'Draft',
     createdBy: this.state.currentUser?.name || 'Admin',
-    createdDate: (mode === 'edit' && p && p.createdDate) ? p.createdDate : new Date().toISOString().slice(0, 10),
+    createdDate: (mode === 'edit' && p && p.createdDate) ? p.createdDate : today,
     remarks: get('pf-remarks'),
-  };
+  });
   if (mode === 'add') {
-    this.state.beejPrices.unshift(newPrice);
-    this.state.priceAuditLog.unshift({ action: action === 'publish' ? 'Publish' : 'Create', priceId: newPrice.id, performedBy: newPrice.createdBy, date: new Date().toISOString().slice(0, 10), detail: `Price created for ${newPrice.crop} ${newPrice.variety}` });
+    // One price entry per selected variety; the same price/validity applies to each.
+    varieties.forEach(variety => {
+      const nextNo = Math.max(0, ...this.state.beejPrices.map(x => parseInt(String(x.id).replace(/\D/g, ''), 10) || 0)) + 1;
+      const newPrice = buildPrice(variety, `PRC-${String(nextNo).padStart(3, '0')}`);
+      this.state.beejPrices.unshift(newPrice);
+      this.state.priceAuditLog.unshift({ action: action === 'publish' ? 'Publish' : 'Create', priceId: newPrice.id, performedBy: newPrice.createdBy, date: today, detail: `Price created for ${newPrice.crop} ${newPrice.variety}` });
+    });
   } else {
+    const newPrice = buildPrice(varieties[0], this.state.selectedPriceId);
     const idx = this.state.beejPrices.findIndex(p => p.id === this.state.selectedPriceId);
     if (idx > -1) { this.state.beejPrices[idx] = newPrice; }
-    this.state.priceAuditLog.unshift({ action: 'Update', priceId: newPrice.id, performedBy: newPrice.createdBy, date: new Date().toISOString().slice(0, 10), detail: `Price updated — selling price ₹${newPrice.sellingPrice}` });
+    this.state.priceAuditLog.unshift({ action: 'Update', priceId: newPrice.id, performedBy: newPrice.createdBy, date: today, detail: `Price updated — selling price ₹${newPrice.sellingPrice}` });
   }
-  alert(`Price ${action === 'publish' ? 'published' : 'saved as draft'} successfully!`);
+  const many = mode === 'add' && varieties.length > 1 ? ` for ${varieties.length} varieties` : '';
+  alert(`Price${many} ${action === 'publish' ? 'published' : 'saved as draft'} successfully!`);
   this.navigate('admin-price-list');
 };
 
@@ -983,7 +1006,7 @@ App.renderStockEntry = function () {
             <label>Seed Category <span style="color:#F44336">*</span></label>
             <select class="form-control" id="se-category">
               <option value="">Select Category</option>
-              <option>Breeder Seed</option><option>Foundation Seed</option><option>Certified Seed</option>
+              <option>Breeder Seed</option><option>Foundation Seed</option><option>Certified Seed</option><option>Hybrid Seed</option>
             </select>
           </div>
           <div class="form-group">

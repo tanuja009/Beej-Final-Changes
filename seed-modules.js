@@ -93,10 +93,6 @@
       ni('receipt_long', 'Demand Management', 'admin-demands'),
       '</div>',
 
-      '<div class="nav-section"><div class="nav-section-title">Trade Lines</div>',
-      ni('swap_horiz', 'Buying/Selling Line', 'admin-seed-lines'),
-      '</div>',
-
 
 
       // REMOVED: Registration section commented out
@@ -194,6 +190,7 @@
       case 'soc-fc-edit': return App.smRenderFCForm('edit');
       case 'soc-fc-view': return App.smRenderFCView();
       case 'admin-seed-lines': return App.renderSeedLines();
+      case 'admin-packaging': return App.renderPackaging();
       default: return _prev();
     }
   };
@@ -214,6 +211,7 @@
     'soc-fc-edit': 'Foundation and Certified Seed Management',
     'soc-fc-view': 'Seed Stock Details',
     'admin-seed-lines': 'Seed Buying/Selling Line Management',
+    'admin-packaging': 'Seed Packaging Management',
   };
   App.renderHeader = function () {
     var html = _prev();
@@ -304,6 +302,32 @@ App._fcVarietyCode = function (variety) {
   };
   // Fall back: strip non-alphanumerics and uppercase.
   return map[variety] || variety.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+};
+
+// Crop-wise variety names for the FC form (keeps the record's current variety selectable when editing).
+App._fcVarietyNames = function (crop, current) {
+  var names = App.varietiesForCrop(crop);
+  if (current && names.indexOf(current) === -1) names.unshift(current);
+  return names;
+};
+
+// Crop changed on the FC form → rebuild the Variety control for that crop (single select in edit, multi-select when adding).
+App.onFCCropChange = function () {
+  var crop = document.getElementById('ff-crop') ? document.getElementById('ff-crop').value : '';
+  var el = document.getElementById('ff-variety');
+  if (el && el.tagName === 'SELECT') {
+    el.innerHTML = '<option value="">Select...</option>' + App._fcVarietyNames(crop, '').map(function (o) { return '<option value="' + o + '">' + o + '</option>'; }).join('');
+    return;
+  }
+  App.msRender('ff-variety', App.varietiesForCrop(crop), !crop, 'Select Crop first', App._fcVarietiesChanged);
+  App._msRefresh('ff-variety');
+  App._fcVarietiesChanged([]);
+};
+
+// Multi-select changed: clear the "Variety is required" error. (Variety Code is set per variety on save.)
+App._fcVarietiesChanged = function () {
+  var err = document.getElementById('smerr-ff-variety');
+  if (err) err.style.display = 'none';
 };
 
 // When the Variety select changes, auto-fill the Variety Code field.
@@ -664,7 +688,6 @@ App.smRenderFCForm = function (mode) {
   var seedClasses = ['Breeder', 'Foundation I', 'Foundation II', 'Certified'];
   var seasons = ['Kharif 2024', 'Rabi 2024-25', 'Summer 2025', 'Kharif 2025'];
   var crops = ['Wheat', 'Paddy (Rice)', 'Maize', 'Bajra (Pearl Millet)', 'Jowar (Sorghum)', 'Gram (Chickpea)', 'Pigeon Pea (Arhar)', 'Soybean', 'Groundnut', 'Mustard', 'Sunflower', 'Cotton', 'Sugarcane', 'Moong (Green Gram)', 'Urad (Black Gram)', 'Lentil (Masoor)', 'Barley', 'Oat'];
-  var varieties = ['GW-322', 'JS-335', 'JG-315', 'Pusa Bold', 'MTU-7029', 'IR-36', 'DHM-117', 'HHB-67', 'CSH-16', 'UPAS-120', 'TAG-24', 'KBSH-1', 'Suraj (H-777)', 'CO-86032', 'K-851', 'T-9', 'L-4076', 'RD-2035', 'OS-6'];
   var districts = ['Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain', 'Chhindwara', 'Seoni', 'Narsinghpur', 'Betul'];
   var blocks = ['Patan', 'Harrai', 'Amarwara', 'Chaurai', 'Mohgaon', 'Sausar', 'Tamia'];
   var certAgencies = ['State Seed Certification Agency (SSCA)', 'Madhya Pradesh State Seed Certification Agency', 'Central Seed Certification Board', 'ICAR Seed Certification', 'Private Certification Agency'];
@@ -680,11 +703,18 @@ App.smRenderFCForm = function (mode) {
     + App._smFld('Seed Class', 'ff-seedclass', 'select', seedClasses, v('seedClass'), true)
     + App._smFld('Season', 'ff-season', 'select', seasons, v('season'), true)
     + App._smFld('Crop', 'ff-crop', 'select', crops, v('crop'), true)
+      .replace('<select id="ff-crop" class="form-control">', '<select id="ff-crop" class="form-control" onchange="App.onFCCropChange()">')
     + ('<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>'
-      + '<select id="ff-variety" class="form-control" onchange="App._fcVarietyChanged(this.value)">'
-      + '<option value="">Select...</option>'
-      + varieties.map(function (o) { return '<option value="' + o + '"' + (v('variety') === o ? ' selected' : '') + '>' + o + '</option>'; }).join('')
-      + '</select><div id="smerr-ff-variety" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div></div>')
+      + (isEdit
+        // Editing one record: single, crop-wise Variety select.
+        ? '<select id="ff-variety" class="form-control" onchange="App._fcVarietyChanged(this.value)">'
+        + '<option value="">Select...</option>'
+        + App._fcVarietyNames(v('crop'), v('variety')).map(function (o) { return '<option value="' + o + '"' + (v('variety') === o ? ' selected' : '') + '>' + o + '</option>'; }).join('')
+        + '</select>'
+        // Adding: one or more varieties (crop-wise multi-select); one record is created per variety.
+        : App.msRender('ff-variety', App.varietiesForCrop(v('crop')), !v('crop'), 'Select Crop first', App._fcVarietiesChanged)
+        + App.msHint('Select one or more varieties. One record is created per variety with the same details.'))
+      + '<div id="smerr-ff-variety" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div></div>')
     + App._smFld('Production Year', 'ff-prodyear', 'number', null, v('productionYear', new Date().getFullYear()), true, 'e.g. 2024')
     + '</div></div>'
 
@@ -860,7 +890,9 @@ App.smFCSave = function (mode, submitType) {
   var seedClass = App._smGet('ff-seedclass');
   var season = App._smGet('ff-season');
   var crop = App._smGet('ff-crop');
-  var variety = App._smGet('ff-variety');
+  // Add: one or more varieties from the multi-select. Edit: the record's single variety.
+  var varieties = isEdit ? [App._smGet('ff-variety')].filter(Boolean) : App.msValues('ff-variety');
+  var variety = varieties[0] || '';
   var varietyCode = App._smGet('ff-varietycode');
   var seedLotNo = App._smGet('ff-lotno');
   var productionYear = App._smGet('ff-prodyear');
@@ -892,7 +924,7 @@ App.smFCSave = function (mode, submitType) {
   if (!seedClass) { App._smErr('ff-seedclass', 'Seed class is required'); return; }
   if (!season) { App._smErr('ff-season', 'Season is required'); return; }
   if (!crop) { App._smErr('ff-crop', 'Crop is required'); return; }
-  if (!variety) { App._smErr('ff-variety', 'Variety is required'); return; }
+  if (!varieties.length) { App._smErr('ff-variety', 'Variety is required'); return; }
   if (!productionYear || productionYear < 2000 || productionYear > 2100) { App._smErr('ff-prodyear', 'Valid production year is required'); return; }
   if (!producerName.trim()) { App._smErr('ff-producername', 'Producer name is required'); return; }
   if (!producerRegNo.trim()) { App._smErr('ff-producerreg', 'Producer registration no. is required'); return; }
@@ -941,14 +973,24 @@ App.smFCSave = function (mode, submitType) {
     packagingQty: parseFloat(bagSize) || 0
   };
 
+  // One record per selected variety; every other detail is shared. Variety Code is looked up per variety.
+  var recs = varieties.map(function (vr, i) {
+    var r = Object.assign({}, newRec);
+    r.variety = vr;
+    r.varietyCode = varietyCode || App._fcVarietyCode(vr);
+    if (!isEdit) r.id = 'FC-' + Date.now() + (varieties.length > 1 ? '-' + (i + 1) : '');
+    return r;
+  });
+
   if (isEdit) {
     var idx = App.state.fcSeedStock.findIndex(function (r) { return r.id === App.state.fcSelId; });
-    if (idx >= 0) App.state.fcSeedStock[idx] = newRec;
+    if (idx >= 0) App.state.fcSeedStock[idx] = recs[0];
   } else {
-    App.state.fcSeedStock.push(newRec);
+    recs.forEach(function (r) { App.state.fcSeedStock.push(r); });
   }
 
-  alert((isEdit ? 'Record updated' : 'Record added') + ' successfully!');
+  App.msReset('ff-variety');
+  alert((isEdit ? 'Record updated' : (recs.length > 1 ? recs.length + ' records added' : 'Record added')) + ' successfully!');
   App.navigate('soc-fc-list');
 };
 
@@ -1008,15 +1050,20 @@ App.smFCToggleActive = function (id) {
     var names = ['Paddy', 'Wheat', 'Soybean', 'Gram', 'Mustard', 'Maize'];
     return names.map(function (n) { return '<option value="' + n + '"' + (n === sel ? ' selected' : '') + '>' + n + '</option>'; }).join('');
   };
-  App._lineVarietyOpts = function (sel) {
-    if (App._smVarietyNameOpts) return App._smVarietyNameOpts(sel);
-    var names = ['IR-64', 'GW-322', 'HD-2967', 'JS-335', 'JG-315', 'Pusa Bold'];
-    return names.map(function (n) { return '<option value="' + n + '"' + (n === sel ? ' selected' : '') + '>' + n + '</option>'; }).join('');
+  // Variety multi-select for the line form (crop-wise).
+  App._lineVarietyMs = function (crop) {
+    return App.msRender('sl-variety', App.varietiesForCrop(crop), !crop, 'Select Crop first');
+  };
+  // Crop changed → rebuild the variety list in place (any stale selection is dropped).
+  App.onLineCropChange = function () {
+    var crop = document.getElementById('sl-crop') ? document.getElementById('sl-crop').value : '';
+    App._lineVarietyMs(crop);
+    App._msRefresh('sl-variety');
   };
 
   // ── Open / close the form ──
   App.openSeedLineForm = function () { this.state.showSeedLineForm = true; this.render(); };
-  App.closeSeedLineForm = function () { this.state.showSeedLineForm = false; this.render(); };
+  App.closeSeedLineForm = function () { this.msReset('sl-variety'); this.state.showSeedLineForm = false; this.render(); };
 
   // ── Save a new line from the form ──
   App.saveSeedLine = function () {
@@ -1026,14 +1073,17 @@ App.smFCToggleActive = function (id) {
     var finYear = g('sl-finyear') || this._lineFinYear();
     var season = g('sl-season');
     var crop = g('sl-crop');
-    var variety = g('sl-variety');
+    // One line can cover several varieties of the crop.
+    var varieties = this.msValues('sl-variety');
+    var variety = varieties.join(', ');
     var startDate = g('sl-start');
     var endDate = g('sl-end');
-    if (!crop || !variety) { this.showToast('Please select crop and variety'); return; }
+    if (!crop || !varieties.length) { this.showToast('Please select crop and at least one variety'); return; }
     if (!startDate || !endDate) { this.showToast('Please set line start and end dates'); return; }
     if (endDate < startDate) { this.showToast('End date cannot be before start date'); return; }
     var id = 'LINE-' + String(this.state.seedLines.length + 1).padStart(3, '0');
-    this.state.seedLines.unshift({ id: id, lineType: lineType, seedType: seedType, finYear: finYear, season: season, crop: crop, variety: variety, startDate: startDate, endDate: endDate });
+    this.state.seedLines.unshift({ id: id, lineType: lineType, seedType: seedType, finYear: finYear, season: season, crop: crop, variety: variety, varieties: varieties, startDate: startDate, endDate: endDate });
+    this.msReset('sl-variety');
     this.state.showSeedLineForm = false;
     this.showToast('Seed ' + lineType.toLowerCase() + ' line ' + id + ' created.');
     this.render();
@@ -1047,7 +1097,6 @@ App.smFCToggleActive = function (id) {
     var rows = lines.map(function (l) {
       var st = App._lineStatus(l);
       return '<tr>'
-        + '<td><b style="color:#2E7D32;">' + l.id + '</b></td>'
         + '<td>' + typeBadge(l.lineType) + '</td>'
         + '<td>' + l.seedType + '</td>'
         + '<td>' + l.finYear + '</td>'
@@ -1069,7 +1118,7 @@ App.smFCToggleActive = function (id) {
       lines.length === 0
         ? '<div style="padding:48px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">swap_horiz</span><p>No lines yet.</p></div>'
         : '<div class="table-wrap"><table><thead><tr>'
-        + '<th>Line ID</th><th>Type</th><th>Seed Type</th><th>Fin. Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Start Date</th><th>End Date</th><th>Status</th>'
+        + '<th>Type</th><th>Seed Type</th><th>Fin. Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Start Date</th><th>End Date</th><th>Status</th>'
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
       '</div></div>'
     ].join('');
@@ -1091,7 +1140,7 @@ App.smFCToggleActive = function (id) {
       '<select class="form-control" id="sl-type"><option value="Buying">Buying (Procure from societies)</option><option value="Selling">Selling (Supply to societies)</option></select></div>',
 
       '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-seedtype"><option>Breeder</option><option>Foundation</option><option>Certified</option></select></div>',
+      '<select class="form-control" id="sl-seedtype"><option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option></select></div>',
 
       '<div class="form-group"><label>Financial Year</label>',
       '<input type="text" class="form-control" id="sl-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
@@ -1100,10 +1149,12 @@ App.smFCToggleActive = function (id) {
       '<select class="form-control" id="sl-season"><option>Kharif</option><option>Rabi</option><option>Summer</option></select></div>',
 
       '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-crop"><option value="">Select Crop</option>' + App._lineCropOpts('') + '</select></div>',
+      '<select class="form-control" id="sl-crop" onchange="App.onLineCropChange()"><option value="">Select Crop</option>' + App._lineCropOpts('') + '</select></div>',
 
       '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-variety"><option value="">Select Variety</option>' + App._lineVarietyOpts('') + '</select></div>',
+      App._lineVarietyMs(''),
+      App.msHint('Select one or more varieties for this line.'),
+      '</div>',
 
       '<div class="form-group"><label>Line Start Date <span style="color:#F44336">*</span></label>',
       '<input type="date" class="form-control" id="sl-start" value="' + today + '"/></div>',
@@ -1124,6 +1175,156 @@ App.smFCToggleActive = function (id) {
   var _navPrev = App.navigate.bind(App);
   App.navigate = function (page) {
     if (page === 'admin-seed-lines') this.state.showSeedLineForm = false;
+    if (page === 'admin-packaging') this.state.showPackagingForm = false;
     return _navPrev(page);
+  };
+}());
+
+
+// ════════════════════════════════════════════════════════════
+// MODULE — PACKAGING SET (Admin)
+// Defines the pack size (unit + quantity) used when packing seed, per
+// Financial Year / Seed Type / Season / Crop / Variety. Picking several
+// varieties applies the same unit + quantity to each; one record is saved
+// per variety.
+// ════════════════════════════════════════════════════════════
+(function () {
+  // ── State ──
+  App.state.packagingSets = [
+    { id: 'PKG-001', finYear: '2024-2025', seedType: 'Certified', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', unit: 'Kg', quantity: 40 },
+    { id: 'PKG-002', finYear: '2024-2025', seedType: 'Breeder', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', unit: 'Kg', quantity: 25 },
+    { id: 'PKG-003', finYear: '2024-2025', seedType: 'Foundation', season: 'Rabi', crop: 'Gram', variety: 'JG-315', unit: 'Kg', quantity: 30 }
+  ];
+  App.state.showPackagingForm = false;
+
+  // Units follow the project-wide rule: Kg and Quintal only.
+  App._pkUnits = function () { return App._seUnits || ['Kg', 'Quintal']; };
+
+  App.openPackagingForm = function () { this.state.showPackagingForm = true; this.render(); };
+  App.closePackagingForm = function () { this.msReset('pk-variety'); this.state.showPackagingForm = false; this.render(); };
+
+  // Variety multi-select for the form (crop-wise).
+  App._pkVarietyMs = function (crop) {
+    return App.msRender('pk-variety', App.varietiesForCrop(crop), !crop, 'Select Crop first');
+  };
+  // Crop changed → rebuild the variety list in place (any stale selection is dropped).
+  App.onPackagingCropChange = function () {
+    var crop = document.getElementById('pk-crop') ? document.getElementById('pk-crop').value : '';
+    App._pkVarietyMs(crop);
+    App._msRefresh('pk-variety');
+  };
+
+  // ── Save: one packaging record per selected variety ──
+  App.savePackaging = function () {
+    var g = function (id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+    var finYear = g('pk-finyear') || this._lineFinYear();
+    var seedType = g('pk-seedtype');
+    var season = g('pk-season');
+    var crop = g('pk-crop');
+    var varieties = this.msValues('pk-variety');
+    var unit = g('pk-unit');
+    var quantity = parseFloat(g('pk-qty'));
+    if (!seedType || !season || !crop) { this.showToast('Please select seed type, season and crop'); return; }
+    if (!varieties.length) { this.showToast('Please select at least one variety'); return; }
+    if (!unit) { this.showToast('Please select a unit'); return; }
+    if (!quantity || quantity <= 0) { this.showToast('Please enter a valid quantity'); return; }
+
+    // Block exact duplicates (same year/type/season/crop/variety/unit/quantity). Check every variety first.
+    var list = this.state.packagingSets;
+    var dups = varieties.filter(function (variety) {
+      return list.some(function (p) {
+        return p.finYear === finYear && p.seedType === seedType && p.season === season && p.crop === crop
+          && p.variety === variety && p.unit === unit && Number(p.quantity) === quantity;
+      });
+    });
+    if (dups.length) {
+      this.showToast('Packaging of ' + quantity + ' ' + unit + ' already exists for: ' + dups.join(', '));
+      return;
+    }
+
+    var nextNo = Math.max(0, Math.max.apply(null, list.map(function (p) { return parseInt(String(p.id).replace(/\D/g, ''), 10) || 0; })));
+    varieties.forEach(function (variety) {
+      nextNo += 1;
+      list.unshift({ id: 'PKG-' + String(nextNo).padStart(3, '0'), finYear: finYear, seedType: seedType, season: season, crop: crop, variety: variety, unit: unit, quantity: quantity });
+    });
+    this.msReset('pk-variety');
+    this.state.showPackagingForm = false;
+    this.showToast(varieties.length > 1 ? 'Packaging set added for ' + varieties.length + ' varieties.' : 'Packaging set added.');
+    this.render();
+  };
+
+  // ── Page: list or form ──
+  App.renderPackaging = function () {
+    if (this.state.showPackagingForm) return this.renderPackagingForm();
+    var rows = this.state.packagingSets.map(function (p) {
+      return '<tr>'
+        + '<td>' + p.finYear + '</td>'
+        + '<td>' + p.seedType + '</td>'
+        + '<td>' + p.season + '</td>'
+        + '<td>' + p.crop + '</td>'
+        + '<td>' + p.variety + '</td>'
+        + '<td style="font-weight:700;color:#2E7D32;">' + p.quantity + '</td>'
+        + '<td>' + p.unit + '</td>'
+        + '</tr>';
+    }).join('');
+    return [
+      '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">',
+      '<div><h1>Seed Packaging Management</h1><p>Define pack size (unit and quantity) for each seed type, crop and variety</p></div>',
+      '<button class="btn btn-primary" onclick="App.openPackagingForm()"><span class="material-icons">add</span> New Packaging</button>',
+      '</div>',
+      '<div class="card"><div class="card-header"><h3>All Packaging Sets</h3></div>',
+      '<div class="card-body" style="padding:0;">',
+      this.state.packagingSets.length === 0
+        ? '<div style="padding:48px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">inventory_2</span><p>No packaging sets yet.</p></div>'
+        : '<div class="table-wrap"><table><thead><tr>'
+        + '<th>Fin. Year</th><th>Seed Type</th><th>Season</th><th>Crop</th><th>Variety</th><th>Quantity</th><th>Unit</th>'
+        + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
+      '</div></div>'
+    ].join('');
+  };
+
+  // ── Form ──
+  App.renderPackagingForm = function () {
+    var fy = this._lineFinYear();
+    var unitOpts = App._pkUnits().map(function (u) { return '<option>' + u + '</option>'; }).join('');
+    return [
+      '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">',
+      '<div><h1>New Packaging</h1><p>Set the pack size for a seed type, crop and variety</p></div>',
+      '<button class="btn btn-gray" onclick="App.closePackagingForm()"><span class="material-icons">arrow_back</span> Back to List</button>',
+      '</div>',
+      '<div class="card" style="max-width:860px;"><div class="card-body">',
+      '<div class="form-grid">',
+
+      '<div class="form-group"><label>Financial Year</label>',
+      '<input type="text" class="form-control" id="pk-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
+
+      '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="pk-seedtype"><option value="">Select Seed Type</option><option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option></select></div>',
+
+      '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="pk-season"><option value="">Select Season</option><option>Kharif</option><option>Rabi</option><option>Summer</option></select></div>',
+
+      '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="pk-crop" onchange="App.onPackagingCropChange()"><option value="">Select Crop</option>' + App._lineCropOpts('') + '</select></div>',
+
+      '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>',
+      App._pkVarietyMs(''),
+      App.msHint('Select one or more varieties. Same unit and quantity apply to each.'),
+      '</div>',
+
+      '<div class="form-group"><label>Unit <span style="color:#F44336">*</span></label>',
+      '<select class="form-control" id="pk-unit"><option value="">Select Unit</option>' + unitOpts + '</select></div>',
+
+      '<div class="form-group"><label>Quantity <span style="color:#F44336">*</span></label>',
+      '<input type="number" class="form-control" id="pk-qty" min="0.1" step="any" placeholder="e.g. 40"/>',
+      '<div style="font-size:0.72rem;color:#757575;margin-top:4px;">Quantity of seed in one pack, in the selected unit.</div></div>',
+
+      '</div>',
+      '<div style="display:flex;gap:12px;margin-top:20px;">',
+      '<button class="btn btn-gray" onclick="App.closePackagingForm()">Cancel</button>',
+      '<button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.savePackaging()"><span class="material-icons">check_circle</span> Save Packaging</button>',
+      '</div>',
+      '</div></div>'
+    ].join('');
   };
 }());

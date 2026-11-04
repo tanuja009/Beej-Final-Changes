@@ -126,6 +126,24 @@ App._smSeasonName = function (season) { return String(season || '').replace(/\s*
 App._smVarOpts = function (crop, season, sel) { return App._smVarietiesForCrop(crop, season).map(function (v) { return '<option value="' + v.name + '"' + (sel === v.name ? ' selected' : '') + '>' + v.name + '</option>'; }).join(''); };
 App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety).map(function (sv) { return '<option value="' + sv.name + '"' + (sel === sv.name ? ' selected' : '') + '>' + sv.name + '</option>'; }).join(''); };
 
+// ── Variety multi-select helpers (checkbox dropdown, crop-wise) ──
+// Variety names available for a crop (+ season, if chosen).
+App._smVarNames = function (crop, season) { return App._smVarietiesForCrop(crop, season).map(function (v) { return v.name; }); };
+// Multi-select control + hint. The same lot/quantity/etc. entered on the form applies to every selected variety.
+App._smVarMs = function (key, crop, season, onChange) {
+  return App.msRender(key, crop ? App._smVarNames(crop, season) : [], !crop, 'Select Crop first', onChange)
+    + '<div style="font-size:0.72rem;color:#757575;margin-top:4px;">Select one or more varieties. Same values apply to each selected variety.</div>';
+};
+// Sub-Variety only makes sense for exactly one variety; refresh the select in place when the selection changes.
+App._smSubRefresh = function (selectId, varieties) {
+  var el = document.getElementById(selectId);
+  if (!el) return;
+  var multi = varieties.length > 1;
+  el.innerHTML = '<option value="">' + (multi ? 'N/A (multiple varieties)' : 'Select Sub-Variety') + '</option>'
+    + (varieties.length === 1 ? App._smSubOpts(varieties[0], '') : '');
+  el.disabled = multi;
+};
+
 // ═══════════════════════════════════════════════════════════
 // 2. SIDEBAR — inject Stock Management section
 // ═══════════════════════════════════════════════════════════
@@ -145,6 +163,8 @@ App._smSubOpts = function (variety, sel) { return App._smSubVForVariety(variety)
       + ni('grass', 'Crop Master', 'sm-crop', true)
       + ni('date_range', 'Financial Year', 'sm-finyear', true)
       + ni('category', 'Variety Master', 'sm-variety', true)
+      + ni('swap_horiz', 'Seed Buying/Selling Line Management', 'admin-seed-lines', true)
+      + ni('inventory_2', 'Seed Packaging Management', 'admin-packaging', true)
       + '</div>';
     if (/nav-section-title">Management</.test(html)) {
       return html.replace(/(<div class="nav-section"><div class="nav-section-title">Management<\/div>)/, section + '\n$1');
@@ -276,7 +296,9 @@ App.smInventoryForm = function () {
     + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" id="if-finyear"><option value="">Select Financial Year</option>' + App._smFinYearOpts(r ? r.finYear : '') + '</select></div>'
     + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" id="if-season" onchange="App.state.sm.filter.season=this.value;App.state.sm.filter.crop=\'\';App.state.sm.filter.variety=\'\';App.render()"><option value="">Select Season</option>' + App._smSeasonOpts(season) + '</select></div>'
     + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="if-crop" onchange="App.state.sm.filter.crop=this.value;App.state.sm.filter.variety=\'\';App.render()"><option value="">Select Crop</option>' + App._smCropOpts(season, crop) + '</select></div>'
-    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label><select class="form-control" id="if-variety" onchange="App.state.sm.filter.variety=this.value;App.render()"><option value="">Select Variety</option>' + App._smVarOpts(crop, season, variety) + '</select></div>'
+    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>' + (mode === 'edit'
+      ? '<select class="form-control" id="if-variety" onchange="App.state.sm.filter.variety=this.value;App.render()"><option value="">Select Variety</option>' + App._smVarOpts(crop, season, variety) + '</select>'
+      : App._smVarMs('if-variety', crop, season)) + '</div>'
     + '</div></div>'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">scale</span> Lot &amp; Quantity</div>'
     + '<div class="form-grid">'
@@ -292,30 +314,36 @@ App.smInventoryForm = function () {
 
 App.smSaveInventory = function () {
   var g = function (id) { var e = document.getElementById(id); return e ? String(e.value).trim() : ''; };
-  var finYear = g('if-finyear'), season = g('if-season'), crop = g('if-crop'), variety = g('if-variety'), lot = g('if-lot');
+  var finYear = g('if-finyear'), season = g('if-season'), crop = g('if-crop'), lot = g('if-lot');
+  // Add mode: one or more varieties (multi-select). Edit mode: the single variety of the record.
+  var isEdit = SM.formMode === 'edit';
+  var varieties = isEdit ? [g('if-variety')].filter(Boolean) : App.msValues('if-variety');
   var opening = parseFloat(g('if-opening'));
-  if (!finYear || !season || !crop || !variety || !lot || isNaN(opening) || opening < 0) {
+  if (!finYear || !season || !crop || !varieties.length || !lot || isNaN(opening) || opening < 0) {
     alert('Please fill Financial Year, Season, Crop, Variety, Lot/Batch and a valid Opening Quantity.'); return;
   }
   var unit = g('if-unit') || 'KG', inward = parseFloat(g('if-inward')) || 0;
-  var existingRec = SM.formMode === 'edit' ? SM.inventory.find(function (x) { return x.id === SM.editId; }) : null;
+  var existingRec = isEdit ? SM.inventory.find(function (x) { return x.id === SM.editId; }) : null;
   var subVar = existingRec ? (existingRec.subVariety || '') : '';
-  // Prevent duplicate lot for the same crop+variety (except the row being edited)
-  var dup = SM.inventory.some(function (x) {
-    return x.id !== SM.editId && x.lot === lot && x.crop === crop && x.variety === variety;
+  // Prevent duplicate lot for the same crop+variety (except the row being edited). Check ALL varieties first.
+  var dups = varieties.filter(function (variety) {
+    return SM.inventory.some(function (x) { return x.id !== SM.editId && x.lot === lot && x.crop === crop && x.variety === variety; });
   });
-  if (dup) { alert('Inventory for Lot "' + lot + '" under ' + crop + ' / ' + variety + ' already exists.'); return; }
+  if (dups.length) { alert('Inventory for Lot "' + lot + '" under ' + crop + ' / ' + dups.join(', ') + ' already exists.'); return; }
   var today = new Date().toISOString().split('T')[0];
-  if (SM.formMode === 'edit') {
+  if (isEdit) {
+    var variety = varieties[0];
     var r = SM.inventory.find(function (x) { return x.id === SM.editId; });
     if (r) { r.finYear = finYear; r.season = season; r.crop = crop; r.variety = variety; r.subVariety = subVar; r.lot = lot; r.opening = opening; r.inward = inward; r.unit = unit; r.updated = today; }
     App.showToast('Inventory updated successfully.');
   } else {
-    var rec = { id: App._smNextId(SM.inventory, 'INV-'), finYear: finYear, season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: opening, inward: inward, outward: 0, adjustment: 0, unit: unit, updated: today };
-    SM.inventory.push(rec);
-    // Opening ledger entry so the ledger stays consistent
-    SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: today, type: 'Opening Stock', ref: App._smNextId(SM.ledger, 'OPEN-'), season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: 0, inward: opening + inward, outward: 0, adj: 0, closing: opening + inward, remarks: 'Inventory added' });
-    App.showToast('Inventory / stock added successfully.');
+    // One inventory record (and opening ledger entry) per selected variety, same lot/quantity for each.
+    varieties.forEach(function (variety) {
+      SM.inventory.push({ id: App._smNextId(SM.inventory, 'INV-'), finYear: finYear, season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: opening, inward: inward, outward: 0, adjustment: 0, unit: unit, updated: today });
+      // Opening ledger entry so the ledger stays consistent
+      SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: today, type: 'Opening Stock', ref: App._smNextId(SM.ledger, 'OPEN-'), season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: 0, inward: opening + inward, outward: 0, adj: 0, closing: opening + inward, remarks: 'Inventory added' });
+    });
+    App.showToast(varieties.length > 1 ? 'Inventory added for ' + varieties.length + ' varieties.' : 'Inventory / stock added successfully.');
   }
   App.navigate('sm-inventory');
 };
@@ -325,14 +353,18 @@ App.smSaveInventory = function () {
 // ═══════════════════════════════════════════════════════════
 App.smInward = function () {
   var f = SM.filter;
+  // Variety multi-select; Sub-Variety is only available when exactly one variety is selected.
+  var varMs = App._smVarMs('si-variety', f.crop, f.season, function (sel) { App._smSubRefresh('si-subvar', sel); });
+  var vSel = App.msValues('si-variety');
+  var subDisabled = vSel.length > 1;
   return '<div class="page-header"><h1>Stock Inward</h1><p>Add new stock inward entry</p></div>'
     + '<div class="card"><div class="card-body">'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">login</span> Inward Details</div>'
     + '<div class="form-grid">'
     + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" id="si-season" onchange="App.state.sm.filter.season=this.value;App.render()"><option value="">Select Season</option>' + App._smSeasonOpts(f.season) + '</select></div>'
     + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="si-crop" onchange="App.state.sm.filter.crop=this.value;App.render()"><option value="">Select Crop</option>' + App._smCropOpts(f.season, f.crop) + '</select></div>'
-    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label><select class="form-control" id="si-variety" onchange="App.state.sm.filter.variety=this.value;App.render()"><option value="">Select Variety</option>' + App._smVarOpts(f.crop, f.season, f.variety) + '</select></div>'
-    + '<div class="form-group"><label>Sub-Variety</label><select class="form-control" id="si-subvar"><option value="">Select Sub-Variety</option>' + App._smSubOpts(f.variety, '') + '</select></div>'
+    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>' + varMs + '</div>'
+    + '<div class="form-group"><label>Sub-Variety</label><select class="form-control" id="si-subvar"' + (subDisabled ? ' disabled' : '') + '><option value="">' + (subDisabled ? 'N/A (multiple varieties)' : 'Select Sub-Variety') + '</option>' + (vSel.length === 1 ? App._smSubOpts(vSel[0], '') : '') + '</select></div>'
     + '<div class="form-group"><label>Lot/Batch No. <span style="color:#F44336">*</span></label><input class="form-control" id="si-lot" placeholder="e.g. LOT-P-002"></div>'
     + '<div class="form-group"><label>Inward Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="si-date" value="' + new Date().toISOString().split('T')[0] + '"></div>'
     + '<div class="form-group"><label>Quantity <span style="color:#F44336">*</span></label><input type="number" class="form-control" id="si-qty" placeholder="Enter quantity"></div>'
@@ -347,20 +379,26 @@ App.smInward = function () {
 };
 App.smSaveInward = function () {
   var g = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
-  var season = g('si-season'), crop = g('si-crop'), variety = g('si-variety'), lot = g('si-lot'), qty = parseFloat(g('si-qty'));
-  if (!season || !crop || !variety || !lot || !qty || qty <= 0) { alert('Please fill all required fields with valid data.'); return; }
-  var subVar = g('si-subvar'), unit = g('si-unit'), source = g('si-source'), ref = g('si-ref') || App._smNextId(SM.ledger, 'IN-'), remarks = g('si-remarks');
-  // Find or create inventory row
-  var inv = SM.inventory.find(function (r) { return r.lot === lot && r.crop === crop && r.variety === variety; });
-  if (inv) {
-    inv.inward += qty; inv.updated = new Date().toISOString().split('T')[0];
-  } else {
-    SM.inventory.push({ id: App._smNextId(SM.inventory, 'INV-'), season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: 0, inward: qty, outward: 0, adjustment: 0, unit: unit, updated: new Date().toISOString().split('T')[0] });
-    inv = SM.inventory[SM.inventory.length - 1];
-  }
-  var closing = App._smAvail(inv);
-  SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: g('si-date') || new Date().toISOString().split('T')[0], type: 'Inward', ref: ref, season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: closing - qty, inward: qty, outward: 0, adj: 0, closing: closing, remarks: remarks || 'Stock inward — ' + source });
-  App.showToast('Stock inward recorded successfully.');
+  var season = g('si-season'), crop = g('si-crop'), varieties = App.msValues('si-variety'), lot = g('si-lot'), qty = parseFloat(g('si-qty'));
+  if (!season || !crop || !varieties.length || !lot || !qty || qty <= 0) { alert('Please fill all required fields with valid data.'); return; }
+  // Sub-Variety applies only when a single variety is selected.
+  var subVar = varieties.length === 1 ? g('si-subvar') : '';
+  var unit = g('si-unit'), source = g('si-source'), refIn = g('si-ref'), remarks = g('si-remarks');
+  // One inward entry per selected variety; the same lot/quantity applies to each.
+  varieties.forEach(function (variety) {
+    var ref = refIn || App._smNextId(SM.ledger, 'IN-');
+    // Find or create inventory row
+    var inv = SM.inventory.find(function (r) { return r.lot === lot && r.crop === crop && r.variety === variety; });
+    if (inv) {
+      inv.inward += qty; inv.updated = new Date().toISOString().split('T')[0];
+    } else {
+      SM.inventory.push({ id: App._smNextId(SM.inventory, 'INV-'), season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: 0, inward: qty, outward: 0, adjustment: 0, unit: unit, updated: new Date().toISOString().split('T')[0] });
+      inv = SM.inventory[SM.inventory.length - 1];
+    }
+    var closing = App._smAvail(inv);
+    SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: g('si-date') || new Date().toISOString().split('T')[0], type: 'Inward', ref: ref, season: season, crop: crop, variety: variety, subVariety: subVar, lot: lot, opening: closing - qty, inward: qty, outward: 0, adj: 0, closing: closing, remarks: remarks || 'Stock inward — ' + source });
+  });
+  App.showToast(varieties.length > 1 ? 'Stock inward recorded for ' + varieties.length + ' varieties.' : 'Stock inward recorded successfully.');
   App.navigate('sm-inventory');
 };
 
@@ -369,14 +407,17 @@ App.smSaveInward = function () {
 // ═══════════════════════════════════════════════════════════
 App.smOutward = function () {
   var f = SM.filter;
+  var varMs = App._smVarMs('so-variety', f.crop, f.season, function (sel) { App._smSubRefresh('so-subvar', sel); });
+  var vSel = App.msValues('so-variety');
+  var subDisabled = vSel.length > 1;
   return '<div class="page-header"><h1>Stock Outward</h1><p>Record stock dispatched / outward</p></div>'
     + '<div class="card"><div class="card-body">'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">logout</span> Outward Details</div>'
     + '<div class="form-grid">'
     + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" id="so-season" onchange="App.state.sm.filter.season=this.value;App.render()"><option value="">Select</option>' + App._smSeasonOpts(f.season) + '</select></div>'
     + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="so-crop" onchange="App.state.sm.filter.crop=this.value;App.render()"><option value="">Select</option>' + App._smCropOpts(f.season, f.crop) + '</select></div>'
-    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label><select class="form-control" id="so-variety" onchange="App.state.sm.filter.variety=this.value;App.render()"><option value="">Select</option>' + App._smVarOpts(f.crop, f.season, f.variety) + '</select></div>'
-    + '<div class="form-group"><label>Sub-Variety</label><select class="form-control" id="so-subvar"><option value="">Select</option>' + App._smSubOpts(f.variety, '') + '</select></div>'
+    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>' + varMs + '</div>'
+    + '<div class="form-group"><label>Sub-Variety</label><select class="form-control" id="so-subvar"' + (subDisabled ? ' disabled' : '') + '><option value="">' + (subDisabled ? 'N/A (multiple varieties)' : 'Select') + '</option>' + (vSel.length === 1 ? App._smSubOpts(vSel[0], '') : '') + '</select></div>'
     + '<div class="form-group"><label>Lot/Batch No. <span style="color:#F44336">*</span></label><input class="form-control" id="so-lot" placeholder="LOT-P-001"></div>'
     + '<div class="form-group"><label>Outward Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="so-date" value="' + new Date().toISOString().split('T')[0] + '"></div>'
     + '<div class="form-group"><label>Quantity <span style="color:#F44336">*</span></label><input type="number" class="form-control" id="so-qty" placeholder="Quantity"></div>'
@@ -390,16 +431,27 @@ App.smOutward = function () {
 };
 App.smSaveOutward = function () {
   var g = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
-  var crop = g('so-crop'), variety = g('so-variety'), lot = g('so-lot'), qty = parseFloat(g('so-qty'));
-  if (!crop || !variety || !lot || !qty || qty <= 0) { alert('Please fill all required fields.'); return; }
-  var inv = SM.inventory.find(function (r) { return r.lot === lot && r.crop === crop && r.variety === variety; });
-  if (!inv) { alert('No matching inventory found for this Lot/Crop/Variety.'); return; }
-  var avail = App._smAvail(inv);
-  if (qty > avail) { alert('Insufficient stock. Available quantity is ' + avail + ' ' + inv.unit + '.'); return; }
-  inv.outward += qty; inv.updated = new Date().toISOString().split('T')[0];
-  var closing = App._smAvail(inv);
-  SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: g('so-date') || new Date().toISOString().split('T')[0], type: 'Outward', ref: g('so-ref') || App._smNextId(SM.ledger, 'OUT-'), season: g('so-season'), crop: crop, variety: variety, subVariety: g('so-subvar'), lot: lot, opening: closing + qty, inward: 0, outward: qty, adj: 0, closing: closing, remarks: g('so-remarks') || 'Dispatched to ' + g('so-dest') });
-  App.showToast('Stock outward recorded successfully.');
+  var crop = g('so-crop'), varieties = App.msValues('so-variety'), lot = g('so-lot'), qty = parseFloat(g('so-qty'));
+  if (!crop || !varieties.length || !lot || !qty || qty <= 0) { alert('Please fill all required fields.'); return; }
+  // Validate EVERY selected variety first (inventory exists for this lot + enough stock); save nothing if any fails.
+  var rows = [], problems = [];
+  varieties.forEach(function (variety) {
+    var inv = SM.inventory.find(function (r) { return r.lot === lot && r.crop === crop && r.variety === variety; });
+    if (!inv) { problems.push(variety + ': no inventory found for Lot "' + lot + '"'); return; }
+    var avail = App._smAvail(inv);
+    if (qty > avail) { problems.push(variety + ': insufficient stock (available ' + avail + ' ' + inv.unit + ')'); return; }
+    rows.push({ variety: variety, inv: inv });
+  });
+  if (problems.length) { alert('Outward not saved:\n' + problems.join('\n')); return; }
+  var subVar = varieties.length === 1 ? g('so-subvar') : '';
+  var refIn = g('so-ref');
+  rows.forEach(function (row) {
+    var inv = row.inv;
+    inv.outward += qty; inv.updated = new Date().toISOString().split('T')[0];
+    var closing = App._smAvail(inv);
+    SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: g('so-date') || new Date().toISOString().split('T')[0], type: 'Outward', ref: refIn || App._smNextId(SM.ledger, 'OUT-'), season: g('so-season'), crop: crop, variety: row.variety, subVariety: subVar, lot: lot, opening: closing + qty, inward: 0, outward: qty, adj: 0, closing: closing, remarks: g('so-remarks') || 'Dispatched to ' + g('so-dest') });
+  });
+  App.showToast(varieties.length > 1 ? 'Stock outward recorded for ' + varieties.length + ' varieties.' : 'Stock outward recorded successfully.');
   App.navigate('sm-inventory');
 };
 
@@ -408,13 +460,14 @@ App.smSaveOutward = function () {
 // ═══════════════════════════════════════════════════════════
 App.smAdjust = function () {
   var f = SM.filter;
+  var varMs = App._smVarMs('sa-variety', f.crop, f.season);
   return '<div class="page-header"><h1>Stock Adjustment</h1><p>Correct stock differences</p></div>'
     + '<div class="card"><div class="card-body">'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">tune</span> Adjustment Details</div>'
     + '<div class="form-grid">'
     + '<div class="form-group"><label>Season</label><select class="form-control" id="sa-season" onchange="App.state.sm.filter.season=this.value;App.render()"><option value="">Select</option>' + App._smSeasonOpts(f.season) + '</select></div>'
     + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="sa-crop" onchange="App.state.sm.filter.crop=this.value;App.render()"><option value="">Select</option>' + App._smCropOpts(f.season, f.crop) + '</select></div>'
-    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label><select class="form-control" id="sa-variety" onchange="App.state.sm.filter.variety=this.value;App.render()"><option value="">Select</option>' + App._smVarOpts(f.crop, f.season, f.variety) + '</select></div>'
+    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>' + varMs + '</div>'
     + '<div class="form-group"><label>Lot/Batch <span style="color:#F44336">*</span></label><input class="form-control" id="sa-lot" placeholder="LOT-P-001"></div>'
     + '<div class="form-group"><label>Adjustment Type <span style="color:#F44336">*</span></label><select class="form-control" id="sa-type"><option value="">Select</option><option value="increase">Increase</option><option value="decrease">Decrease</option></select></div>'
     + '<div class="form-group"><label>Quantity <span style="color:#F44336">*</span></label><input type="number" class="form-control" id="sa-qty" placeholder="Quantity"></div>'
@@ -428,17 +481,26 @@ App.smAdjust = function () {
 };
 App.smSaveAdjust = function () {
   var g = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
-  var crop = g('sa-crop'), variety = g('sa-variety'), lot = g('sa-lot'), qty = parseFloat(g('sa-qty')), type = g('sa-type'), reason = g('sa-reason');
-  if (!crop || !variety || !lot || !qty || !type || !reason) { alert('Please fill all required fields.'); return; }
-  var inv = SM.inventory.find(function (r) { return r.lot === lot && r.crop === crop && r.variety === variety; });
-  if (!inv) { alert('No matching inventory found.'); return; }
+  var crop = g('sa-crop'), varieties = App.msValues('sa-variety'), lot = g('sa-lot'), qty = parseFloat(g('sa-qty')), type = g('sa-type'), reason = g('sa-reason');
+  if (!crop || !varieties.length || !lot || !qty || !type || !reason) { alert('Please fill all required fields.'); return; }
   var delta = type === 'increase' ? qty : -qty;
-  if (type === 'decrease' && App._smAvail(inv) < qty) { alert('Insufficient stock for decrease. Available: ' + App._smAvail(inv) + ' ' + inv.unit); return; }
-  if (!confirm('Confirm stock adjustment: ' + type + ' ' + qty + ' ' + inv.unit + '?\nReason: ' + reason)) return;
-  inv.adjustment += delta; inv.updated = new Date().toISOString().split('T')[0];
-  var closing = App._smAvail(inv);
-  SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: g('sa-date') || new Date().toISOString().split('T')[0], type: type === 'increase' ? 'Adjustment Increase' : 'Adjustment Decrease', ref: App._smNextId(SM.ledger, 'ADJ-'), season: g('sa-season'), crop: crop, variety: variety, subVariety: '', lot: lot, opening: closing - delta, inward: 0, outward: 0, adj: delta, closing: closing, remarks: reason + (g('sa-remarks') ? ' — ' + g('sa-remarks') : '') });
-  App.showToast('Stock adjustment saved successfully.');
+  // Validate EVERY selected variety first; save nothing if any fails.
+  var rows = [], problems = [];
+  varieties.forEach(function (variety) {
+    var inv = SM.inventory.find(function (r) { return r.lot === lot && r.crop === crop && r.variety === variety; });
+    if (!inv) { problems.push(variety + ': no inventory found for Lot "' + lot + '"'); return; }
+    if (type === 'decrease' && App._smAvail(inv) < qty) { problems.push(variety + ': insufficient stock for decrease (available ' + App._smAvail(inv) + ' ' + inv.unit + ')'); return; }
+    rows.push({ variety: variety, inv: inv });
+  });
+  if (problems.length) { alert('Adjustment not saved:\n' + problems.join('\n')); return; }
+  if (!confirm('Confirm stock adjustment: ' + type + ' ' + qty + ' ' + rows[0].inv.unit + ' for ' + varieties.join(', ') + '?\nReason: ' + reason)) return;
+  rows.forEach(function (row) {
+    var inv = row.inv;
+    inv.adjustment += delta; inv.updated = new Date().toISOString().split('T')[0];
+    var closing = App._smAvail(inv);
+    SM.ledger.push({ id: App._smNextId(SM.ledger, 'LG-'), date: g('sa-date') || new Date().toISOString().split('T')[0], type: type === 'increase' ? 'Adjustment Increase' : 'Adjustment Decrease', ref: App._smNextId(SM.ledger, 'ADJ-'), season: g('sa-season'), crop: crop, variety: row.variety, subVariety: '', lot: lot, opening: closing - delta, inward: 0, outward: 0, adj: delta, closing: closing, remarks: reason + (g('sa-remarks') ? ' — ' + g('sa-remarks') : '') });
+  });
+  App.showToast(varieties.length > 1 ? 'Stock adjustment saved for ' + varieties.length + ' varieties.' : 'Stock adjustment saved successfully.');
   App.navigate('sm-inventory');
 };
 

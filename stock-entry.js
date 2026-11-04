@@ -70,20 +70,38 @@ App._seStorageLocations = ['Cold Storage A', 'Godown B', 'Godown C', 'Ambient St
 App._seLabs = ['State Seed Testing Lab, Bhopal', 'Regional Seed Lab, Jabalpur', 'District Seed Lab, Indore'];
 
 // Compute existing stock for a Seed Type + Season + Crop + Variety + Sub-Variety + Lot combination
-App._seExistingStock = function (f) {
+// `variety` is optional: pass a specific variety when a form has several selected (defaults to f.variety).
+App._seExistingStock = function (f, variety) {
   if (!f) return 0;
+  var v = (variety !== undefined) ? variety : f.variety;
   return SEList().filter(function (e) {
     return e.id !== SE().editId
       && e.seedType === f.seedType && e.season === f.season && e.crop === f.crop
-      && e.variety === f.variety && (e.subVariety || '') === (f.subVariety || '')
+      && e.variety === v && (e.subVariety || '') === (f.subVariety || '')
       && e.lot === f.lot && e.lot;
   }).reduce(function (sum, e) { return sum + (Number(e.addQty) || 0); }, 0);
+};
+
+// Varieties chosen on the form: the multi-select list in add mode, the single record variety in edit mode.
+App._seFormVarieties = function (f) {
+  if (!f) return [];
+  if (SE().editId) return f.variety ? [f.variety] : [];
+  return (f.varieties || []).slice();
+};
+// Display text for the stock fields: a number for one variety; a note when several varieties are selected.
+App._seExistingLabel = function (f) {
+  var vs = App._seFormVarieties(f);
+  return vs.length > 1 ? 'Varies by variety' : App._seExistingStock(f);
+};
+App._seTotalLabel = function (f) {
+  var vs = App._seFormVarieties(f);
+  return vs.length > 1 ? 'Varies by variety' : App._seExistingStock(f) + (Number(f.addQty) || 0);
 };
 
 // Blank form buffer
 App._seBlankForm = function () {
   return {
-    seedType: '', season: '', crop: '', variety: '', seedClass: '', sourceType: '', addQty: '', unit: 'Quintal', finYear: '', prodDate: '',
+    seedType: '', season: '', crop: '', variety: '', varieties: [], seedClass: '', sourceType: '', addQty: '', unit: 'Quintal', finYear: '', prodDate: '',
     minDemandQty: '', minDemandUnit: 'Quintal', maxDemandQty: '', maxDemandUnit: 'Quintal',
     prodYear: '', receiptDate: '', warehouse: '', storage: '', rack: '',
     quality: '', certStatus: '', germination: '', purity: '', moisture: '', lab: '', reportNo: '', reportDate: '',
@@ -179,10 +197,25 @@ App.seSet = function (key, val) {
   f[key] = val;
   // Reset dependent children when a parent changes
   if (key === 'seedType') { f.seedClass = ''; f.specific = {}; }
-  if (key === 'season') { f.crop = ''; f.variety = ''; f.subVariety = ''; }
-  if (key === 'crop') { f.variety = ''; f.subVariety = ''; }
+  if (key === 'season') { f.crop = ''; f.variety = ''; f.varieties = []; f.subVariety = ''; App.msReset('se-variety'); }
+  if (key === 'crop') { f.variety = ''; f.varieties = []; f.subVariety = ''; App.msReset('se-variety'); }
   if (key === 'variety') { f.subVariety = ''; }
   App.render();
+};
+// Variety multi-select changed (add mode): keep the form buffer in sync without re-rendering the page.
+// f.variety is set only when exactly one variety is selected (it drives Sub-Variety + stock lookup).
+App.seSetVarieties = function (arr) {
+  var f = SE().form; if (!f) return;
+  f.varieties = arr.slice();
+  f.variety = arr.length === 1 ? arr[0] : '';
+  f.subVariety = '';
+  var sub = document.getElementById('se-subvar');
+  if (sub) {
+    sub.innerHTML = '<option value="">' + (arr.length > 1 ? 'N/A (multiple varieties)' : arr.length === 1 ? 'Select Sub-Variety (optional)' : 'Select Variety first') + '</option>'
+      + (arr.length === 1 ? App._seSubVarieties(arr[0]).map(function (sv) { return '<option value="' + sv.name + '">' + sv.name + '</option>'; }).join('') : '');
+    sub.disabled = arr.length !== 1;
+  }
+  App.seRefreshSummary();
 };
 App.seSetSpecific = function (key, val) {
   var f = SE().form; if (!f) return;
@@ -217,12 +250,20 @@ App.seRenderForm = function () {
   var f = st.form;
   var mode = st.editId ? 'Edit' : 'New';
 
+  var isEdit = !!SE().editId;
   var crops = App._seCrops(f.season);
   var varieties = App._seVarieties(f.crop, f.season);
+  var varietyNames = varieties.map(function (v) { return v.name; });
   var subs = App._seSubVarieties(f.variety);
   var classes = App._seSeedClasses(f.seedType);
   var varietyNote = (f.crop && varieties.length === 0)
-    ? '<div style="color:#E65100;font-size:0.78rem;margin-top:4px;">No variety configured for ' + f.crop + '. Please add one in Variety Master.</div>' : '';
+    ? '<div style="color:#E65100;font-size:0.78rem;margin-top:4px;">No variety configured for ' + f.crop + '. Please add one in Variety Master.</div>'
+    : (!isEdit ? '<div style="font-size:0.72rem;color:#757575;margin-top:4px;">Select one or more varieties. The same Lot/Quantity apply to each; one stock entry is created per variety.</div>' : '');
+  // Re-seed the multi-select from the form buffer (its state is cleared on page navigation).
+  if (!isEdit && !App.state._ms['se-variety'] && f.varieties && f.varieties.length) App.msSetValues('se-variety', f.varieties);
+  var varietyFieldHtml = isEdit
+    ? '<select class="form-control" onchange="App.seSet(\'variety\',this.value)"' + (f.crop ? '' : ' disabled') + '>' + seOpt(varieties, f.variety, f.crop ? 'Select Variety' : 'Select Crop first') + '</select>'
+    : App.msRender('se-variety', f.crop ? varietyNames : [], !f.crop, 'Select Crop first', App.seSetVarieties);
 
   var breadcrumb = '<div style="font-size:0.8rem;color:#757575;margin-bottom:6px;">Stock Management &rsaquo; Stock Entry</div>';
 
@@ -283,16 +324,16 @@ App.seRenderForm = function () {
     + '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seSet(\'seedType\',this.value)">' + seOpt(App._seSeedTypes, f.seedType, 'Select Seed Type') + '</select><div class="se-err" id="err-seedType"></div></div>'
     + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seSet(\'season\',this.value)">' + seOpt(App._seSeasons(), f.season, 'Select Season') + '</select><div class="se-err" id="err-season"></div></div>'
     + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seSet(\'crop\',this.value)"' + (f.season ? '' : ' disabled') + '>' + seOpt(crops, f.crop, f.season ? 'Select Crop' : 'Select Season first') + '</select><div class="se-err" id="err-crop"></div></div>'
-    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seSet(\'variety\',this.value)"' + (f.crop ? '' : ' disabled') + '>' + seOpt(varieties, f.variety, f.crop ? 'Select Variety' : 'Select Crop first') + '</select><div class="se-err" id="err-variety"></div>' + varietyNote + '</div>'
-    + '<div class="form-group"><label>Sub-Variety</label><select class="form-control" onchange="App.seSet(\'subVariety\',this.value)"' + (f.variety ? '' : ' disabled') + '>' + seOpt(subs, f.subVariety, f.variety ? 'Select Sub-Variety (optional)' : 'Select Variety first') + '</select></div>'
+    + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>' + varietyFieldHtml + '<div class="se-err" id="err-variety"></div>' + varietyNote + '</div>'
+    + '<div class="form-group"><label>Sub-Variety</label><select class="form-control" id="se-subvar" onchange="App.seSet(\'subVariety\',this.value)"' + (f.variety ? '' : ' disabled') + '>' + seOpt(subs, f.subVariety, f.variety ? 'Select Sub-Variety (optional)' : (App._seFormVarieties(f).length > 1 ? 'N/A (multiple varieties)' : (isEdit || f.crop ? 'Select Variety first' : 'Select Crop first'))) + '</select></div>'
     + '</div></div></div>'
 
     // Section 2: Stock Details
     + '<div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>2. Stock Details</h3></div><div class="card-body"><div class="form-grid">'
     + '<div class="form-group"><label>Lot Number <span style="color:#F44336">*</span></label><input class="form-control" value="' + (f.lot || '') + '" placeholder="e.g. BS-P-002" oninput="App.seLive(\'lot\',this.value)"><div class="se-err" id="err-lot"></div></div>'
-    + '<div class="form-group"><label>Available / Existing Stock</label><input class="form-control" id="se-existing" value="' + App._seExistingStock(f) + '" readonly style="background:#f5f5f5;"></div>'
+    + '<div class="form-group"><label>Available / Existing Stock</label><input class="form-control" id="se-existing" value="' + App._seExistingLabel(f) + '" readonly style="background:#f5f5f5;"></div>'
     + '<div class="form-group"><label>Quantity to be Added <span style="color:#F44336">*</span></label><input type="number" class="form-control" value="' + (f.addQty || '') + '" placeholder="Enter quantity" oninput="App.seLive(\'addQty\',this.value)"><div class="se-err" id="err-addQty"></div></div>'
-    + '<div class="form-group"><label>Total Stock</label><input class="form-control" id="se-total" value="' + (App._seExistingStock(f) + (Number(f.addQty) || 0)) + '" readonly style="background:#f5f5f5;font-weight:600;"></div>'
+    + '<div class="form-group"><label>Total Stock</label><input class="form-control" id="se-total" value="' + App._seTotalLabel(f) + '" readonly style="background:#f5f5f5;font-weight:600;"></div>'
     + '<div class="form-group"><label>Unit <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'unit\',this.value)">' + seOpt(App._seUnits, f.unit, 'Select Unit') + '</select><div class="se-err" id="err-unit"></div></div>'
     + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'finYear\',this.value)">' + seOpt(App._seFinYears(), f.finYear, 'Select Financial Year') + '</select><div class="se-err" id="err-finYear"></div></div>'
     + '<div class="form-group"><label>Production Date</label><input type="date" class="form-control" value="' + (f.prodDate || '') + '" oninput="App.seLive(\'prodDate\',this.value)"><div class="se-err" id="err-prodDate"></div></div>'
@@ -323,11 +364,10 @@ App.seRenderForm = function () {
 // Refresh the auto-computed Existing Stock + Total Stock fields during typing.
 App.seRefreshSummary = function () {
   var f = SE().form || {};
-  var existing = App._seExistingStock(f);
   var existingInput = document.getElementById('se-existing');
-  if (existingInput) existingInput.value = existing;
+  if (existingInput) existingInput.value = App._seExistingLabel(f);
   var totalInput = document.getElementById('se-total');
-  if (totalInput) totalInput.value = existing + (Number(f.addQty) || 0);
+  if (totalInput) totalInput.value = App._seTotalLabel(f);
 };
 
 // ── Documents ──
@@ -372,7 +412,7 @@ App._seValidate = function (draft) {
   // Full validation
   if (!f.season) errs.season = 'Season is required.';
   if (!f.crop) errs.crop = 'Crop is required.';
-  if (!f.variety) errs.variety = 'Variety is required.';
+  if (!App._seFormVarieties(f).length) errs.variety = 'Variety is required.';
   if (!f.lot) errs.lot = 'Lot Number is required.';
   var qty = Number(f.addQty);
   if (!f.addQty || isNaN(qty) || qty <= 0) errs.addQty = 'Quantity must be a number greater than 0.';
@@ -382,11 +422,13 @@ App._seValidate = function (draft) {
   var today = new Date().toISOString().split('T')[0];
   if (f.prodDate && f.prodDate > today) errs.prodDate = 'Production Date cannot be in the future.';
   // Duplicate combination
-  var dup = SEList().some(function (e) {
-    return e.id !== SE().editId && e.seedType === f.seedType && e.season === f.season && e.crop === f.crop
-      && e.variety === f.variety && (e.subVariety || '') === (f.subVariety || '') && e.lot === f.lot;
+  var dupVarieties = App._seFormVarieties(f).filter(function (variety) {
+    return SEList().some(function (e) {
+      return e.id !== SE().editId && e.seedType === f.seedType && e.season === f.season && e.crop === f.crop
+        && e.variety === variety && (e.subVariety || '') === (f.subVariety || '') && e.lot === f.lot;
+    });
   });
-  if (dup) errs.lot = 'A stock entry already exists for this Seed Type + Season + Crop + Variety + Lot.';
+  if (dupVarieties.length) errs.lot = 'A stock entry already exists for this Seed Type + Season + Crop + Lot' + (App._seFormVarieties(f).length > 1 ? ' for: ' + dupVarieties.join(', ') : ' + Variety') + '.';
   return errs;
 };
 App._seRenderErrors = function (errs) {
@@ -421,10 +463,19 @@ App.seSubmit = function () {
 
 App.seConfirmSubmit = function () {
   var rec = App._sePersist('Submitted');
+  var n = SE().lastCreatedCount || 1;
   SE().confirmOpen = false;
   SE().lastSubmitted = rec;
-  App.showToast('Stock entry successfully submitted.');
-  App.navigate('se-view');
+  // Edit mode keeps lastCreatedCount from a previous add; only trust it for new entries.
+  if (SE().editId) n = 1;
+  if (n > 1) {
+    // Several varieties were saved: show the list (all new entries are at the top).
+    App.showToast('Stock entries successfully submitted for ' + n + ' varieties.');
+    App.navigate('se-list');
+  } else {
+    App.showToast('Stock entry successfully submitted.');
+    App.navigate('se-view');
+  }
 };
 
 App.seCancelConfirm = function () { SE().confirmOpen = false; App.render(); };
@@ -448,18 +499,25 @@ App._sePersist = function (status) {
       return r;
     }
   }
-  var rec = {
-    id: App._seNextId(), seedType: f.seedType, season: f.season, crop: f.crop, variety: f.variety, subVariety: f.subVariety,
-    seedClass: f.seedClass, sourceType: f.sourceType, availableQty: App._seExistingStock(f), addQty: Number(f.addQty) || 0,
-    minDemandQty: Number(f.minDemandQty) || 0, minDemandUnit: f.minDemandUnit,
-    maxDemandQty: Number(f.maxDemandQty) || 0, maxDemandUnit: f.maxDemandUnit,
-    unit: f.unit, lot: f.lot, finYear: f.finYear, prodYear: f.prodYear, prodDate: f.prodDate, receiptDate: f.receiptDate,
-    warehouse: f.warehouse, storage: f.storage, rack: f.rack, quality: f.quality, certStatus: f.certStatus,
-    germination: f.germination, purity: f.purity, moisture: f.moisture, lab: f.lab, reportNo: f.reportNo, reportDate: f.reportDate,
-    specific: f.specific, documents: f.documents, remarks: f.remarks, status: status, entryDate: today
-  };
-  SEList().unshift(rec);
-  return rec;
+  // New entry: one stock entry per selected variety (a draft with no variety yet saves a single blank-variety entry).
+  var vs = App._seFormVarieties(f);
+  if (!vs.length) vs = [''];
+  var created = vs.map(function (variety) {
+    var rec = {
+      id: App._seNextId(), seedType: f.seedType, season: f.season, crop: f.crop, variety: variety, subVariety: vs.length === 1 ? f.subVariety : '',
+      seedClass: f.seedClass, sourceType: f.sourceType, availableQty: App._seExistingStock(f, variety), addQty: Number(f.addQty) || 0,
+      minDemandQty: Number(f.minDemandQty) || 0, minDemandUnit: f.minDemandUnit,
+      maxDemandQty: Number(f.maxDemandQty) || 0, maxDemandUnit: f.maxDemandUnit,
+      unit: f.unit, lot: f.lot, finYear: f.finYear, prodYear: f.prodYear, prodDate: f.prodDate, receiptDate: f.receiptDate,
+      warehouse: f.warehouse, storage: f.storage, rack: f.rack, quality: f.quality, certStatus: f.certStatus,
+      germination: f.germination, purity: f.purity, moisture: f.moisture, lab: f.lab, reportNo: f.reportNo, reportDate: f.reportDate,
+      specific: Object.assign({}, f.specific), documents: (f.documents || []).slice(), remarks: f.remarks, status: status, entryDate: today
+    };
+    SEList().unshift(rec);
+    return rec;
+  });
+  App.state.stockEntry.lastCreatedCount = created.length;
+  return created[0];
 };
 
 App.seReset = function () {
@@ -486,7 +544,7 @@ App.seRenderConfirmModal = function () {
     + '<div style="background:#F5F5F5;border-radius:8px;padding:14px;font-size:0.85rem;">'
     + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#757575;">Seed Type</span><b>' + (f.seedType || '—') + '</b></div>'
     + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#757575;">Crop</span><b>' + (f.crop || '—') + '</b></div>'
-    + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#757575;">Variety</span><b>' + (f.variety || '—') + '</b></div>'
+    + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#757575;">Variety</span><b>' + (App._seFormVarieties(f).join(', ') || '—') + '</b></div>'
     + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#757575;">Lot Number</span><b>' + (f.lot || '—') + '</b></div>'
     + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#757575;">Quantity</span><b>' + (f.addQty || '—') + ' ' + (f.unit || '') + '</b></div>'
     + '</div></div>'

@@ -1725,9 +1725,8 @@ const App = {
             </div>
             <div class="form-group">
               <label>Crop Variety *</label>
-              <select class="form-control" id="d-variety" onchange="App.updateMaxDemand()">
-                <option value="">Select Crop First</option>
-              </select>
+              ${App.msRender('d-variety', [], true, 'Select Crop first', App.updateMaxDemand.bind(App))}
+              ${App.msHint()}
             </div>
             <div class="form-group">
               <label>Max Demand Quantity (for this variety)</label>
@@ -1781,32 +1780,10 @@ const App = {
   },
 
   updateVarieties(crop) {
-    const varieties = {
-      'Wheat': ['GW-322', 'GW-496', 'HD-2967', 'K-307', 'HD-2733', 'HD-3086', 'PBW-343', 'DBW-17'],
-      'Paddy (Rice)': ['IR-36', 'MTU-7029', 'Pusa Basmati-1121', 'Pusa-44', 'Swarna', 'IR-64', 'Samba Mahsuri'],
-      'Maize': ['DHM-117', 'Vivek Hybrid-27', 'HQPM-1', 'Pro-311', 'Kaveri-50', 'DHM-121'],
-      'Bajra (Pearl Millet)': ['HHB-67', 'HHB-197', 'Proagro-9444', 'RHB-177', 'GHB-558'],
-      'Jowar (Sorghum)': ['CSH-16', 'CSV-15', 'M-35-1', 'SPV-462', 'Pusa Chari-6'],
-      'Gram (Chickpea)': ['JG-315', 'JG-14', 'JAKI-9218', 'JG-16', 'BG-372', 'GNG-1581'],
-      'Pigeon Pea (Arhar)': ['UPAS-120', 'Pusa-992', 'Asha (ICPL-87)', 'Narendra Arhar-1', 'BDN-711'],
-      'Soybean': ['JS-335', 'NRC-37', 'JS-9560', 'JS-95-60', 'MACS-1407', 'PS-1092'],
-      'Groundnut': ['TAG-24', 'TG-37A', 'Girnar-2', 'GG-20', 'ICGS-76'],
-      'Mustard': ['Pusa Bold', 'RH-30', 'Varuna', 'Pusa Mustard-27', 'Kranti'],
-      'Sunflower': ['KBSH-1', 'MSFH-17', 'PSH-569', 'CO-4', 'Phule Bhaskar'],
-      'Cotton': ['Suraj (H-777)', 'H-1098', 'Bunny Bt', 'Ajeet-155', 'RCH-2'],
-      'Sugarcane': ['CO-86032', 'CO-0238', 'CoJ-64', 'Co-98014', 'CO-0118'],
-      'Moong (Green Gram)': ['K-851', 'IPM-2-3', 'HUM-1', 'Pusa-105', 'ML-613'],
-      'Urad (Black Gram)': ['T-9', 'PU-31', 'Pant-U-19', 'IPU-94-1', 'Pusa-1003'],
-      'Lentil (Masoor)': ['L-4076', 'PL-406', 'IPL-81', 'JL-3', 'Pusa-4'],
-      'Barley': ['RD-2035', 'BH-393', 'K-603', 'PL-426', 'Jyoti'],
-      'Oat': ['OS-6', 'Kent', 'UPO-94', 'Sabzar', 'HFO-114'],
-    };
-    const sel = document.getElementById('d-variety');
-    if (!sel) return;
-    const list = varieties[crop] || [];
-    sel.innerHTML = list.length
-      ? list.map((v, i) => `<option ${i === 0 ? 'selected' : ''}>${v}</option>`).join('')
-      : '<option>Select Crop First</option>';
+    const list = this.varietiesForCrop(crop);
+    // Re-render the variety multi-select for the new crop (clears any stale selection).
+    this.msRender('d-variety', list, !crop, 'Select Crop first', this.updateMaxDemand.bind(this));
+    this._msRefresh('d-variety');
 
     // Update available stock based on crop and variety
     const stockEl = document.getElementById('d-avail-stock');
@@ -1815,7 +1792,7 @@ const App = {
       stockEl.value = mockStock + ' Qt';
     }
 
-    // Refresh the Max Demand Quantity for the (first) variety now selected.
+    // Refresh the Max Demand Quantity for the variety selection now reset.
     this.updateMaxDemand();
   },
 
@@ -1841,18 +1818,26 @@ const App = {
     const el = document.getElementById('d-max-demand');
     if (!el) return;
     const crop = document.getElementById('d-crop') ? document.getElementById('d-crop').value : '';
-    const variety = document.getElementById('d-variety') ? document.getElementById('d-variety').value : '';
-    const max = this._maxDemandFor(crop, variety);
-    el.value = max || 'Not set for this variety';
-    el.style.color = max ? '#2E7D32' : '#9E9E9E';
+    const varieties = this.msValues('d-variety');
+    if (!varieties.length) { el.value = '—'; el.style.color = '#9E9E9E'; this.calculateEstPrice(document.getElementById('d-qty') ? document.getElementById('d-qty').value : ''); return; }
+    const maxes = varieties.map(v => this._maxDemandFor(crop, v));
+    // One variety: just the value. Several: "variety: value" for each.
+    el.value = varieties.length === 1
+      ? (maxes[0] || 'Not set for this variety')
+      : varieties.map((v, i) => v + ': ' + (maxes[i] || 'Not set')).join(' | ');
+    el.style.color = maxes.some(Boolean) ? '#2E7D32' : '#9E9E9E';
+    // The estimated price depends on how many varieties are selected.
+    this.calculateEstPrice(document.getElementById('d-qty') ? document.getElementById('d-qty').value : '');
   },
 
   calculateEstPrice(qty) {
     const priceEl = document.getElementById('d-est-price');
-    if (!priceEl || !qty) return;
-    // Mock price calculation: ₹5000 per quintal
+    if (!priceEl) return;
+    if (!qty) { priceEl.value = ''; return; }
+    // Mock price calculation: ₹5000 per quintal, for each selected variety (same quantity each)
     const pricePerQt = 5000;
-    const totalPrice = parseFloat(qty) * pricePerQt;
+    const count = Math.max(1, this.msValues('d-variety').length);
+    const totalPrice = parseFloat(qty) * pricePerQt * count;
     priceEl.value = totalPrice.toFixed(2);
   },
 
@@ -1879,10 +1864,29 @@ const App = {
   previewDemand() {
     const qty = parseInt(document.getElementById('d-qty')?.value) || 200;
     const crop = document.getElementById('d-crop')?.value || 'Wheat';
-    const variety = document.getElementById('d-variety')?.value || 'GW-322';
+    const varieties = this.msValues('d-variety');
+    if (!varieties.length) { alert('Please select at least one crop variety.'); return; }
     const season = document.getElementById('d-season')?.value || 'Rabi';
-    this.state.currentDemand = { season, crop, variety, qty, cost: qty * 2400, advance: qty * 2400 * 0.25 };
+    // `qty` is per variety: the same quantity is demanded for every selected variety.
+    const total = qty * varieties.length;
+    this.state.currentDemand = {
+      season, crop, variety: varieties.join(', '), varieties, qty,
+      cost: total * 2400, advance: total * 2400 * 0.25
+    };
     this.navigate('demand-preview');
+  },
+
+  // "120 Quintal" for one variety; "120 Quintal each × 3 varieties = 360 Quintal" for several.
+  _demandQtyText(d) {
+    const n = d.varieties ? d.varieties.length : 1;
+    return n > 1 ? `${d.qty} Quintal each × ${n} varieties = ${d.qty * n} Quintal` : `${d.qty} Quintal`;
+  },
+
+  // Next free demand id (max existing number + 1), so ids stay unique even when several demands are created at once.
+  _nextDemandId() {
+    const nums = this.state.demands.map(x => parseInt(String(x.id).replace(/\D/g, '').slice(-3), 10)).filter(n => !isNaN(n));
+    const next = (nums.length ? Math.max(...nums) : 0) + 1;
+    return 'DEM-2024-' + String(next).padStart(3, '0');
   },
 
   // ============================
@@ -1911,7 +1915,7 @@ const App = {
           <div class="preview-item"><label>Season</label><span>${d.season} 2024-25</span></div>
           <div class="preview-item"><label>Crop</label><span>${d.crop}</span></div>
           <div class="preview-item"><label>Variety</label><span>${d.variety}</span></div>
-          <div class="preview-item"><label>${isFull ? 'Quantity' : 'Requested Quantity'}</label><span>${d.qty} Quintal</span></div>
+          <div class="preview-item"><label>${isFull ? 'Quantity' : 'Requested Quantity'}</label><span>${this._demandQtyText(d)}</span></div>
           <div class="preview-item"><label>Available Stock</label><span style="color:#2E7D32;">850 Qt ✓</span></div>
           <div class="preview-item"><label>Rate per Quintal</label><span>₹${rate.toLocaleString()}/-</span></div>
           <div class="preview-item"><label>Total Members</label><span>65</span></div>
@@ -1969,7 +1973,7 @@ const App = {
         </div>
         <div class="invoice-row"><span class="label">Society</span><span class="value">Rampur Krishi Samiti</span></div>
         <div class="invoice-row"><span class="label">Crop / Variety</span><span class="value">${d.crop} / ${d.variety}</span></div>
-        <div class="invoice-row"><span class="label">Quantity</span><span class="value">${d.qty} Quintal</span></div>
+        <div class="invoice-row"><span class="label">Quantity</span><span class="value">${this._demandQtyText(d)}</span></div>
         <div class="invoice-row"><span class="label">Rate</span><span class="value">₹${rate.toLocaleString()} per Qt</span></div>
         <div class="invoice-row"><span class="label">Total Amount</span><span class="value">₹${d.cost.toLocaleString()}</span></div>
         ${isFull
@@ -2032,11 +2036,16 @@ const App = {
       this.showPaymentSuccess('full');
       return;
     }
-    this.state.demands.unshift({
-      id: `DEM-2024-00${this.state.demands.length + 1}`,
-      date: new Date().toISOString().split('T')[0],
-      season: d.season, crop: d.crop, variety: d.variety, qty: d.qty, rate: 2400,
-      payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Under Review'
+    // One demand per selected variety; the same quantity/season/crop apply to each.
+    const varieties = (d.varieties && d.varieties.length) ? d.varieties : [d.variety];
+    const date = new Date().toISOString().split('T')[0];
+    this.state._lastDemandIds = varieties.map(variety => {
+      const id = this._nextDemandId();
+      this.state.demands.unshift({
+        id, date, season: d.season, crop: d.crop, variety, qty: d.qty, rate: 2400,
+        payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Under Review'
+      });
+      return id;
     });
     this.showPaymentSuccess('advance');
   },
@@ -4089,7 +4098,7 @@ const App = {
     };
     const cropBase = { Soybean: 2400, Wheat: 2200, Gram: 2600, Mustard: 2800, Paddy: 2100, Maize: 1900 };
     const rate = base[variety] || cropBase[crop] || 2400;
-    const mult = seedType === 'Breeder' ? 1.3 : seedType === 'Foundation' ? 1.15 : 1.0; // Certified = base
+    const mult = seedType === 'Breeder' ? 1.3 : seedType === 'Foundation' ? 1.15 : 1.0; // Certified / Hybrid = base rate
     return Math.round(rate * mult);
   },
 
@@ -4098,19 +4107,37 @@ const App = {
     const crops = ['Soybean', 'Wheat', 'Gram', 'Mustard', 'Paddy', 'Maize'];
     return crops.map(c => `<option value="${c}" ${c === sel ? 'selected' : ''}>${c}</option>`).join('');
   },
-  _distVarietyOpts(sel) {
-    const vs = ['JS-335', 'GW-322', 'HD-2967', 'JG-315', 'Pusa Bold', 'IR-64', 'Swarna', 'MTU-7029', 'Pusa Basmati-1'];
-    return vs.map(v => `<option value="${v}" ${v === sel ? 'selected' : ''}>${v}</option>`).join('');
+  // Variety multi-select for the distribution form (crop-wise).
+  _distMs(crop) {
+    return this.msRender('nd-variety', this.varietiesForCrop(crop), !crop, 'Select Crop first', () => this.recalcDistAmount());
+  },
+  // Crop changed → rebuild the variety list in place (stale selection is dropped) and refresh the amount.
+  onDistCropChange() {
+    const crop = document.getElementById('nd-crop')?.value || '';
+    this._distMs(crop);
+    this._msRefresh('nd-variety');
+    this.recalcDistAmount();
+  },
+  // "₹3,120 / Qt" for one rate, "₹2,860 – ₹3,120 / Qt" when the selected varieties are priced differently.
+  _distRateText(seedType, crop, varieties) {
+    if (!varieties.length) return '—';
+    const rates = varieties.map(v => this._distPrice(seedType, crop, v));
+    const lo = Math.min(...rates), hi = Math.max(...rates);
+    return lo === hi ? '₹' + lo.toLocaleString() + ' / Qt' : '₹' + lo.toLocaleString() + ' – ₹' + hi.toLocaleString() + ' / Qt';
   },
 
   // ── Open / close the new-distribution form ──
   openNewDistForm() {
     this.state.showNewDistForm = true;
     this.state.newDistMemberId = this.state.members.find(m => m.status === 'Active')?.id || '';
+    // Default selection matches the form's default crop (Soybean).
+    this.msReset('nd-variety');
+    this.msSetValues('nd-variety', ['JS-335']);
     this.render();
   },
   closeNewDistForm() {
     this.state.showNewDistForm = false;
+    this.msReset('nd-variety');
     this.render();
   },
 
@@ -4131,13 +4158,13 @@ const App = {
   recalcDistAmount() {
     const seedType = document.getElementById('nd-seedtype')?.value || 'Breeder';
     const crop = document.getElementById('nd-crop')?.value || '';
-    const variety = document.getElementById('nd-variety')?.value || '';
+    const varieties = this.msValues('nd-variety');
     const qty = parseFloat(document.getElementById('nd-qty')?.value) || 0;
-    const rate = this._distPrice(seedType, crop, variety);
-    const total = Math.round(rate * qty);
+    // Total = sum over the selected varieties of (rate × quantity); the same quantity applies to each variety.
+    const total = varieties.reduce((s, v) => s + Math.round(this._distPrice(seedType, crop, v) * qty), 0);
     const rateEl = document.getElementById('nd-rate');
     const amtEl = document.getElementById('nd-amount');
-    if (rateEl) rateEl.value = '₹' + rate.toLocaleString() + ' / Qt';
+    if (rateEl) rateEl.value = this._distRateText(seedType, crop, varieties);
     if (amtEl) amtEl.value = '₹' + total.toLocaleString();
   },
 
@@ -4148,8 +4175,9 @@ const App = {
     const sm = members.find(m => m.id === selId) || members[0] || {};
     const finYear = this._currentFinYear();
     const today = new Date().toISOString().split('T')[0];
-    const seedType = 'Breeder', crop = 'Soybean', variety = 'JS-335';
-    const rate = this._distPrice(seedType, crop, variety);
+    const seedType = 'Breeder', crop = 'Soybean';
+    const varMs = this._distMs(crop);
+    const rateText = this._distRateText(seedType, crop, this.msValues('nd-variety'));
     return `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
       <div>
@@ -4188,20 +4216,19 @@ const App = {
           <div class="form-group">
             <label>Seed Type *</label>
             <select class="form-control" id="nd-seedtype" onchange="App.recalcDistAmount()">
-              <option>Breeder</option><option>Foundation</option><option>Certified</option>
+              <option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option>
             </select>
           </div>
           <div class="form-group">
             <label>Crop *</label>
-            <select class="form-control" id="nd-crop" onchange="App.recalcDistAmount()">
+            <select class="form-control" id="nd-crop" onchange="App.onDistCropChange()">
               ${this._distCropOpts(crop)}
             </select>
           </div>
           <div class="form-group">
             <label>Variety *</label>
-            <select class="form-control" id="nd-variety" onchange="App.recalcDistAmount()">
-              ${this._distVarietyOpts(variety)}
-            </select>
+            ${varMs}
+            ${this.msHint()}
           </div>
           <div class="form-group">
             <label>Quantity (Quintal) *</label>
@@ -4209,7 +4236,7 @@ const App = {
           </div>
           <div class="form-group">
             <label>Rate</label>
-            <input type="text" class="form-control" id="nd-rate" value="₹${rate.toLocaleString()} / Qt" readonly style="background:#f5f5f5;"/>
+            <input type="text" class="form-control" id="nd-rate" value="${rateText}" readonly style="background:#f5f5f5;"/>
           </div>
           <div class="form-group">
             <label>Total Amount (auto)</label>
@@ -4238,22 +4265,29 @@ const App = {
     const season = document.getElementById('nd-season')?.value || 'Kharif';
     const seedType = document.getElementById('nd-seedtype')?.value || 'Breeder';
     const crop = document.getElementById('nd-crop')?.value || 'Soybean';
-    const variety = document.getElementById('nd-variety')?.value || 'JS-335';
+    const varieties = this.msValues('nd-variety');
     const qty = parseFloat(document.getElementById('nd-qty')?.value);
     const finYear = document.getElementById('nd-finyear')?.value || this._currentFinYear();
     const date = document.getElementById('nd-date')?.value || new Date().toISOString().split('T')[0];
+    if (!varieties.length) { this.showToast('Please select at least one variety'); return; }
     if (!qty || qty <= 0) { this.showToast('Please enter a valid quantity'); return; }
-    const rate = this._distPrice(seedType, crop, variety);
-    const amount = Math.round(rate * qty);
-    const rNo = 'RCP-' + String(this.state.distributionRecords.length + 1).padStart(3, '0');
-    const record = {
-      receiptNo: rNo, memberId: m.id, memberName: m.name, mobile: m.mobile, village: m.village,
-      finYear, season, seedType, crop, variety, qty, rate, amount, date,
-      status: 'Completed', societyName: 'Rampur Krishi Samiti', societyCode: 'SOC-001',
-    };
-    this.state.distributionRecords.push(record);
+    // One distribution record per selected variety, each with the same quantity.
+    const records = varieties.map(variety => {
+      const rate = this._distPrice(seedType, crop, variety);
+      const record = {
+        receiptNo: 'RCP-' + String(this.state.distributionRecords.length + 1).padStart(3, '0'),
+        memberId: m.id, memberName: m.name, mobile: m.mobile, village: m.village,
+        finYear, season, seedType, crop, variety, qty, rate, amount: Math.round(rate * qty), date,
+        status: 'Completed', societyName: 'Rampur Krishi Samiti', societyCode: 'SOC-001',
+      };
+      this.state.distributionRecords.push(record);
+      return record;
+    });
     this.state.showNewDistForm = false;
-    this.state.receiptPopup = record;
+    this.msReset('nd-variety');
+    // A receipt popup only fits a single record; for several varieties return to the list instead.
+    if (records.length === 1) this.state.receiptPopup = records[0];
+    else this.showToast(records.length + ' distributions recorded (' + varieties.join(', ') + ').');
     this.render();
   },
 

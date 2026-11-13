@@ -13,32 +13,32 @@
 if (!App.state.sm) {
   App.state.sm = {
     seasons: [
-      { id: 'SEA-01', name: 'Kharif 2026', code: 'KH26', desc: 'Monsoon crop season', status: 'Active', created: '2026-01-01' },
-      { id: 'SEA-02', name: 'Rabi 2025-26', code: 'RB2526', desc: 'Winter crop season', status: 'Active', created: '2025-10-01' },
-      { id: 'SEA-03', name: 'Summer 2026', code: 'SM26', desc: 'Zaid crop season', status: 'Active', created: '2026-02-01' }
+      { id: 'SEA-01', name: 'Kharif', code: 'KH', desc: 'Monsoon crop season', status: 'Active', created: '2026-01-01' },
+      { id: 'SEA-02', name: 'Rabi', code: 'RB', desc: 'Winter crop season', status: 'Active', created: '2025-10-01' },
+      { id: 'SEA-03', name: 'Summer', code: 'SM', desc: 'Zaid crop season', status: 'Active', created: '2026-02-01' }
     ],
     crops: [
-      { id: 'CRP-01', name: 'Paddy', code: 'PDY', seasons: ['Kharif 2026'], desc: 'Rice crop', status: 'Active', created: '2026-01-05' },
-      { id: 'CRP-02', name: 'Wheat', code: 'WHT', seasons: ['Rabi 2025-26'], desc: 'Wheat crop', status: 'Active', created: '2026-01-05' },
-      { id: 'CRP-03', name: 'Soybean', code: 'SYB', seasons: ['Kharif 2026'], desc: 'Oilseed crop', status: 'Active', created: '2026-01-05' },
-      { id: 'CRP-04', name: 'Gram', code: 'GRM', seasons: ['Rabi 2025-26'], desc: 'Pulse crop', status: 'Active', created: '2026-01-05' },
-      { id: 'CRP-05', name: 'Mustard', code: 'MST', seasons: ['Rabi 2025-26'], desc: 'Oilseed crop', status: 'Active', created: '2026-01-05' },
-      { id: 'CRP-06', name: 'Maize', code: 'MZE', seasons: ['Kharif 2026', 'Summer 2026'], desc: 'Cereal crop', status: 'Active', created: '2026-01-05' }
+      { id: 'CRP-01', name: 'Paddy', code: 'PDY', seasons: ['Kharif'], desc: 'Rice crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-02', name: 'Wheat', code: 'WHT', seasons: ['Rabi'], desc: 'Wheat crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-03', name: 'Soybean', code: 'SYB', seasons: ['Kharif'], desc: 'Oilseed crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-04', name: 'Gram', code: 'GRM', seasons: ['Rabi'], desc: 'Pulse crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-05', name: 'Mustard', code: 'MST', seasons: ['Rabi'], desc: 'Oilseed crop', status: 'Active', created: '2026-01-05' },
+      { id: 'CRP-06', name: 'Maize', code: 'MZE', seasons: ['Kharif', 'Summer'], desc: 'Cereal crop', status: 'Active', created: '2026-01-05' }
     ],
     varieties: [
-      { id: 'VAR-001', name: 'IR-64', code: 'IR64', crop: 'Paddy', season: 'Kharif 2026', desc: 'Medium-duration paddy', status: 'Active', created: '2026-01-10' },
-      { id: 'VAR-002', name: 'MTU-7029', code: 'MTU7029', crop: 'Paddy', season: 'Kharif 2026', desc: 'Swarna variety', status: 'Active', created: '2026-01-12' },
-      { id: 'VAR-003', name: 'GW-322', code: 'GW322', crop: 'Wheat', season: 'Rabi 2025-26', desc: 'High yield wheat', status: 'Active', created: '2026-01-15' },
-      { id: 'VAR-004', name: 'HD-2967', code: 'HD2967', crop: 'Wheat', season: 'Rabi 2025-26', desc: 'Bread wheat', status: 'Active', created: '2026-01-16' },
-      { id: 'VAR-005', name: 'JS-335', code: 'JS335', crop: 'Soybean', season: 'Kharif 2026', desc: 'Standard soybean', status: 'Active', created: '2026-01-18' },
-      { id: 'VAR-006', name: 'JG-315', code: 'JG315', crop: 'Gram', season: 'Rabi 2025-26', desc: 'Desi gram', status: 'Active', created: '2026-01-20' },
-      { id: 'VAR-007', name: 'Pusa Bold', code: 'PBOLD', crop: 'Mustard', season: 'Rabi 2025-26', desc: 'Popular mustard', status: 'Active', created: '2026-01-22' }
+      { id: 'VAR-001', name: 'IR-64', code: 'IR64', crop: 'Paddy', season: 'Kharif', desc: 'Medium-duration paddy', status: 'Active', created: '2026-01-10' },
+      { id: 'VAR-002', name: 'MTU-7029', code: 'MTU7029', crop: 'Paddy', season: 'Kharif', desc: 'Swarna variety', status: 'Active', created: '2026-01-12' },
+      { id: 'VAR-003', name: 'GW-322', code: 'GW322', crop: 'Wheat', season: 'Rabi', desc: 'High yield wheat', status: 'Active', created: '2026-01-15' },
+      { id: 'VAR-004', name: 'HD-2967', code: 'HD2967', crop: 'Wheat', season: 'Rabi', desc: 'Bread wheat', status: 'Active', created: '2026-01-16' },
+      { id: 'VAR-005', name: 'JS-335', code: 'JS335', crop: 'Soybean', season: 'Kharif', desc: 'Standard soybean', status: 'Active', created: '2026-01-18' },
+      { id: 'VAR-006', name: 'JG-315', code: 'JG315', crop: 'Gram', season: 'Rabi', desc: 'Desi gram', status: 'Active', created: '2026-01-20' },
+      { id: 'VAR-007', name: 'Pusa Bold', code: 'PBOLD', crop: 'Mustard', season: 'Rabi', desc: 'Popular mustard', status: 'Active', created: '2026-01-22' }
     ],
     subVarieties: [
-      { id: 'SUB-001', name: 'IR-64 Premium', code: 'IR64-PR', variety: 'IR-64', crop: 'Paddy', season: 'Kharif 2026', desc: 'Premium grade', status: 'Active', created: '2026-02-01' },
-      { id: 'SUB-002', name: 'IR-64 Standard', code: 'IR64-ST', variety: 'IR-64', crop: 'Paddy', season: 'Kharif 2026', desc: 'Standard grade', status: 'Active', created: '2026-02-02' },
-      { id: 'SUB-003', name: 'GW-322 Bold', code: 'GW322-BD', variety: 'GW-322', crop: 'Wheat', season: 'Rabi 2025-26', desc: 'Bold grain', status: 'Active', created: '2026-02-05' },
-      { id: 'SUB-004', name: 'JS-335 Improved', code: 'JS335-IM', variety: 'JS-335', crop: 'Soybean', season: 'Kharif 2026', desc: 'Improved yield', status: 'Active', created: '2026-02-08' }
+      { id: 'SUB-001', name: 'IR-64 Premium', code: 'IR64-PR', variety: 'IR-64', crop: 'Paddy', season: 'Kharif', desc: 'Premium grade', status: 'Active', created: '2026-02-01' },
+      { id: 'SUB-002', name: 'IR-64 Standard', code: 'IR64-ST', variety: 'IR-64', crop: 'Paddy', season: 'Kharif', desc: 'Standard grade', status: 'Active', created: '2026-02-02' },
+      { id: 'SUB-003', name: 'GW-322 Bold', code: 'GW322-BD', variety: 'GW-322', crop: 'Wheat', season: 'Rabi', desc: 'Bold grain', status: 'Active', created: '2026-02-05' },
+      { id: 'SUB-004', name: 'JS-335 Improved', code: 'JS335-IM', variety: 'JS-335', crop: 'Soybean', season: 'Kharif', desc: 'Improved yield', status: 'Active', created: '2026-02-08' }
     ],
     financialYears: [
       { id: 'FY-01', name: '2025-2026', code: 'FY2526', startDate: '2025-04-01', endDate: '2026-03-31', status: 'Active', created: '2025-04-01' },
@@ -46,20 +46,20 @@ if (!App.state.sm) {
       { id: 'FY-03', name: '2024-2025', code: 'FY2425', startDate: '2024-04-01', endDate: '2025-03-31', status: 'Active', created: '2024-04-01' }
     ],
     inventory: [
-      { id: 'INV-001', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1000, inward: 500, outward: 200, adjustment: 0, unit: 'KG', updated: '2026-03-01' },
-      { id: 'INV-002', season: 'Rabi 2025-26', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 800, inward: 300, outward: 350, adjustment: -20, unit: 'KG', updated: '2026-03-02' },
-      { id: 'INV-003', season: 'Kharif 2026', crop: 'Soybean', variety: 'JS-335', subVariety: 'JS-335 Improved', lot: 'LOT-S-001', opening: 500, inward: 250, outward: 0, adjustment: 0, unit: 'KG', updated: '2026-03-03' },
-      { id: 'INV-004', season: 'Rabi 2025-26', crop: 'Gram', variety: 'JG-315', subVariety: '', lot: 'LOT-G-001', opening: 400, inward: 0, outward: 150, adjustment: 10, unit: 'KG', updated: '2026-03-04' },
-      { id: 'INV-005', season: 'Rabi 2025-26', crop: 'Mustard', variety: 'Pusa Bold', subVariety: '', lot: 'LOT-M-001', opening: 300, inward: 100, outward: 80, adjustment: 0, unit: 'KG', updated: '2026-03-05' }
+      { id: 'INV-001', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1000, inward: 500, outward: 200, adjustment: 0, unit: 'KG', updated: '2026-03-01' },
+      { id: 'INV-002', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 800, inward: 300, outward: 350, adjustment: -20, unit: 'KG', updated: '2026-03-02' },
+      { id: 'INV-003', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', subVariety: 'JS-335 Improved', lot: 'LOT-S-001', opening: 500, inward: 250, outward: 0, adjustment: 0, unit: 'KG', updated: '2026-03-03' },
+      { id: 'INV-004', season: 'Rabi', crop: 'Gram', variety: 'JG-315', subVariety: '', lot: 'LOT-G-001', opening: 400, inward: 0, outward: 150, adjustment: 10, unit: 'KG', updated: '2026-03-04' },
+      { id: 'INV-005', season: 'Rabi', crop: 'Mustard', variety: 'Pusa Bold', subVariety: '', lot: 'LOT-M-001', opening: 300, inward: 100, outward: 80, adjustment: 0, unit: 'KG', updated: '2026-03-05' }
     ],
     ledger: [
-      { id: 'LG-001', date: '2026-03-01', type: 'Opening Stock', ref: 'OPEN-001', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 0, inward: 1000, outward: 0, adj: 0, closing: 1000, remarks: 'Season opening' },
-      { id: 'LG-002', date: '2026-03-05', type: 'Inward', ref: 'IN-001', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1000, inward: 500, outward: 0, adj: 0, closing: 1500, remarks: 'Received from supplier' },
-      { id: 'LG-003', date: '2026-03-10', type: 'Outward', ref: 'OUT-001', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1500, inward: 0, outward: 200, adj: 0, closing: 1300, remarks: 'Dispatched to society' },
-      { id: 'LG-004', date: '2026-03-02', type: 'Opening Stock', ref: 'OPEN-002', season: 'Rabi 2025-26', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 0, inward: 800, outward: 0, adj: 0, closing: 800, remarks: 'Season opening' },
-      { id: 'LG-005', date: '2026-03-08', type: 'Inward', ref: 'IN-002', season: 'Rabi 2025-26', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 800, inward: 300, outward: 0, adj: 0, closing: 1100, remarks: 'Received' },
-      { id: 'LG-006', date: '2026-03-12', type: 'Outward', ref: 'OUT-002', season: 'Rabi 2025-26', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 1100, inward: 0, outward: 350, adj: 0, closing: 750, remarks: 'Dispatched' },
-      { id: 'LG-007', date: '2026-03-15', type: 'Adjustment Decrease', ref: 'ADJ-001', season: 'Rabi 2025-26', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 750, inward: 0, outward: 0, adj: -20, closing: 730, remarks: 'Damaged write-off' }
+      { id: 'LG-001', date: '2026-03-01', type: 'Opening Stock', ref: 'OPEN-001', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 0, inward: 1000, outward: 0, adj: 0, closing: 1000, remarks: 'Season opening' },
+      { id: 'LG-002', date: '2026-03-05', type: 'Inward', ref: 'IN-001', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1000, inward: 500, outward: 0, adj: 0, closing: 1500, remarks: 'Received from supplier' },
+      { id: 'LG-003', date: '2026-03-10', type: 'Outward', ref: 'OUT-001', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', subVariety: 'IR-64 Premium', lot: 'LOT-P-001', opening: 1500, inward: 0, outward: 200, adj: 0, closing: 1300, remarks: 'Dispatched to society' },
+      { id: 'LG-004', date: '2026-03-02', type: 'Opening Stock', ref: 'OPEN-002', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 0, inward: 800, outward: 0, adj: 0, closing: 800, remarks: 'Season opening' },
+      { id: 'LG-005', date: '2026-03-08', type: 'Inward', ref: 'IN-002', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 800, inward: 300, outward: 0, adj: 0, closing: 1100, remarks: 'Received' },
+      { id: 'LG-006', date: '2026-03-12', type: 'Outward', ref: 'OUT-002', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 1100, inward: 0, outward: 350, adj: 0, closing: 750, remarks: 'Dispatched' },
+      { id: 'LG-007', date: '2026-03-15', type: 'Adjustment Decrease', ref: 'ADJ-001', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', subVariety: 'GW-322 Bold', lot: 'LOT-W-001', opening: 750, inward: 0, outward: 0, adj: -20, closing: 730, remarks: 'Damaged write-off' }
     ],
     // UI state
     filter: { season: '', crop: '', variety: '', subVariety: '', status: '', search: '', type: '' },
@@ -104,12 +104,12 @@ App._smVarietyNameOpts = function (sel) {
   if (sel && names.indexOf(sel) === -1) names.unshift(sel);
   return names.map(function (n) { return '<option' + (sel === n ? ' selected' : '') + '>' + n + '</option>'; }).join('');
 };
-// Financial Year options from 2021-2022 up to the current FY (Indian FY: Apr-Mar), newest first.
+// Procurement Year options from 2021-2022 up to the current FY (Indian FY: Apr-Mar), newest first.
 App._smFinYearRangeOpts = function (sel) {
   var now = new Date();
   // FY starting year: Jan-Mar belongs to the previous FY start.
   var startYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
-  var opts = '<option value="">Select Financial Year</option>';
+  var opts = '<option value="">Select Procurement Year</option>';
   var selected = false;
   for (var y = startYear; y >= 2021; y--) {
     var name = y + '-' + (y + 1);
@@ -161,7 +161,7 @@ App._smSubRefresh = function (selectId, varieties) {
       + ni('dashboard', 'Stock Dashboard', 'sm-dashboard')
       + ni('event', 'Season Master', 'sm-season', true)
       + ni('grass', 'Crop Master', 'sm-crop', true)
-      + ni('date_range', 'Financial Year', 'sm-finyear', true)
+      + ni('date_range', 'Procurement Year', 'sm-finyear', true)
       + ni('category', 'Variety Master', 'sm-variety', true)
       + ni('swap_horiz', 'Seed Buying/Selling Line Management', 'admin-seed-lines', true)
       + ni('inventory_2', 'Seed Packaging Management', 'admin-packaging', true)
@@ -217,7 +217,7 @@ App._smSubRefresh = function (selectId, varieties) {
     'sm-subvariety': 'Sub-Variety Master', 'sm-subvariety-form': 'Sub-Variety Master',
     'sm-season': 'Season Master', 'sm-season-form': 'Season Master',
     'sm-crop': 'Crop Master', 'sm-crop-form': 'Crop Master',
-    'sm-finyear': 'Financial Year Master', 'sm-finyear-form': 'Financial Year Master',
+    'sm-finyear': 'Procurement Year Master', 'sm-finyear-form': 'Procurement Year Master',
     'sm-reports': 'Stock Reports'
   };
   App.renderHeader = function () {
@@ -293,7 +293,7 @@ App.smInventoryForm = function () {
     + '<div class="card"><div class="card-body">'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">inventory_2</span> Stock Classification</div>'
     + '<div class="form-grid">'
-    + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" id="if-finyear"><option value="">Select Financial Year</option>' + App._smFinYearOpts(r ? r.finYear : '') + '</select></div>'
+    + '<div class="form-group"><label>Procurement Year <span style="color:#F44336">*</span></label><select class="form-control" id="if-finyear"><option value="">Select Procurement Year</option>' + App._smFinYearOpts(r ? r.finYear : '') + '</select></div>'
     + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" id="if-season" onchange="App.state.sm.filter.season=this.value;App.state.sm.filter.crop=\'\';App.state.sm.filter.variety=\'\';App.render()"><option value="">Select Season</option>' + App._smSeasonOpts(season) + '</select></div>'
     + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="if-crop" onchange="App.state.sm.filter.crop=this.value;App.state.sm.filter.variety=\'\';App.render()"><option value="">Select Crop</option>' + App._smCropOpts(season, crop) + '</select></div>'
     + '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>' + (mode === 'edit'
@@ -320,7 +320,7 @@ App.smSaveInventory = function () {
   var varieties = isEdit ? [g('if-variety')].filter(Boolean) : App.msValues('if-variety');
   var opening = parseFloat(g('if-opening'));
   if (!finYear || !season || !crop || !varieties.length || !lot || isNaN(opening) || opening < 0) {
-    alert('Please fill Financial Year, Season, Crop, Variety, Lot/Batch and a valid Opening Quantity.'); return;
+    alert('Please fill Procurement Year, Season, Crop, Variety, Lot/Batch and a valid Opening Quantity.'); return;
   }
   var unit = g('if-unit') || 'KG', inward = parseFloat(g('if-inward')) || 0;
   var existingRec = isEdit ? SM.inventory.find(function (x) { return x.id === SM.editId; }) : null;
@@ -709,8 +709,8 @@ App.smSeasonForm = function () {
     + '<div class="card"><div class="card-body">'
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">event</span> Season Details</div>'
     + '<div class="form-grid">'
-    + '<div class="form-group"><label>Season Name <span style="color:#F44336">*</span></label><input class="form-control" id="ss-name" value="' + (r ? r.name : '') + '" placeholder="e.g. Kharif 2026"></div>'
-    + '<div class="form-group"><label>Season Code <span style="color:#F44336">*</span></label><input class="form-control" id="ss-code" value="' + (r ? r.code : '') + '" placeholder="e.g. KH26" style="text-transform:uppercase;"></div>'
+    + '<div class="form-group"><label>Season Name <span style="color:#F44336">*</span></label><select class="form-control" id="ss-name"><option value="">Select Season</option>' + ['Kharif', 'Rabi', 'Summer'].map(function (n) { return '<option' + (r && r.name === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div>'
+    + '<div class="form-group"><label>Season Code <span style="color:#F44336">*</span></label><input class="form-control" id="ss-code" value="' + (r ? r.code : '') + '" placeholder="e.g. KH" style="text-transform:uppercase;"></div>'
     + '<div class="form-group" style="grid-column:1/-1;"><label>Description</label><textarea class="form-control" id="ss-desc" rows="2">' + (r ? (r.desc || '') : '') + '</textarea></div>'
     + '<div class="form-group"><label>Status</label><select class="form-control" id="ss-status"><option value="Active"' + (r && r.status === 'Active' ? ' selected' : '') + '>Active</option><option value="Inactive"' + (r && r.status === 'Inactive' ? ' selected' : '') + '>Inactive</option></select></div>'
     + '</div></div>'
@@ -809,11 +809,11 @@ App.smSaveCrop = function () {
 // ═══════════════════════════════════════════════════════════
 App.smFinYearList = function () {
   var rows = SM.financialYears;
-  return '<div class="page-header"><h1>Financial Year Master</h1><p>Manage financial years</p></div>'
-    + '<div class="card"><div class="card-header"><h3>Financial Years (' + rows.length + ')</h3>'
-    + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-finyear-form\')"><span class="material-icons">add</span> Create Financial Year</button>'
+  return '<div class="page-header"><h1>Procurement Year Master</h1><p>Manage procurement years</p></div>'
+    + '<div class="card"><div class="card-header"><h3>Procurement Years (' + rows.length + ')</h3>'
+    + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-finyear-form\')"><span class="material-icons">add</span> Create Procurement Year</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Sr.</th><th>Financial Year</th><th>Code</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
+    + '<thead><tr><th>Sr.</th><th>Procurement Year</th><th>Code</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
     + rows.map(function (r, i) {
       return '<tr><td>' + (i + 1) + '</td><td><b>' + r.name + '</b></td><td>' + (r.code || '—') + '</td><td style="font-size:0.8rem;">' + (r.startDate || '') + '</td><td style="font-size:0.8rem;">' + (r.endDate || '') + '</td>'
         + '<td>' + App._smBdg(r.status) + '</td><td style="font-size:0.78rem;">' + (r.created || '') + '</td>'
@@ -826,16 +826,16 @@ App.smFinYearList = function () {
 };
 App.smToggleFinYear = function (id) {
   var r = SM.financialYears.find(function (fy) { return fy.id === id; });
-  if (r) { r.status = r.status === 'Active' ? 'Inactive' : 'Active'; App.showToast('Financial Year status updated.'); App.render(); }
+  if (r) { r.status = r.status === 'Active' ? 'Inactive' : 'Active'; App.showToast('Procurement Year status updated.'); App.render(); }
 };
 App.smFinYearForm = function () {
   var mode = SM.formMode || 'add';
   var r = mode === 'edit' ? SM.financialYears.find(function (fy) { return fy.id === SM.editId; }) : null;
-  return '<div class="page-header"><h1>' + (mode === 'edit' ? 'Edit' : 'Create') + ' Financial Year</h1></div>'
+  return '<div class="page-header"><h1>' + (mode === 'edit' ? 'Edit' : 'Create') + ' Procurement Year</h1></div>'
     + '<div class="card"><div class="card-body">'
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">date_range</span> Financial Year Details</div>'
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">date_range</span> Procurement Year Details</div>'
     + '<div class="form-grid">'
-    + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" id="fy-name">' + App._smFinYearRangeOpts(r ? r.name : '') + '</select></div>'
+    + '<div class="form-group"><label>Procurement Year <span style="color:#F44336">*</span></label><select class="form-control" id="fy-name">' + App._smFinYearRangeOpts(r ? r.name : '') + '</select></div>'
     + '<div class="form-group"><label>Code <span style="color:#F44336">*</span></label><input class="form-control" id="fy-code" value="' + (r ? r.code : '') + '" placeholder="e.g. FY2627" style="text-transform:uppercase;"></div>'
     + '<div class="form-group"><label>Start Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="fy-start" value="' + (r ? r.startDate : '') + '"></div>'
     + '<div class="form-group"><label>End Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="fy-end" value="' + (r ? r.endDate : '') + '"></div>'
@@ -851,15 +851,15 @@ App.smSaveFinYear = function () {
   if (!name || !code || !start || !end) { alert('Please fill all required fields.'); return; }
   if (new Date(end) <= new Date(start)) { alert('End Date must be after Start Date.'); return; }
   var existing = SM.financialYears.filter(function (fy) { return fy.id !== SM.editId; });
-  if (existing.some(function (fy) { return (fy.code || '').toUpperCase() === code; })) { alert('Financial Year Code "' + code + '" already exists.'); return; }
-  if (existing.some(function (fy) { return fy.name.toLowerCase() === name.toLowerCase(); })) { alert('Financial Year "' + name + '" already exists.'); return; }
+  if (existing.some(function (fy) { return (fy.code || '').toUpperCase() === code; })) { alert('Procurement Year Code "' + code + '" already exists.'); return; }
+  if (existing.some(function (fy) { return fy.name.toLowerCase() === name.toLowerCase(); })) { alert('Procurement Year "' + name + '" already exists.'); return; }
   if (SM.formMode === 'edit') {
     var r = SM.financialYears.find(function (fy) { return fy.id === SM.editId; });
     if (r) { r.name = name; r.code = code; r.startDate = start; r.endDate = end; r.status = g('fy-status'); }
-    App.showToast('Financial Year updated successfully.');
+    App.showToast('Procurement Year updated successfully.');
   } else {
     SM.financialYears.push({ id: App._smNextId(SM.financialYears, 'FY-'), name: name, code: code, startDate: start, endDate: end, status: g('fy-status') || 'Active', created: new Date().toISOString().split('T')[0] });
-    App.showToast('Financial Year created successfully.');
+    App.showToast('Procurement Year created successfully.');
   }
   App.navigate('sm-finyear');
 };

@@ -23,7 +23,7 @@ if (!App.state.stockEntry) {
 if (!App.state.stockEntries) {
   App.state.stockEntries = [
     {
-      id: 'SE-2026-001', seedType: 'Breeder Seed', season: 'Kharif 2026', crop: 'Paddy', variety: 'IR-64', seedClass: 'Breeder', sourceType: 'Production', availableQty: 1000, addQty: 500, unit: 'Quintal', minDemandQty: 50, minDemandUnit: 'Quintal', maxDemandQty: 300, maxDemandUnit: 'Quintal',
+      id: 'SE-2026-001', seedType: 'Breeder Seed', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', seedClass: 'Breeder', sourceType: 'Production', availableQty: 1000, addQty: 500, unit: 'Quintal', minDemandQty: 50, minDemandUnit: 'Quintal', maxDemandQty: 300, maxDemandUnit: 'Quintal',
       prodYear: '2026', prodDate: '2026-06-15', receiptDate: '2026-06-20', storage: 'Cold Storage A', warehouse: 'Central Warehouse, Bhopal',
       rack: 'R-12', quality: 'Approved', certStatus: 'Certified', germination: 92, purity: 98, moisture: 11,
       lab: 'State Seed Testing Lab, Bhopal', reportNo: 'TR-2026-001', reportDate: '2026-06-18',
@@ -32,7 +32,7 @@ if (!App.state.stockEntries) {
       remarks: 'Initial breeder seed production', status: 'Submitted', entryDate: '2026-06-20'
     },
     {
-      id: 'SE-2026-002', seedType: 'Foundation Seed', season: 'Rabi 2025-26', crop: 'Wheat', variety: 'GW-322',
+      id: 'SE-2026-002', seedType: 'Foundation Seed', season: 'Rabi', crop: 'Wheat', variety: 'GW-322',
       seedClass: 'Foundation I', sourceType: 'Procurement', availableQty: 800, addQty: 300, unit: 'Quintal', minDemandQty: 40, minDemandUnit: 'Quintal', maxDemandQty: 250, maxDemandUnit: 'Quintal',
       prodYear: '2025', prodDate: '2025-11-10', receiptDate: '2025-11-20', storage: 'Godown B', warehouse: 'Divisional Store, Jabalpur',
       rack: 'R-05', quality: 'Tested', certStatus: 'Under Process', germination: 88, purity: 97, moisture: 12,
@@ -41,7 +41,7 @@ if (!App.state.stockEntries) {
       documents: [], remarks: '', status: 'Approved', entryDate: '2025-11-20'
     },
     {
-      id: 'SE-2026-003', seedType: 'Certified Seed', season: 'Kharif 2026', crop: 'Soybean', variety: 'JS-335',
+      id: 'SE-2026-003', seedType: 'Certified Seed', season: 'Kharif', crop: 'Soybean', variety: 'JS-335',
       seedClass: 'Certified', sourceType: 'Production', availableQty: 500, addQty: 250, unit: 'Quintal', minDemandQty: 30, minDemandUnit: 'Quintal', maxDemandQty: 180, maxDemandUnit: 'Quintal',
       prodYear: '2026', prodDate: '2026-05-20', receiptDate: '2026-05-28', storage: 'Godown C', warehouse: 'Regional Depot, Indore',
       rack: 'R-08', quality: 'Pending Testing', certStatus: 'Not Certified', germination: 0, purity: 0, moisture: 0,
@@ -335,7 +335,7 @@ App.seRenderForm = function () {
     + '<div class="form-group"><label>Quantity to be Added <span style="color:#F44336">*</span></label><input type="number" class="form-control" value="' + (f.addQty || '') + '" placeholder="Enter quantity" oninput="App.seLive(\'addQty\',this.value)"><div class="se-err" id="err-addQty"></div></div>'
     + '<div class="form-group"><label>Total Stock</label><input class="form-control" id="se-total" value="' + App._seTotalLabel(f) + '" readonly style="background:#f5f5f5;font-weight:600;"></div>'
     + '<div class="form-group"><label>Unit <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'unit\',this.value)">' + seOpt(App._seUnits, f.unit, 'Select Unit') + '</select><div class="se-err" id="err-unit"></div></div>'
-    + '<div class="form-group"><label>Financial Year <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'finYear\',this.value)">' + seOpt(App._seFinYears(), f.finYear, 'Select Financial Year') + '</select><div class="se-err" id="err-finYear"></div></div>'
+    + '<div class="form-group"><label>Procurement Year <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'finYear\',this.value)">' + seOpt(App._seFinYears(), f.finYear, 'Select Procurement Year') + '</select><div class="se-err" id="err-finYear"></div></div>'
     + '<div class="form-group"><label>Production Date</label><input type="date" class="form-control" value="' + (f.prodDate || '') + '" oninput="App.seLive(\'prodDate\',this.value)"><div class="se-err" id="err-prodDate"></div></div>'
     // Min / Max demand quantity (per crop & variety) at the end of Stock Details
     + '<div class="form-group"><label>Min Demand Quantity (per crop &amp; variety)</label><input type="number" class="form-control" min="0" value="' + (f.minDemandQty || '') + '" placeholder="e.g. 50" oninput="App.seLive(\'minDemandQty\',this.value)"><div class="se-err" id="err-minDemandQty"></div></div>'
@@ -417,7 +417,7 @@ App._seValidate = function (draft) {
   var qty = Number(f.addQty);
   if (!f.addQty || isNaN(qty) || qty <= 0) errs.addQty = 'Quantity must be a number greater than 0.';
   if (!f.unit) errs.unit = 'Unit is required.';
-  if (!f.finYear) errs.finYear = 'Financial Year is required.';
+  if (!f.finYear) errs.finYear = 'Procurement Year is required.';
   // Dates
   var today = new Date().toISOString().split('T')[0];
   if (f.prodDate && f.prodDate > today) errs.prodDate = 'Production Date cannot be in the future.';

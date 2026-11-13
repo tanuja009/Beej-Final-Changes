@@ -11,26 +11,26 @@
 (function () {
   App.state.hybridAllocs = [
     {
-      id: 'HSA-001', season: 'Kharif 2024', variety: 'DKC-9144',
+      id: 'HSA-001', finYear: '2024-2025', season: 'Kharif', variety: 'DKC-9144',
       parentVariety: 'DMRH-202', society: 'Rampur Krishi Samiti',
       socCode: 'SOC-001', allocQty: 120, expectedProd: 480,
-      allocDate: '2024-05-10', lastDate: '2024-06-30',
+      allocDate: '2024-05-10',
       remarks: 'Priority allocation', status: 'Allocated',
       createdBy: 'Admin Sharma', createdAt: '2024-05-10', updatedAt: '2024-05-10'
     },
     {
-      id: 'HSA-002', season: 'Rabi 2024-25', variety: 'PAC-749',
+      id: 'HSA-002', finYear: '2024-2025', season: 'Rabi', variety: 'PAC-749',
       parentVariety: '', society: 'Sehora Kisan Sabha',
       socCode: 'SOC-002', allocQty: 80, expectedProd: 320,
-      allocDate: '2024-10-15', lastDate: '2024-12-15',
+      allocDate: '2024-10-15',
       remarks: '', status: 'Draft',
       createdBy: 'Admin Sharma', createdAt: '2024-10-15', updatedAt: '2024-10-15'
     },
     {
-      id: 'HSA-003', season: 'Rabi 2024-25', variety: 'NK-6240',
+      id: 'HSA-003', finYear: '2024-2025', season: 'Rabi', variety: 'NK-6240',
       parentVariety: 'R-301', society: 'Bargaon Beej Samiti',
       socCode: 'SOC-003', allocQty: 60, expectedProd: 240,
-      allocDate: '2024-11-01', lastDate: '2025-01-31',
+      allocDate: '2024-11-01',
       remarks: '', status: 'Draft',
       createdBy: 'Admin Sharma', createdAt: '2024-11-01', updatedAt: '2024-11-01'
     },
@@ -38,29 +38,26 @@
 
   App.state.fcSeedStock = [
     {
-      id: 'FCS-001', season: 'Kharif 2024', category: 'Foundation',
-      variety: 'GW-322', breederLotNo: 'BL-2024-001',
-      producedQty: 500, availableQty: 380, processingDate: '2024-07-15',
-      qualityStatus: 'Passed', certNumber: 'CERT-MP-001', certDate: '2024-08-01',
-      packagingQty: 40, storageLocation: 'Warehouse A, Rack 3',
-      remarks: 'First batch', societyId: 'SOC-001',
-      createdBy: 'Ramesh Verma', createdAt: '2024-07-15', updatedAt: '2024-08-01'
+      id: 'FCS-001', memberId: 'MBR-001', memberName: 'Ramesh Kumar', seedType: 'Foundation', finYear: '2024-2025', season: 'Kharif',
+      crop: 'Soybean', variety: 'JS-335', allocDate: '2024-06-20', procDate: '2024-10-25', unit: 'Quintal', allocQty: 2.5, produceQty: 18,
+      activeStatus: 'Active', createdBy: 'Ramesh Verma', createdAt: '2024-06-20', updatedAt: '2024-10-25'
     },
     {
-      id: 'FCS-002', season: 'Rabi 2024-25', category: 'Certified',
-      variety: 'JG-315', breederLotNo: 'BL-2024-008',
-      producedQty: 200, availableQty: 200, processingDate: '2024-11-10',
-      qualityStatus: 'Pending', certNumber: '', certDate: '',
-      packagingQty: 40, storageLocation: 'Warehouse B',
-      remarks: 'Testing in progress', societyId: 'SOC-001',
-      createdBy: 'Ramesh Verma', createdAt: '2024-11-10', updatedAt: '2024-11-10'
+      id: 'FCS-002', memberId: 'MBR-002', memberName: 'Sunita Devi', seedType: 'Certified', finYear: '2024-2025', season: 'Rabi',
+      crop: 'Wheat', variety: 'GW-322', allocDate: '2024-10-18', procDate: '2025-03-28', unit: 'Quintal', allocQty: 1.5, produceQty: 12,
+      activeStatus: 'Active', createdBy: 'Ramesh Verma', createdAt: '2024-10-18', updatedAt: '2025-03-28'
+    },
+    {
+      id: 'FCS-003', memberId: 'MBR-003', memberName: 'Dinesh Patel', seedType: 'Foundation', finYear: '2024-2025', season: 'Rabi',
+      crop: 'Gram (Chickpea)', variety: 'JG-315', allocDate: '2024-11-05', procDate: '', unit: 'Kg', allocQty: 80, produceQty: null,
+      activeStatus: 'Active', createdBy: 'Ramesh Verma', createdAt: '2024-11-05', updatedAt: '2024-11-05'
     },
   ];
 
   App.state.hybridSelId = null;
   App.state.hybridFilter = { season: '', society: '', status: '', search: '' };
   App.state.fcSelId = null;
-  App.state.fcFilter = { season: '', category: '', search: '' };
+  App.state.fcFilter = { season: '', seedType: '', search: '' };
 }());
 
 // ══════════════════════════════════════════════
@@ -107,15 +104,12 @@
       ni('add_circle', 'New Allocation', 'admin-hybrid-add', true),
       '</div>',
 
-      '<div class="nav-section"><div class="nav-section-title">Reports &amp; Users</div>',
+      '<div class="nav-section"><div class="nav-section-title">Reports</div>',
       ni('bar_chart', 'Reports', 'admin-reports'),
-      ni('manage_accounts', 'Users', 'profile'),
       '</div>',
 
       '</div>',
-      '<div class="sidebar-footer" onclick="App.logout()">',
-      '<span class="material-icons">logout</span><span>Logout</span>',
-      '</div></nav>'
+      '</nav>'
     ].join('');
   };
 }());
@@ -156,8 +150,7 @@
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Seed Stock</div>',
-      ni('inventory_2', 'Foundation &amp; Certified Seed', 'soc-fc-list'),
-      ni('add_circle', 'Foundation and Certified Seed Management', 'soc-fc-add', true),
+      (function () { var on = ['soc-fc-list', 'soc-fc-add', 'soc-fc-edit', 'soc-fc-view'].indexOf(p) > -1; return '<div class="nav-item' + (on ? ' active' : '') + '" onclick="App.navigate(\'soc-fc-list\')"><span class="material-icons">inventory_2</span><span>Foundation &amp; Certified Seed</span></div>'; }()),
       '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Reports</div>',
@@ -207,9 +200,9 @@
     'admin-hybrid-edit': 'Edit Hybrid Seed Allocation',
     'admin-hybrid-view': 'Hybrid Seed Allocation Details',
     'soc-fc-list': 'Foundation & Certified Seed Management',
-    'soc-fc-add': 'Foundation and Certified Seed Management',
-    'soc-fc-edit': 'Foundation and Certified Seed Management',
-    'soc-fc-view': 'Seed Stock Details',
+    'soc-fc-add': 'New Foundation & Certified Seed Allocation',
+    'soc-fc-edit': 'Edit Foundation & Certified Seed Allocation',
+    'soc-fc-view': 'Foundation & Certified Seed Details',
     'admin-seed-lines': 'Seed Buying/Selling Line Management',
     'admin-packaging': 'Seed Packaging Management',
   };
@@ -291,53 +284,6 @@ App._smFld = function (label, id, type, opts, val, req, ph) {
     + '</div>';
 };
 
-// Map a seed variety name to its code (used to auto-populate Variety Code on the FC form).
-App._fcVarietyCode = function (variety) {
-  if (!variety) return '';
-  var map = {
-    'GW-322': 'GW322', 'JS-335': 'JS335', 'JG-315': 'JG315', 'Pusa Bold': 'PBOLD', 'MTU-7029': 'MTU7029',
-    'IR-36': 'IR36', 'DHM-117': 'DHM117', 'HHB-67': 'HHB67', 'CSH-16': 'CSH16', 'UPAS-120': 'UPAS120',
-    'TAG-24': 'TAG24', 'KBSH-1': 'KBSH1', 'Suraj (H-777)': 'H777', 'CO-86032': 'CO86032', 'K-851': 'K851',
-    'T-9': 'T9', 'L-4076': 'L4076', 'RD-2035': 'RD2035', 'OS-6': 'OS6'
-  };
-  // Fall back: strip non-alphanumerics and uppercase.
-  return map[variety] || variety.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-};
-
-// Crop-wise variety names for the FC form (keeps the record's current variety selectable when editing).
-App._fcVarietyNames = function (crop, current) {
-  var names = App.varietiesForCrop(crop);
-  if (current && names.indexOf(current) === -1) names.unshift(current);
-  return names;
-};
-
-// Crop changed on the FC form → rebuild the Variety control for that crop (single select in edit, multi-select when adding).
-App.onFCCropChange = function () {
-  var crop = document.getElementById('ff-crop') ? document.getElementById('ff-crop').value : '';
-  var el = document.getElementById('ff-variety');
-  if (el && el.tagName === 'SELECT') {
-    el.innerHTML = '<option value="">Select...</option>' + App._fcVarietyNames(crop, '').map(function (o) { return '<option value="' + o + '">' + o + '</option>'; }).join('');
-    return;
-  }
-  App.msRender('ff-variety', App.varietiesForCrop(crop), !crop, 'Select Crop first', App._fcVarietiesChanged);
-  App._msRefresh('ff-variety');
-  App._fcVarietiesChanged([]);
-};
-
-// Multi-select changed: clear the "Variety is required" error. (Variety Code is set per variety on save.)
-App._fcVarietiesChanged = function () {
-  var err = document.getElementById('smerr-ff-variety');
-  if (err) err.style.display = 'none';
-};
-
-// When the Variety select changes, auto-fill the Variety Code field.
-App._fcVarietyChanged = function (variety) {
-  var el = document.getElementById('ff-varietycode');
-  if (el) el.value = App._fcVarietyCode(variety);
-  var err = document.getElementById('smerr-ff-variety');
-  if (err) err.style.display = 'none';
-};
-
 // ══════════════════════════════════════════════
 // 7. HYBRID SEED MANAGEMENT — LIST
 // ══════════════════════════════════════════════
@@ -353,7 +299,7 @@ App.smRenderHybridList = function () {
         || r.society.toLowerCase().indexOf(f.search.toLowerCase()) > -1);
   });
 
-  var seasons = Array.from(new Set(all.map(function (r) { return r.season; }))).sort();
+  var seasons = ['Kharif', 'Rabi', 'Summer'];
   var statuses = ['Allocated', 'Draft', 'Cancelled'];
 
   var html = '<div class="page-header"><h1>Hybrid Seed Management</h1>'
@@ -391,24 +337,25 @@ App.smRenderHybridList = function () {
     + '<button class="btn btn-danger btn-sm"><span class="material-icons">picture_as_pdf</span> PDF</button>'
     + '</div></div>'
     + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>ID</th><th>Season</th><th>Variety</th>'
-    + '<th>Society</th><th>Alloc Qty</th><th>Exp. Prod.</th><th>Alloc / Last Date</th>'
+    + '<thead><tr><th>ID</th><th>Proc. Year</th><th>Season</th><th>Variety</th>'
+    + '<th>Society</th><th>Alloc Qty</th><th>Exp. Prod.</th><th>Alloc Date</th>'
     + '<th>Status</th><th>Actions</th></tr></thead><tbody>';
 
   if (rows.length === 0) {
-    html += '<tr><td colspan="9" style="text-align:center;padding:40px;color:#9E9E9E;">No records found.</td></tr>';
+    html += '<tr><td colspan="10" style="text-align:center;padding:40px;color:#9E9E9E;">No records found.</td></tr>';
   } else {
     rows.forEach(function (r) {
       var act = (r.activeStatus || 'Active');
       html += '<tr>'
         + '<td><b>' + r.id + '</b></td>'
+        + '<td>' + (r.finYear || '—') + '</td>'
         + '<td>' + r.season + '</td>'
         + '<td><div style="font-weight:500;">' + r.variety + '</div>'
         + (r.parentVariety ? '<div style="font-size:.72rem;color:#9E9E9E;">Parent: ' + r.parentVariety + '</div>' : '') + '</td>'
         + '<td>' + r.society + '</td>'
         + '<td style="font-weight:600;color:#2E7D32;">' + r.allocQty + ' Qt</td>'
         + '<td>' + r.expectedProd + ' Qt</td>'
-        + '<td style="font-size:.78rem;"><div>' + r.allocDate + '</div><div style="color:#9E9E9E;">to ' + r.lastDate + '</div></td>'
+        + '<td style="font-size:.82rem;">' + r.allocDate + '</td>'
         + '<td><span class="badge ' + (act === 'Active' ? 'badge-success' : 'badge-danger') + '">' + act + '</span></td>'
         + '<td><div class="action-btns">'
         + '<button class="btn btn-info btn-sm" title="View" onclick="App.state.hybridSelId=\'' + r.id + '\';App.navigate(\'admin-hybrid-view\')">'
@@ -439,8 +386,10 @@ App.smRenderHybridForm = function (mode) {
   var rec = isEdit ? this.state.hybridAllocs.find(function (r) { return r.id === App.state.hybridSelId; }) : null;
   var v = function (f, def) { return rec ? (rec[f] !== undefined ? String(rec[f]) : '') : (def || ''); };
 
-  var seasons = ['Kharif 2024', 'Rabi 2024-25', 'Summer 2025', 'Kharif 2025'];
+  var seasons = ['Kharif', 'Rabi', 'Summer'];
   var societies = ['Rampur Krishi Samiti', 'Sehora Kisan Sabha', 'Bargaon Beej Samiti', 'Patan Krishi Vikas Samiti'];
+  // Procurement Year is auto-filled: current FY for a new allocation, the saved FY (or current, if none) when editing.
+  var finYear = (rec && rec.finYear) || App._lineFinYear();
 
   return '<div class="page-header"><h1>' + (isEdit ? 'Edit' : 'New') + ' Hybrid Seed Allocation</h1>'
     + '<p>' + (isEdit ? 'Update allocation details.' : 'Create a new hybrid seed allocation for a society.') + '</p></div>'
@@ -449,6 +398,8 @@ App.smRenderHybridForm = function (mode) {
     /* Section 1 */
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">grass</span> Allocation Details</div>'
     + '<div class="form-grid">'
+    + '<div class="form-group"><label>Procurement Year</label>'
+    + '<input type="text" id="hf-finyear" class="form-control" value="' + finYear + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>'
     + App._smFld('Season', 'hf-season', 'select', seasons, v('season'), true)
     + App._smFld('Hybrid Seed Variety', 'hf-variety', 'text', null, v('variety'), true, 'e.g. DKC-9144')
     + App._smFld('Parent Seed Variety (if applicable)', 'hf-parent', 'text', null, v('parentVariety'), false, 'e.g. DMRH-202')
@@ -461,7 +412,6 @@ App.smRenderHybridForm = function (mode) {
     + App._smFld('Allocated Quantity (Qt)', 'hf-allocqty', 'number', null, v('allocQty'), true, 'Quintals')
     + App._smFld('Expected Production Qty (Qt)', 'hf-expprod', 'number', null, v('expectedProd'), true, 'Quintals')
     + App._smFld('Allocation Date', 'hf-allocdate', 'date', null, v('allocDate'), true)
-    + App._smFld('Last Date', 'hf-lastdate', 'date', null, v('lastDate'), true)
     + '</div></div>'
 
     /* Section 3 */
@@ -496,6 +446,7 @@ App.smRenderHybridView = function () {
     + '<div class="card-header"><h3>' + r.variety + ' — ' + r.season + '</h3>' + App._smBadge(r.status) + '</div>'
     + '<div class="card-body">'
     + row('Allocation ID', '<b>' + r.id + '</b>')
+    + row('Procurement Year', r.finYear)
     + row('Season', r.season)
     + row('Hybrid Variety', r.variety)
     + row('Parent Variety', r.parentVariety)
@@ -503,7 +454,6 @@ App.smRenderHybridView = function () {
     + row('Allocated Qty', r.allocQty + ' Quintal')
     + row('Expected Production', r.expectedProd + ' Quintal')
     + row('Allocation Date', r.allocDate)
-    + row('Last Date', r.lastDate)
     + row('Remarks', r.remarks)
     + row('Status', App._smBadge(r.status))
     + row('Created By', r.createdBy)
@@ -521,7 +471,7 @@ App.smRenderHybridView = function () {
 // ══════════════════════════════════════════════
 App.smHybridSave = function (mode) {
   var isEdit = mode === 'edit';
-  var errIds = ['hf-season', 'hf-variety', 'hf-society', 'hf-allocqty', 'hf-expprod', 'hf-allocdate', 'hf-lastdate'];
+  var errIds = ['hf-season', 'hf-variety', 'hf-society', 'hf-allocqty', 'hf-expprod', 'hf-allocdate'];
   App._smClearErr(errIds);
   var season = App._smGet('hf-season');
   var variety = App._smGet('hf-variety');
@@ -529,7 +479,7 @@ App.smHybridSave = function (mode) {
   var allocQty = parseFloat(App._smGet('hf-allocqty')) || 0;
   var expProd = parseFloat(App._smGet('hf-expprod')) || 0;
   var aDate = App._smGet('hf-allocdate');
-  var lDate = App._smGet('hf-lastdate');
+  var finYear = App._smGet('hf-finyear') || App._lineFinYear();
   var ok = true;
   if (!season) { App._smErr('hf-season', 'Season is required.'); ok = false; }
   if (!variety) { App._smErr('hf-variety', 'Variety is required.'); ok = false; }
@@ -537,15 +487,14 @@ App.smHybridSave = function (mode) {
   if (!allocQty) { App._smErr('hf-allocqty', 'Allocated qty is required.'); ok = false; }
   if (!expProd) { App._smErr('hf-expprod', 'Expected production required.'); ok = false; }
   if (!aDate) { App._smErr('hf-allocdate', 'Allocation date is required.'); ok = false; }
-  if (!lDate) { App._smErr('hf-lastdate', 'Last date is required.'); ok = false; }
   if (!ok) return;
   var now = new Date().toISOString().slice(0, 10);
   var existing = isEdit ? App.state.hybridAllocs.find(function (r) { return r.id === App.state.hybridSelId; }) : null;
   var rec = {
     id: isEdit ? App.state.hybridSelId : App._smNextId(App.state.hybridAllocs, 'HSA-'),
-    season: season, variety: variety, parentVariety: App._smGet('hf-parent'),
+    finYear: finYear, season: season, variety: variety, parentVariety: App._smGet('hf-parent'),
     society: society, socCode: 'SOC-XXX', allocQty: allocQty, expectedProd: expProd,
-    allocDate: aDate, lastDate: lDate, remarks: App._smGet('hf-remarks'),
+    allocDate: aDate, remarks: App._smGet('hf-remarks'),
     status: App._smGet('hf-status') || 'Draft',
     createdBy: (App.state.currentUser && App.state.currentUser.name) || 'Admin',
     createdAt: existing ? existing.createdAt : now,
@@ -579,426 +528,271 @@ App.smHybridToggleActive = function (id) {
 };
 
 // ══════════════════════════════════════════════
-// 11. FOUNDATION & CERTIFIED — LIST
+// 11. FOUNDATION & CERTIFIED SEED — one combined page
+//     List (with "New Allocation") + Add/Edit form + View.
+//     A record = seed allocated to a member for one crop variety, plus the
+//     produce procured back from that member. One Unit applies to both quantities.
 // ══════════════════════════════════════════════
+App._fcSeedTypes = ['Foundation', 'Certified'];
+App._fcSeasons = ['Kharif', 'Rabi', 'Summer'];
+App._fcCrops = ['Wheat', 'Paddy (Rice)', 'Maize', 'Bajra (Pearl Millet)', 'Jowar (Sorghum)', 'Gram (Chickpea)', 'Pigeon Pea (Arhar)', 'Soybean', 'Groundnut', 'Mustard', 'Sunflower', 'Cotton', 'Sugarcane', 'Moong (Green Gram)', 'Urad (Black Gram)', 'Lentil (Masoor)', 'Barley', 'Oat'];
+// Units follow the project-wide rule: Kg and Quintal only.
+App._fcUnits = function () { return App._seUnits || ['Kg', 'Quintal']; };
+
+// "2.5 Quintal", or "—" when nothing is recorded yet.
+App._fcQtyText = function (qty, unit) {
+  return (qty === null || qty === undefined || qty === '') ? '—' : qty + ' ' + (unit || '');
+};
+
+// Crop-wise variety names (keeps the record's current variety selectable when editing).
+App._fcVarietyNames = function (crop, current) {
+  var names = App.varietiesForCrop(crop);
+  if (current && names.indexOf(current) === -1) names.unshift(current);
+  return names;
+};
+
+// Crop changed on the form → rebuild the Variety control (single select when editing, multi-select when adding).
+App.onFCCropChange = function () {
+  var crop = document.getElementById('fc-crop') ? document.getElementById('fc-crop').value : '';
+  var el = document.getElementById('fc-variety');
+  if (el && el.tagName === 'SELECT') {
+    el.innerHTML = '<option value="">Select Variety</option>' + App._fcVarietyNames(crop, '').map(function (o) { return '<option value="' + o + '">' + o + '</option>'; }).join('');
+    return;
+  }
+  App.msRender('fc-variety', App.varietiesForCrop(crop), !crop, 'Select Crop first', App._fcVarietiesChanged);
+  App._msRefresh('fc-variety');
+  App._fcVarietiesChanged();
+};
+// A variety was picked: clear the "Variety is required" error.
+App._fcVarietiesChanged = function () {
+  var err = document.getElementById('smerr-fc-variety');
+  if (err) err.style.display = 'none';
+};
+
 App.smRenderFCList = function () {
   var f = this.state.fcFilter;
   var all = this.state.fcSeedStock;
+  var q = (f.search || '').toLowerCase();
   var rows = all.filter(function (r) {
     return (!f.season || r.season === f.season)
-      && (!f.category || r.category === f.category)
-      && (!f.search || r.id.toLowerCase().indexOf(f.search.toLowerCase()) > -1
-        || r.variety.toLowerCase().indexOf(f.search.toLowerCase()) > -1
-        || r.breederLotNo.toLowerCase().indexOf(f.search.toLowerCase()) > -1);
+      && (!f.seedType || r.seedType === f.seedType)
+      && (!q || (r.memberName + ' ' + r.crop + ' ' + r.variety).toLowerCase().indexOf(q) > -1);
   });
+  var opt = function (list, sel) { return list.map(function (s) { return '<option' + (sel === s ? ' selected' : '') + '>' + s + '</option>'; }).join(''); };
 
-  var seasons = Array.from(new Set(all.map(function (r) { return r.season; }))).sort();
-
-  var html = '<div class="page-header"><h1>Foundation &amp; Certified Seed Management</h1>'
-    + '<p>Track and manage foundation and certified seed stock</p></div>';
-
-  /* Stats */
-  html += '<div class="stats-grid">'
-    + '<div class="stat-card"><div class="stat-icon"><span class="material-icons">inventory_2</span></div><div class="stat-info"><div class="value">' + all.length + '</div><div class="label">Total Records</div></div></div>'
-    + '<div class="stat-card blue"><div class="stat-icon"><span class="material-icons">layers</span></div><div class="stat-info"><div class="value">' + all.filter(function (r) { return r.category === 'Foundation'; }).length + '</div><div class="label">Foundation Seed</div></div></div>'
-    + '<div class="stat-card"><div class="stat-icon"><span class="material-icons">verified</span></div><div class="stat-info"><div class="value">' + all.filter(function (r) { return r.category === 'Certified'; }).length + '</div><div class="label">Certified Seed</div></div></div>'
-    + '<div class="stat-card orange"><div class="stat-icon"><span class="material-icons">scale</span></div><div class="stat-info"><div class="value">' + all.reduce(function (s, r) { return s + r.availableQty; }, 0) + ' Qt</div><div class="label">Available Stock</div></div></div>'
+  var html = '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">'
+    + '<div><h1>Foundation &amp; Certified Seed Management</h1>'
+    + '<p>Allocate foundation and certified seed to members and track the produce procured</p></div>'
+    + '<button class="btn btn-primary" onclick="App.navigate(\'soc-fc-add\')"><span class="material-icons">add</span> New Foundation and Certified Seed Entry</button>'
     + '</div>';
 
   /* Filter bar */
   html += '<div class="search-bar" style="margin-bottom:16px;">'
     + '<div class="search-field"><label>Search</label>'
-    + '<input class="form-control" placeholder="ID, Variety, Lot No..." value="' + (f.search || '') + '" oninput="App.state.fcFilter.search=this.value;App.render()"/></div>'
+    + '<input class="form-control" placeholder="Member, Crop, Variety..." value="' + (f.search || '') + '" oninput="App.state.fcFilter.search=this.value;App.render()"/></div>'
     + '<div class="search-field"><label>Season</label>'
-    + '<select class="form-control" onchange="App.state.fcFilter.season=this.value;App.render()">'
-    + '<option value="">All Seasons</option>'
-    + seasons.map(function (s) { return '<option' + (f.season === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
-    + '</select></div>'
-    + '<div class="search-field"><label>Seed Category</label>'
-    + '<select class="form-control" onchange="App.state.fcFilter.category=this.value;App.render()">'
-    + '<option value="">All Categories</option>'
-    + ['Foundation', 'Certified'].map(function (c) { return '<option' + (f.category === c ? ' selected' : '') + '>' + c + '</option>'; }).join('')
-    + '</select></div>'
+    + '<select class="form-control" onchange="App.state.fcFilter.season=this.value;App.render()"><option value="">All Seasons</option>' + opt(App._fcSeasons, f.season) + '</select></div>'
+    + '<div class="search-field"><label>Seed Type</label>'
+    + '<select class="form-control" onchange="App.state.fcFilter.seedType=this.value;App.render()"><option value="">All</option>' + opt(App._fcSeedTypes, f.seedType) + '</select></div>'
     + '<div class="search-field" style="align-self:flex-end;">'
-    + '<button class="btn btn-gray btn-sm" onclick="App.state.fcFilter={season:\'\',category:\'\',search:\'\'};App.render()">'
-    + '<span class="material-icons">clear</span> Reset</button></div>'
-    + '<div style="margin-left:auto;align-self:flex-end;">'
-    + '<button class="btn btn-primary" onclick="App.navigate(\'soc-fc-add\')">'
-    + '<span class="material-icons">add</span> Add Seed Details</button></div>'
+    + '<button class="btn btn-gray btn-sm" onclick="App.state.fcFilter={season:\'\',seedType:\'\',search:\'\'};App.render()"><span class="material-icons">clear</span> Reset</button></div>'
     + '</div>';
 
   /* Table */
   html += '<div class="card"><div class="card-header">'
-    + '<h3>Seed Stock Records <span style="color:#757575;font-weight:400;font-size:.85rem;">(' + rows.length + ' records)</span></h3>'
-    + '<div style="display:flex;gap:8px;">'
-    + '<button class="btn btn-success btn-sm"><span class="material-icons">table_chart</span> Export</button>'
-    + '<button class="btn btn-gray btn-sm"><span class="material-icons">print</span> Print</button>'
-    + '</div></div>'
+    + '<h3>Allocations <span style="color:#757575;font-weight:400;font-size:.85rem;">(' + rows.length + ' records)</span></h3></div>'
     + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Stock ID</th><th>Season</th><th>Category</th><th>Variety</th>'
-    + '<th>Lot No.</th><th>Produced</th><th>Available</th><th>Quality</th>'
-    + '<th>Cert. No.</th><th>Cert. Date</th><th>Actions</th></tr></thead><tbody>';
+    + '<thead><tr><th>Member Name</th><th>Seed Type</th><th>Proc. Year</th><th>Season</th><th>Crop</th><th>Variety</th>'
+    + '<th>Allocated Date</th><th>Procurement Date</th><th>Allocated Qty</th><th>Produce Qty</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
 
   if (rows.length === 0) {
-    html += '<tr><td colspan="11" style="text-align:center;padding:40px;color:#9E9E9E;">No records found.</td></tr>';
+    html += '<tr><td colspan="12" style="text-align:center;padding:40px;color:#9E9E9E;">No records found.</td></tr>';
   } else {
     rows.forEach(function (r) {
+      var act = r.activeStatus || 'Active';
       html += '<tr>'
-        + '<td><b>' + r.id + '</b></td>'
+        + '<td><div style="font-weight:500;">' + r.memberName + '</div><div style="font-size:.72rem;color:#9E9E9E;">' + r.memberId + '</div></td>'
+        + '<td><span class="badge ' + (r.seedType === 'Foundation' ? 'badge-info' : 'badge-success') + '">' + r.seedType + '</span></td>'
+        + '<td>' + (r.finYear || '—') + '</td>'
         + '<td>' + r.season + '</td>'
-        + '<td>' + App._smBadge(r.category) + '</td>'
+        + '<td>' + r.crop + '</td>'
         + '<td>' + r.variety + '</td>'
-        + '<td style="font-size:.8rem;">' + r.breederLotNo + '</td>'
-        + '<td style="font-weight:600;">' + r.producedQty + ' Qt</td>'
-        + '<td style="font-weight:600;color:#2E7D32;">' + r.availableQty + ' Qt</td>'
-        + '<td>' + App._smBadge(r.qualityStatus) + '</td>'
-        + '<td style="font-size:.8rem;">' + (r.certNumber || '—') + '</td>'
-        + '<td style="font-size:.8rem;">' + (r.certDate || '—') + '</td>'
+        + '<td style="font-size:.82rem;">' + (r.allocDate || '—') + '</td>'
+        + '<td style="font-size:.82rem;">' + (r.procDate || '—') + '</td>'
+        + '<td style="font-weight:600;color:#1565C0;">' + App._fcQtyText(r.allocQty, r.unit) + '</td>'
+        + '<td style="font-weight:600;color:#2E7D32;">' + App._fcQtyText(r.produceQty, r.unit) + '</td>'
+        + '<td><span class="badge ' + (act === 'Active' ? 'badge-success' : 'badge-danger') + '">' + act + '</span></td>'
         + '<td><div class="action-btns">'
-        + '<button class="btn btn-info btn-sm" title="View" onclick="App.state.fcSelId=\'' + r.id + '\';App.navigate(\'soc-fc-view\')">'
-        + '<span class="material-icons" style="font-size:14px;">visibility</span></button>'
-        + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.state.fcSelId=\'' + r.id + '\';App.navigate(\'soc-fc-edit\')">'
-        + '<span class="material-icons" style="font-size:14px;">edit</span></button>'
-        + '<button class="btn ' + ((r.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smFCToggleActive(\'' + r.id + '\')">' + ((r.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
+        + '<button class="btn btn-info btn-sm" title="View" onclick="App.state.fcSelId=\'' + r.id + '\';App.navigate(\'soc-fc-view\')"><span class="material-icons" style="font-size:14px;">visibility</span></button>'
+        + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.state.fcSelId=\'' + r.id + '\';App.navigate(\'soc-fc-edit\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
+        + '<button class="btn ' + (act === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.smFCToggleActive(\'' + r.id + '\')">' + (act === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
         + '</div></td></tr>';
     });
   }
-  html += '</tbody></table></div>'
-    + '<div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E0E0E0;">'
-    + '<span style="font-size:.82rem;color:#757575;">Showing ' + rows.length + ' of ' + all.length + ' records</span>'
-    + '<div style="display:flex;gap:6px;">'
-    + '<button class="btn btn-gray btn-sm">&#8249; Prev</button>'
-    + '<button class="btn btn-primary btn-sm">1</button>'
-    + '<button class="btn btn-gray btn-sm">Next &#8250;</button>'
-    + '</div></div></div></div>';
-
+  html += '</tbody></table></div></div></div>';
   return html;
 };
 
 // ══════════════════════════════════════════════
-// 12. FOUNDATION & CERTIFIED — FORM (Add / Edit)
-// ══════════════════════════════════════════════
-// 12. FOUNDATION & CERTIFIED SEED — ADD/EDIT FORM
+// 12. FOUNDATION & CERTIFIED SEED — ADD / EDIT FORM
 // ══════════════════════════════════════════════
 App.smRenderFCForm = function (mode) {
   var isEdit = mode === 'edit';
   var rec = isEdit ? this.state.fcSeedStock.find(function (r) { return r.id === App.state.fcSelId; }) : null;
-  var v = function (f, def) { return rec ? (rec[f] !== undefined ? String(rec[f]) : '') : (def || ''); };
+  if (isEdit && !rec) return '<div class="page-header"><h1>Not Found</h1></div>';
+  var v = function (f, def) { return rec ? (rec[f] !== undefined && rec[f] !== null ? String(rec[f]) : '') : (def || ''); };
+  var today = new Date().toISOString().slice(0, 10);
+  var finYear = (rec && rec.finYear) || App._lineFinYear();   // auto-filled, read-only
 
-  var seedClasses = ['Breeder', 'Foundation I', 'Foundation II', 'Certified'];
-  var seasons = ['Kharif 2024', 'Rabi 2024-25', 'Summer 2025', 'Kharif 2025'];
-  var crops = ['Wheat', 'Paddy (Rice)', 'Maize', 'Bajra (Pearl Millet)', 'Jowar (Sorghum)', 'Gram (Chickpea)', 'Pigeon Pea (Arhar)', 'Soybean', 'Groundnut', 'Mustard', 'Sunflower', 'Cotton', 'Sugarcane', 'Moong (Green Gram)', 'Urad (Black Gram)', 'Lentil (Masoor)', 'Barley', 'Oat'];
-  var districts = ['Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain', 'Chhindwara', 'Seoni', 'Narsinghpur', 'Betul'];
-  var blocks = ['Patan', 'Harrai', 'Amarwara', 'Chaurai', 'Mohgaon', 'Sausar', 'Tamia'];
-  var certAgencies = ['State Seed Certification Agency (SSCA)', 'Madhya Pradesh State Seed Certification Agency', 'Central Seed Certification Board', 'ICAR Seed Certification', 'Private Certification Agency'];
-  var warehouses = ['Central Warehouse, Bhopal', 'Divisional Store, Jabalpur', 'Regional Depot, Indore', 'District Godown, Chhindwara', 'Taluka Store, Patan'];
+  // Member dropdown (value = member id). Keep the record's member selectable even if now inactive.
+  var members = (this.state.members || []).filter(function (m) { return m.status === 'Active'; }).map(function (m) { return { id: m.id, name: m.name }; });
+  if (rec && !members.some(function (m) { return m.id === rec.memberId; })) members.unshift({ id: rec.memberId, name: rec.memberName });
+  var memberField = '<div class="form-group"><label>Member Name <span style="color:#F44336">*</span></label>'
+    + '<select id="fc-member" class="form-control"><option value="">Select Member</option>'
+    + members.map(function (m) { return '<option value="' + m.id + '"' + (v('memberId') === m.id ? ' selected' : '') + '>' + m.name + ' (' + m.id + ')</option>'; }).join('')
+    + '</select><div id="smerr-fc-member" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div></div>';
 
-  return '<div class="page-header"><h1>Foundation and Certified Seed Management</h1>'
-    + '<p>' + (isEdit ? 'Update the seed stock record with production and certification details.' : 'Add new foundation or certified seed production details with complete certification information.') + '</p></div>'
+  // Variety: single select when editing one record, crop-wise multi-select when adding (one record per variety).
+  var varietyField = '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>'
+    + (isEdit
+      ? '<select id="fc-variety" class="form-control"><option value="">Select Variety</option>'
+      + App._fcVarietyNames(v('crop'), v('variety')).map(function (o) { return '<option value="' + o + '"' + (v('variety') === o ? ' selected' : '') + '>' + o + '</option>'; }).join('')
+      + '</select>'
+      : App.msRender('fc-variety', App.varietiesForCrop(v('crop')), !v('crop'), 'Select Crop first', App._fcVarietiesChanged)
+      + App.msHint('Select one or more varieties. One record is created per variety with the same details.'))
+    + '<div id="smerr-fc-variety" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div></div>';
+
+  var cropField = App._smFld('Crop', 'fc-crop', 'select', App._fcCrops, v('crop'), true)
+    .replace('<select id="fc-crop" class="form-control">', '<select id="fc-crop" class="form-control" onchange="App.onFCCropChange()">');
+
+  return '<div class="page-header"><h1>' + (isEdit ? 'Edit' : 'New') + ' Foundation &amp; Certified Seed Allocation</h1>'
+    + '<p>' + (isEdit ? 'Update the allocation and produce details.' : 'Allocate foundation or certified seed to a member and record the produce procured.') + '</p></div>'
     + '<div class="card"><div class="card-body">'
 
-    /* Section 1: Seed Classification & Basic Information */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">category</span> Seed Classification & Basic Information</div>'
+    /* Section 1 */
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">category</span> Member &amp; Seed Details</div>'
     + '<div class="form-grid">'
-    + App._smFld('Seed Class', 'ff-seedclass', 'select', seedClasses, v('seedClass'), true)
-    + App._smFld('Season', 'ff-season', 'select', seasons, v('season'), true)
-    + App._smFld('Crop', 'ff-crop', 'select', crops, v('crop'), true)
-      .replace('<select id="ff-crop" class="form-control">', '<select id="ff-crop" class="form-control" onchange="App.onFCCropChange()">')
-    + ('<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>'
-      + (isEdit
-        // Editing one record: single, crop-wise Variety select.
-        ? '<select id="ff-variety" class="form-control" onchange="App._fcVarietyChanged(this.value)">'
-        + '<option value="">Select...</option>'
-        + App._fcVarietyNames(v('crop'), v('variety')).map(function (o) { return '<option value="' + o + '"' + (v('variety') === o ? ' selected' : '') + '>' + o + '</option>'; }).join('')
-        + '</select>'
-        // Adding: one or more varieties (crop-wise multi-select); one record is created per variety.
-        : App.msRender('ff-variety', App.varietiesForCrop(v('crop')), !v('crop'), 'Select Crop first', App._fcVarietiesChanged)
-        + App.msHint('Select one or more varieties. One record is created per variety with the same details.'))
-      + '<div id="smerr-ff-variety" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div></div>')
-    + App._smFld('Production Year', 'ff-prodyear', 'number', null, v('productionYear', new Date().getFullYear()), true, 'e.g. 2024')
+    + memberField
+    + App._smFld('Seed Type', 'fc-seedtype', 'select', App._fcSeedTypes, v('seedType'), true)
+    + '<div class="form-group"><label>Procurement Year</label>'
+    + '<input type="text" id="fc-finyear" class="form-control" value="' + finYear + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>'
+    + App._smFld('Season', 'fc-season', 'select', App._fcSeasons, v('season'), true)
+    + cropField
+    + varietyField
     + '</div></div>'
 
-    /* Section 2: Seed Producer Information */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">agriculture</span> Seed Producer Information</div>'
+    /* Section 2 */
+    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">scale</span> Dates &amp; Quantity</div>'
     + '<div class="form-grid">'
-    + App._smFld('Seed Producer Name', 'ff-producername', 'text', null, v('producerName'), true, 'Full name of producer')
-    + App._smFld('Producer Registration No.', 'ff-producerreg', 'text', null, v('producerRegNo'), true, 'e.g. PROD-MP-2024-001')
-    + App._smFld('Production District', 'ff-proddistrict', 'select', districts, v('productionDistrict'), true)
-    + App._smFld('Production Block', 'ff-prodblock', 'select', blocks, v('productionBlock'), true)
-    + '</div></div>'
-
-    /* Section 3: Production & Area Details */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">landscape</span> Production & Area Details</div>'
-    + '<div class="form-grid">'
-    + App._smFld('Expected Production Quantity (Quintal)', 'ff-expectedqty', 'number', null, v('expectedQty'), true, 'Estimated yield')
-    + App._smFld('Actual Production Quantity (Quintal)', 'ff-actualqty', 'number', null, v('actualQty'), true, 'Actual harvested quantity')
-    + App._smFld('Processing Quantity (Quintal)', 'ff-processingqty', 'number', null, v('processingQty'), false, 'Quantity sent for processing')
-    + '</div></div>'
-
-    /* Section 9: Remarks */
-    + '<div class="form-section"><div class="form-section-title"><span class="material-icons">notes</span> Remarks</div>'
-    + '<div class="form-group"><label>Remarks / Additional Notes</label>'
-    + '<textarea id="ff-remarks" class="form-control" rows="3" placeholder="Any additional information about seed production, quality, or special conditions...">' + (v('remarks')) + '</textarea>'
-    + '</div></div>'
+    + App._smFld('Allocated Date', 'fc-allocdate', 'date', null, v('allocDate', today), true)
+    + App._smFld('Procurement Date', 'fc-procdate', 'date', null, v('procDate'), false)
+    + App._smFld('Unit (for Allocated &amp; Produce Quantity)', 'fc-unit', 'select', App._fcUnits(), v('unit', 'Quintal'), true)
+    + App._smFld('Allocated Quantity', 'fc-allocqty', 'number', null, v('allocQty'), true, 'e.g. 2.5')
+    + App._smFld('Produce Quantity', 'fc-prodqty', 'number', null, v('produceQty'), false, 'e.g. 18')
+    + '</div>'
+    + '<div style="font-size:.75rem;color:#757575;margin-top:6px;">Procurement Date and Produce Quantity can be left blank until the produce is procured.</div></div>'
 
     /* Actions */
     + '<div class="form-actions">'
-    + '<button class="btn btn-gray" onclick="App.navigate(\'soc-fc-list\')"><span class="material-icons">close</span> Cancel</button>'
-    + '<button class="btn btn-outline" onclick="App.smFCSave(\'' + mode + '\',\'draft\')"><span class="material-icons">save</span> Save Draft</button>'
-    + '<button class="btn btn-primary" onclick="App.smFCSave(\'' + mode + '\',\'final\')"><span class="material-icons">' + (isEdit ? 'update' : 'check_circle') + '</span> ' + (isEdit ? 'Update Record' : 'Submit Record') + '</button>'
+    + '<button class="btn btn-gray" onclick="App.msReset(\'fc-variety\');App.navigate(\'soc-fc-list\')"><span class="material-icons">close</span> Cancel</button>'
+    + '<button class="btn btn-primary" onclick="App.smFCSave(\'' + mode + '\')"><span class="material-icons">' + (isEdit ? 'update' : 'check_circle') + '</span> ' + (isEdit ? 'Update Allocation' : 'Save Allocation') + '</button>'
     + '</div>'
     + '</div></div>';
 };
 
 // ══════════════════════════════════════════════
-// 13. FOUNDATION & CERTIFIED — VIEW
+// 13. FOUNDATION & CERTIFIED SEED — VIEW
 // ══════════════════════════════════════════════
 App.smRenderFCView = function () {
   var r = this.state.fcSeedStock.find(function (x) { return x.id === App.state.fcSelId; });
-  if (!r) return '<div class="page-header"><h1>Record Not Found</h1></div>';
-  var row = function (l, v) { return '<div class="invoice-row"><span class="label" style="color:#757575;font-size:.85rem;">' + l + '</span><span class="value" style="font-weight:500;">' + (v || '—') + '</span></div>'; };
-  var catBadge = App._smBadge(r.category);
-
-  return '<div class="page-header"><h1>Foundation and Certified Seed Details</h1><p>' + r.id + '</p></div>'
-    + '<div class="card" style="max-width:1000px;">'
-    + '<div class="card-header"><h3>' + r.variety + ' — ' + r.season + ' &nbsp;' + catBadge + '</h3>' + App._smBadge(r.qualityStatus || 'Passed') + '</div>'
-    + '<div class="card-body" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;">'
-
-    /* Column 1: Seed Classification & Basic Info */
-    + '<div>'
-    + '<p style="font-size:.78rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Seed Classification</p>'
-    + row('Stock ID', '<b>' + r.id + '</b>')
-    + row('Seed Class', r.seedClass || r.category)
+  if (!r) return '<div class="page-header"><h1>Not Found</h1><p>The record could not be found.</p></div>';
+  var act = r.activeStatus || 'Active';
+  var row = function (l, val) { return '<div class="invoice-row"><span class="label">' + l + '</span><span class="value">' + (val || '—') + '</span></div>'; };
+  return '<div class="page-header"><h1>Foundation &amp; Certified Seed Details</h1><p>' + r.memberName + ' — ' + r.crop + ' / ' + r.variety + '</p></div>'
+    + '<div class="card" style="max-width:700px;">'
+    + '<div class="card-header"><h3>' + r.seedType + ' Seed</h3><span class="badge ' + (act === 'Active' ? 'badge-success' : 'badge-danger') + '">' + act + '</span></div>'
+    + '<div class="card-body">'
+    + row('Member Name', r.memberName + ' (' + r.memberId + ')')
+    + row('Seed Type', r.seedType)
+    + row('Procurement Year', r.finYear)
     + row('Season', r.season)
-    + row('Crop', r.crop || '—')
+    + row('Crop', r.crop)
     + row('Variety', r.variety)
-    + row('Variety Code', r.varietyCode || '—')
-    + row('Seed Lot No.', r.seedLotNo || r.breederLotNo)
-    + row('Production Year', r.productionYear || '—')
+    + row('Allocated Date', r.allocDate)
+    + row('Procurement Date', r.procDate)
+    + row('Unit', r.unit)
+    + row('Allocated Quantity', App._fcQtyText(r.allocQty, r.unit))
+    + row('Produce Quantity', App._fcQtyText(r.produceQty, r.unit))
     + '</div>'
-
-    /* Column 2: Production & Quality */
-    + '<div>'
-    + '<p style="font-size:.78rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Production & Quality</p>'
-    + row('Producer Name', r.producerName || '—')
-    + row('Producer Reg. No.', r.producerRegNo || '—')
-    + row('Production District', r.productionDistrict || '—')
-    + row('Production Block', r.productionBlock || '—')
-    + row('Production Area', (r.productionArea || 0) + ' Hectare')
-    + row('Expected Qty', (r.expectedQty || 0) + ' Quintal')
-    + row('Actual Qty', (r.actualQty || r.producedQty || 0) + ' Quintal')
-    + row('Processing Qty', (r.processingQty || 0) + ' Quintal')
-    + '</div>'
-
-    /* Column 3: Certification & Stock */
-    + '<div>'
-    + '<p style="font-size:.78rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Certification & Stock</p>'
-    + row('Approved Qty', '<span style="color:#2E7D32;font-weight:700;">' + (r.approvedQty || 0) + ' Quintal</span>')
-    + row('Rejected Qty', '<span style="color:#C62828;">' + (r.rejectedQty || 0) + ' Quintal</span>')
-    + row('Available Qty', '<span style="color:#2E7D32;font-weight:700;">' + r.availableQty + ' Quintal</span>')
-    + row('Cert. Agency', r.certAgency || r.certNumber || '—')
-    + row('Cert. Number', r.certNumber || '—')
-    + row('Cert. Date', r.certDate || r.processingDate || '—')
-    + row('Quality Status', App._smBadge(r.qualityStatus || 'Passed'))
-    + '</div>'
-
-    + '</div>'
-
-    /* Additional Details Section */
-    + '<div class="card-body" style="border-top:1px solid #E0E0E0;padding-top:20px;">'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">'
-
-    /* Quality Parameters */
-    + '<div>'
-    + '<p style="font-size:.78rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Quality Parameters</p>'
-    + row('Germination %', (r.germination || '—') + (r.germination ? '%' : ''))
-    + row('Physical Purity %', (r.physicalPurity || '—') + (r.physicalPurity ? '%' : ''))
-    + row('Moisture %', (r.moisture || '—') + (r.moisture ? '%' : ''))
-    + '</div>'
-
-    /* Storage & Packaging */
-    + '<div>'
-    + '<p style="font-size:.78rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Storage & Packaging</p>'
-    + row('Storage Warehouse', r.storageWarehouse || '—')
-    + row('Storage Location', r.storageLocation || '—')
-    + row('Bag Size', (r.bagSize || r.packagingQty || '—') + ' Kg')
-    + row('Number of Bags', r.numberOfBags || '—')
-    + row('Total Quantity', (r.totalQuantityKg || 0) + ' Kg (' + ((r.totalQuantityKg || 0) / 100).toFixed(2) + ' Qt)')
-    + '</div>'
-
-    + '</div>'
-
-    + (r.remarks ? '<div style="margin-top:16px;">' + row('Remarks', r.remarks) + '</div>' : '')
-    + '</div>'
-
     + '<div class="card-header" style="border-top:1px solid #E0E0E0;border-bottom:none;justify-content:flex-end;">'
     + '<div style="display:flex;gap:8px;">'
     + '<button class="btn btn-gray" onclick="App.navigate(\'soc-fc-list\')"><span class="material-icons">arrow_back</span> Back</button>'
     + '<button class="btn btn-warning" onclick="App.state.fcSelId=\'' + r.id + '\';App.navigate(\'soc-fc-edit\')"><span class="material-icons">edit</span> Edit</button>'
-    + '<button class="btn btn-gray"><span class="material-icons">print</span> Print</button>'
-    + '</div></div>'
-    + '</div>';
+    + '</div></div></div>';
 };
 
 // ══════════════════════════════════════════════
-// 14. FOUNDATION & CERTIFIED — SAVE / DELETE
+// 14. FOUNDATION & CERTIFIED SEED — SAVE / ACTIVATE
 // ══════════════════════════════════════════════
-
-// Helper: Auto-calculate Total Quantity in Kg
-App.smCalculateTotalKg = function () {
-  var bagSize = parseFloat(document.getElementById('ff-bagsize')?.value) || 0;
-  var numBags = parseFloat(document.getElementById('ff-numbags')?.value) || 0;
-  var totalKg = bagSize * numBags;
-  var totalField = document.getElementById('ff-totalkg');
-  if (totalField) {
-    totalField.value = totalKg.toFixed(2) + ' Kg (' + (totalKg / 100).toFixed(2) + ' Quintal)';
-  }
-};
-
-// Helper: Handle file upload
-App.smHandleFileUpload = function (input) {
-  if (input.files && input.files[0]) {
-    var file = input.files[0];
-    var fileSize = file.size / (1024 * 1024); // Convert to MB
-
-    if (fileSize > 5) {
-      alert('File size exceeds 5MB. Please upload a smaller file.');
-      input.value = '';
-      return;
-    }
-
-    var allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Invalid file type. Please upload PDF, JPG, or PNG only.');
-      input.value = '';
-      return;
-    }
-
-    var filenameDiv = document.getElementById('ff-filename');
-    if (filenameDiv) {
-      filenameDiv.innerHTML = '<span class="material-icons" style="font-size:16px;vertical-align:middle;">check_circle</span> File uploaded: <b>' + file.name + '</b> (' + fileSize.toFixed(2) + ' MB)';
-    }
-  }
-};
-
-App.smFCSave = function (mode, submitType) {
+App.smFCSave = function (mode) {
   var isEdit = mode === 'edit';
-  var errIds = ['ff-seedclass', 'ff-season', 'ff-crop', 'ff-variety', 'ff-lotno', 'ff-prodyear', 'ff-producername', 'ff-producerreg', 'ff-proddistrict', 'ff-prodblock', 'ff-prodarea', 'ff-expectedqty', 'ff-actualqty', 'ff-approvedqty', 'ff-availqty', 'ff-certagency', 'ff-certno', 'ff-certdate', 'ff-germination', 'ff-purity', 'ff-moisture', 'ff-warehouse', 'ff-bagsize', 'ff-numbags'];
-  App._smClearErr(errIds);
+  App._smClearErr(['fc-member', 'fc-seedtype', 'fc-season', 'fc-crop', 'fc-variety', 'fc-allocdate', 'fc-procdate', 'fc-unit', 'fc-allocqty', 'fc-prodqty']);
 
-  // Get all field values
-  var seedClass = App._smGet('ff-seedclass');
-  var season = App._smGet('ff-season');
-  var crop = App._smGet('ff-crop');
+  var memberId = App._smGet('fc-member');
+  var seedType = App._smGet('fc-seedtype');
+  var finYear = App._smGet('fc-finyear') || App._lineFinYear();
+  var season = App._smGet('fc-season');
+  var crop = App._smGet('fc-crop');
   // Add: one or more varieties from the multi-select. Edit: the record's single variety.
-  var varieties = isEdit ? [App._smGet('ff-variety')].filter(Boolean) : App.msValues('ff-variety');
-  var variety = varieties[0] || '';
-  var varietyCode = App._smGet('ff-varietycode');
-  var seedLotNo = App._smGet('ff-lotno');
-  var productionYear = App._smGet('ff-prodyear');
-  var producerName = App._smGet('ff-producername');
-  var producerRegNo = App._smGet('ff-producerreg');
-  var productionDistrict = App._smGet('ff-proddistrict');
-  var productionBlock = App._smGet('ff-prodblock');
-  var productionArea = App._smGet('ff-prodarea');
-  var expectedQty = App._smGet('ff-expectedqty');
-  var actualQty = App._smGet('ff-actualqty');
-  var processingQty = App._smGet('ff-processingqty');
-  var approvedQty = App._smGet('ff-approvedqty');
-  var rejectedQty = App._smGet('ff-rejectedqty');
-  var availableQty = App._smGet('ff-availqty');
-  var certAgency = App._smGet('ff-certagency');
-  var certNumber = App._smGet('ff-certno');
-  var certDate = App._smGet('ff-certdate');
-  var germination = App._smGet('ff-germination');
-  var physicalPurity = App._smGet('ff-purity');
-  var moisture = App._smGet('ff-moisture');
-  var storageWarehouse = App._smGet('ff-warehouse');
-  var storageLocation = App._smGet('ff-storage');
-  var bagSize = App._smGet('ff-bagsize');
-  var numberOfBags = App._smGet('ff-numbags');
-  var totalQuantityKg = App._smGet('ff-totalkg');
-  var remarks = App._smGet('ff-remarks');
+  var varieties = isEdit ? [App._smGet('fc-variety')].filter(Boolean) : App.msValues('fc-variety');
+  var allocDate = App._smGet('fc-allocdate');
+  var procDate = App._smGet('fc-procdate');
+  var unit = App._smGet('fc-unit');
+  var allocQty = parseFloat(App._smGet('fc-allocqty'));
+  var prodRaw = App._smGet('fc-prodqty');
+  var produceQty = prodRaw === '' ? null : parseFloat(prodRaw);
 
-  // Validations
-  if (!seedClass) { App._smErr('ff-seedclass', 'Seed class is required'); return; }
-  if (!season) { App._smErr('ff-season', 'Season is required'); return; }
-  if (!crop) { App._smErr('ff-crop', 'Crop is required'); return; }
-  if (!varieties.length) { App._smErr('ff-variety', 'Variety is required'); return; }
-  if (!productionYear || productionYear < 2000 || productionYear > 2100) { App._smErr('ff-prodyear', 'Valid production year is required'); return; }
-  if (!producerName.trim()) { App._smErr('ff-producername', 'Producer name is required'); return; }
-  if (!producerRegNo.trim()) { App._smErr('ff-producerreg', 'Producer registration no. is required'); return; }
-  if (!productionDistrict) { App._smErr('ff-proddistrict', 'Production district is required'); return; }
-  if (!productionBlock) { App._smErr('ff-prodblock', 'Production block is required'); return; }
-  if (!expectedQty || expectedQty <= 0) { App._smErr('ff-expectedqty', 'Expected quantity must be > 0'); return; }
-  if (!actualQty || actualQty <= 0) { App._smErr('ff-actualqty', 'Actual quantity must be > 0'); return; }
+  var existing = isEdit ? App.state.fcSeedStock.find(function (r) { return r.id === App.state.fcSelId; }) : null;
+  var member = (App.state.members || []).find(function (m) { return m.id === memberId; });
+  var memberName = member ? member.name : (existing && existing.memberId === memberId ? existing.memberName : '');
 
-  var newRec = {
-    id: isEdit ? App.state.fcSelId : 'FC-' + Date.now(),
-    seedClass: seedClass,
-    season: season,
-    crop: crop,
-    variety: variety,
-    varietyCode: varietyCode,
-    seedLotNo: seedLotNo,
-    productionYear: productionYear,
-    producerName: producerName,
-    producerRegNo: producerRegNo,
-    productionDistrict: productionDistrict,
-    productionBlock: productionBlock,
-    productionArea: parseFloat(productionArea) || 0,
-    expectedQty: parseFloat(expectedQty),
-    actualQty: parseFloat(actualQty),
-    processingQty: parseFloat(processingQty || 0),
-    approvedQty: parseFloat(approvedQty) || 0,
-    rejectedQty: parseFloat(rejectedQty || 0),
-    availableQty: parseFloat(availableQty) || parseFloat(actualQty) || 0,
-    certAgency: certAgency,
-    certNumber: certNumber,
-    certDate: certDate,
-    germination: parseFloat(germination) || 0,
-    physicalPurity: parseFloat(physicalPurity) || 0,
-    moisture: parseFloat(moisture) || 0,
-    storageWarehouse: storageWarehouse,
-    storageLocation: storageLocation,
-    bagSize: parseFloat(bagSize) || 0,
-    numberOfBags: parseInt(numberOfBags) || 0,
-    totalQuantityKg: (parseFloat(bagSize) || 0) * (parseInt(numberOfBags) || 0),
-    remarks: remarks,
-    category: seedClass.includes('Foundation') ? 'Foundation' : (seedClass.includes('Certified') ? 'Certified' : seedClass),
-    qualityStatus: 'Passed',
-    breederLotNo: seedLotNo,
-    producedQty: parseFloat(actualQty),
-    processingDate: certDate,
-    packagingQty: parseFloat(bagSize) || 0
-  };
+  var ok = true;
+  if (!memberId || !memberName) { App._smErr('fc-member', 'Member is required.'); ok = false; }
+  if (!seedType) { App._smErr('fc-seedtype', 'Seed type is required.'); ok = false; }
+  if (!season) { App._smErr('fc-season', 'Season is required.'); ok = false; }
+  if (!crop) { App._smErr('fc-crop', 'Crop is required.'); ok = false; }
+  if (!varieties.length) { App._smErr('fc-variety', 'Variety is required.'); ok = false; }
+  if (!allocDate) { App._smErr('fc-allocdate', 'Allocated date is required.'); ok = false; }
+  if (!unit) { App._smErr('fc-unit', 'Unit is required.'); ok = false; }
+  if (isNaN(allocQty) || allocQty <= 0) { App._smErr('fc-allocqty', 'Allocated quantity must be greater than 0.'); ok = false; }
+  if (produceQty !== null && (isNaN(produceQty) || produceQty < 0)) { App._smErr('fc-prodqty', 'Produce quantity must be 0 or more.'); ok = false; }
+  if (procDate && allocDate && procDate < allocDate) { App._smErr('fc-procdate', 'Procurement date cannot be before the allocated date.'); ok = false; }
+  if (!ok) return;
 
-  // One record per selected variety; every other detail is shared. Variety Code is looked up per variety.
-  var recs = varieties.map(function (vr, i) {
-    var r = Object.assign({}, newRec);
-    r.variety = vr;
-    r.varietyCode = varietyCode || App._fcVarietyCode(vr);
-    if (!isEdit) r.id = 'FC-' + Date.now() + (varieties.length > 1 ? '-' + (i + 1) : '');
-    return r;
-  });
-
+  var now = new Date().toISOString().slice(0, 10);
+  var by = (App.state.currentUser && App.state.currentUser.name) || 'Society Head';
+  var list = App.state.fcSeedStock;
   if (isEdit) {
-    var idx = App.state.fcSeedStock.findIndex(function (r) { return r.id === App.state.fcSelId; });
-    if (idx >= 0) App.state.fcSeedStock[idx] = recs[0];
+    if (!existing) return;
+    Object.assign(existing, {
+      memberId: memberId, memberName: memberName, seedType: seedType, finYear: finYear, season: season, crop: crop, variety: varieties[0],
+      allocDate: allocDate, procDate: procDate, unit: unit, allocQty: allocQty, produceQty: produceQty, updatedAt: now
+    });
+    App._smToast('Allocation updated successfully!');
   } else {
-    recs.forEach(function (r) { App.state.fcSeedStock.push(r); });
+    // One record per selected variety; every other detail is shared.
+    varieties.forEach(function (variety) {
+      list.unshift({
+        id: App._smNextId(list, 'FCS-'), memberId: memberId, memberName: memberName, seedType: seedType, finYear: finYear, season: season,
+        crop: crop, variety: variety, allocDate: allocDate, procDate: procDate, unit: unit, allocQty: allocQty, produceQty: produceQty,
+        activeStatus: 'Active', createdBy: by, createdAt: now, updatedAt: now
+      });
+    });
+    App._smToast(varieties.length > 1 ? varieties.length + ' allocations created successfully!' : 'Allocation created successfully!');
   }
-
-  App.msReset('ff-variety');
-  alert((isEdit ? 'Record updated' : (recs.length > 1 ? recs.length + ' records added' : 'Record added')) + ' successfully!');
+  App.msReset('fc-variety');
+  App.state.fcSelId = null;
   App.navigate('soc-fc-list');
-};
-
-App.smFCDelete = function (id) {
-  if (!confirm('Delete seed stock record ' + id + '? This cannot be undone.')) return;
-  App.state.fcSeedStock = App.state.fcSeedStock.filter(function (r) { return r.id !== id; });
-  App._smToast('Record deleted.');
-  App.render();
 };
 
 App.smFCToggleActive = function (id) {
@@ -1008,7 +802,6 @@ App.smFCToggleActive = function (id) {
   App._smToast('Record marked ' + r.activeStatus + '.');
   App.render();
 };
-
 
 // ════════════════════════════════════════════════════════════
 // MODULE — SEED BUYING / SELLING LINE MANAGEMENT (Admin)
@@ -1118,7 +911,7 @@ App.smFCToggleActive = function (id) {
       lines.length === 0
         ? '<div style="padding:48px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">swap_horiz</span><p>No lines yet.</p></div>'
         : '<div class="table-wrap"><table><thead><tr>'
-        + '<th>Type</th><th>Seed Type</th><th>Fin. Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Start Date</th><th>End Date</th><th>Status</th>'
+        + '<th>Type</th><th>Seed Type</th><th>Proc. Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Start Date</th><th>End Date</th><th>Status</th>'
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
       '</div></div>'
     ].join('');
@@ -1142,7 +935,7 @@ App.smFCToggleActive = function (id) {
       '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',
       '<select class="form-control" id="sl-seedtype"><option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option></select></div>',
 
-      '<div class="form-group"><label>Financial Year</label>',
+      '<div class="form-group"><label>Procurement Year</label>',
       '<input type="text" class="form-control" id="sl-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
 
       '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label>',
@@ -1184,7 +977,7 @@ App.smFCToggleActive = function (id) {
 // ════════════════════════════════════════════════════════════
 // MODULE — PACKAGING SET (Admin)
 // Defines the pack size (unit + quantity) used when packing seed, per
-// Financial Year / Seed Type / Season / Crop / Variety. Picking several
+// Procurement Year / Seed Type / Season / Crop / Variety. Picking several
 // varieties applies the same unit + quantity to each; one record is saved
 // per variety.
 // ════════════════════════════════════════════════════════════
@@ -1277,7 +1070,7 @@ App.smFCToggleActive = function (id) {
       this.state.packagingSets.length === 0
         ? '<div style="padding:48px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">inventory_2</span><p>No packaging sets yet.</p></div>'
         : '<div class="table-wrap"><table><thead><tr>'
-        + '<th>Fin. Year</th><th>Seed Type</th><th>Season</th><th>Crop</th><th>Variety</th><th>Quantity</th><th>Unit</th>'
+        + '<th>Proc. Year</th><th>Seed Type</th><th>Season</th><th>Crop</th><th>Variety</th><th>Quantity</th><th>Unit</th>'
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
       '</div></div>'
     ].join('');
@@ -1295,7 +1088,7 @@ App.smFCToggleActive = function (id) {
       '<div class="card" style="max-width:860px;"><div class="card-body">',
       '<div class="form-grid">',
 
-      '<div class="form-group"><label>Financial Year</label>',
+      '<div class="form-group"><label>Procurement Year</label>',
       '<input type="text" class="form-control" id="pk-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
 
       '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',

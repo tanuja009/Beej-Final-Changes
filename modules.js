@@ -229,7 +229,7 @@ App.renderBeejPriceDashboard = function () {
               <td><b>${p.id}</b></td>
               <td>${p.crop}</td>
               <td>${p.variety}</td>
-              <td>${p.season} ${p.cropYear}</td>
+              <td>${p.season}</td>
               <td style="font-weight:600;color:#2E7D32;">₹${p.sellingPrice.toLocaleString()}</td>
               <td>${this._priceBadge(p.status)}</td>
               <td><button class="btn btn-outline btn-sm" onclick="App.state.selectedPriceId='${p.id}';App.navigate('admin-price-view')"><span class="material-icons">visibility</span></button></td>
@@ -323,7 +323,7 @@ App.renderPriceList = function () {
             <td>${p.category}</td>
             <td>${p.crop}</td>
             <td>${p.variety}</td>
-            <td>${p.season} ${p.cropYear}</td>
+            <td>${p.season}</td>
             <td>${p.unit}</td>
             <td style="font-weight:700;color:#2E7D32;">₹${p.sellingPrice.toLocaleString()}</td>
             <td>${p.effectiveFrom}</td>
@@ -592,7 +592,8 @@ App.renderPriceView = function () {
           ${row('Seed Category', p.category)}
           ${row('Crop', p.crop)}
           ${row('Variety', p.variety)}
-          ${row('Season', `${p.season} ${p.cropYear}`)}
+          ${row('Season', p.season)}
+          ${row('Crop Year', p.cropYear)}
           ${row('Unit', p.unit)}
         </div>
         <div>
@@ -624,7 +625,7 @@ App.renderPriceHistory = function () {
   return `
   <div class="page-header">
     <h1>Price History — ${id}</h1>
-    <p>${p ? `${p.crop} / ${p.variety} · ${p.season} ${p.cropYear}` : ''}</p>
+    <p>${p ? `${p.crop} / ${p.variety} · ${p.season}` : ''}</p>
   </div>
   <div class="card">
     <div class="card-header">

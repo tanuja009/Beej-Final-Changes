@@ -109,7 +109,7 @@ const App = {
 
     // Society: member distribution records
     distributionRecords: [
-      { receiptNo: 'RCP-001', memberId: 'MBR-001', memberName: 'Ramesh Kumar', mobile: '9876543210', village: 'Rampur', finYear: '2024-2025', season: 'Kharif', seedType: 'Breeder', crop: 'Soybean', variety: 'JS-335', qty: 2.5, rate: 2400, amount: 6000, date: '2024-07-05', status: 'Completed', stockId: 'RS-001' },
+      { receiptNo: 'RCP-001', memberId: 'MBR-001', memberName: 'Ramesh Kumar', mobile: '9876543210', village: 'Rampur', finYear: '2024-2025', season: 'Kharif', seedType: 'Breeder', crop: 'Soybean', variety: 'JS-335', qty: 2.5, unit: 'Quintal', date: '2024-07-05', status: 'Completed', stockId: 'RS-001' },
     ],
 
     // UI helpers
@@ -737,7 +737,7 @@ const App = {
     return `
     <div class="page-header">
       <h1>Welcome back, Ramesh Verma 👋</h1>
-      <p>Rampur Krishi Samiti (SOC-001) | Kharif Season 2024-25</p>
+      <p>Rampur Krishi Samiti (SOC-001) | Kharif Season</p>
     </div>
     <div class="stats-grid">
       <div class="stat-card">
@@ -1724,14 +1724,19 @@ const App = {
               </select>
             </div>
             <div class="form-group">
-              <label>Crop Variety *</label>
-              ${App.msRender('d-variety', [], true, 'Select Crop first', App.updateMaxDemand.bind(App))}
-              ${App.msHint()}
+              <label>First Choice Variety *</label>
+              ${App._demandChoiceRender('d-variety', '')}
+              ${App.msHint('Your preferred variety. Select one or more.')}
             </div>
             <div class="form-group">
-              <label>Max Demand Quantity (for this variety)</label>
-              <input type="text" class="form-control" id="d-max-demand" value="—" readonly
-                     style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/>
+              <label>Second Choice Variety</label>
+              ${App._demandChoiceRender('d-variety2', '')}
+              ${App.msHint('Optional. Alternate if the first choice is not available.')}
+            </div>
+            <div class="form-group">
+              <label>Third Choice Variety</label>
+              ${App._demandChoiceRender('d-variety3', '')}
+              ${App.msHint('Optional. Alternate if the first and second choice are not available.')}
             </div>
           </div>
         </div>
@@ -1772,18 +1777,57 @@ const App = {
             <span class="material-icons">save</span> Save Draft
           </button>
           <button class="btn btn-primary" onclick="App.previewDemand()">
-            <span class="material-icons">preview</span> Preview & Submit
+            <span class="material-icons">preview</span> Preview
           </button>
         </div>
       </div>
     </div>`;
   },
 
+  // ── First / Second / Third choice variety multi-selects (Raise Demand) ──
+  _DEMAND_CHOICE_KEYS: ['d-variety', 'd-variety2', 'd-variety3'],
+
+  // Varieties offered in one choice: the crop's varieties minus those already picked in the other two choices,
+  // so the same variety can't be chosen twice.
+  _demandChoiceOpts(crop, key) {
+    const taken = [];
+    this._DEMAND_CHOICE_KEYS.filter(k => k !== key).forEach(k => this.msValues(k).forEach(v => taken.push(v)));
+    return this.varietiesForCrop(crop).filter(v => taken.indexOf(v) === -1);
+  },
+  _demandChoiceRender(key, crop) {
+    return this.msRender(key, crop ? this._demandChoiceOpts(crop, key) : [], !crop, 'Select Crop first',
+      () => this._demandChoiceChanged(key));
+  },
+  // A choice changed: refresh the other two so they no longer offer the varieties just picked (or offer freed ones).
+  _demandChoiceChanged(key) {
+    const crop = document.getElementById('d-crop') ? document.getElementById('d-crop').value : '';
+    this._DEMAND_CHOICE_KEYS.filter(k => k !== key).forEach(k => {
+      this._demandChoiceRender(k, crop);
+      this._msRefresh(k);
+    });
+    this._refreshDemandPrice();
+  },
+  // The estimated price depends on the quantity and how many First Choice varieties are selected.
+  _refreshDemandPrice() {
+    this.calculateEstPrice(document.getElementById('d-qty') ? document.getElementById('d-qty').value : '');
+  },
+  // Rows describing the varieties asked for: [label, text]. Plain "Variety" when there are no alternates.
+  _demandChoices(d) {
+    const first = d.varieties && d.varieties.length ? d.varieties.join(', ') : d.variety;
+    const second = (d.secondChoice || []).join(', ');
+    const third = (d.thirdChoice || []).join(', ');
+    if (!second && !third) return [['Variety', first]];
+    const rows = [['First Choice', first]];
+    if (second) rows.push(['Second Choice', second]);
+    if (third) rows.push(['Third Choice', third]);
+    return rows;
+  },
+
   updateVarieties(crop) {
     const list = this.varietiesForCrop(crop);
-    // Re-render the variety multi-select for the new crop (clears any stale selection).
-    this.msRender('d-variety', list, !crop, 'Select Crop first', this.updateMaxDemand.bind(this));
-    this._msRefresh('d-variety');
+    // Crop changed: clear all three choices first, then rebuild each for the new crop.
+    this._DEMAND_CHOICE_KEYS.forEach(k => this.msReset(k));
+    this._DEMAND_CHOICE_KEYS.forEach(k => { this._demandChoiceRender(k, crop); this._msRefresh(k); });
 
     // Update available stock based on crop and variety
     const stockEl = document.getElementById('d-avail-stock');
@@ -1792,42 +1836,8 @@ const App = {
       stockEl.value = mockStock + ' Qt';
     }
 
-    // Refresh the Max Demand Quantity for the variety selection now reset.
-    this.updateMaxDemand();
-  },
-
-  // Look up the Max Demand Quantity set by the admin (on Stock Entry) for the
-  // selected crop + variety, and show it in the read-only field. Variety names
-  // on the demand form may include extra text (e.g. "Paddy (Rice)"), so match
-  // on the variety value and crop loosely.
-  _maxDemandFor(crop, variety) {
-    const entries = this.state.stockEntries || [];
-    // Normalise crop (demand form uses "Paddy (Rice)"; stock uses "Paddy").
-    const cropKey = (crop || '').split('(')[0].trim().toLowerCase();
-    const match = entries.find(e =>
-      e.variety === variety &&
-      (!cropKey || (e.crop || '').toLowerCase().indexOf(cropKey) === 0 || cropKey.indexOf((e.crop || '').toLowerCase()) === 0)
-    ) || entries.find(e => e.variety === variety);
-    if (match && Number(match.maxDemandQty) > 0) {
-      return Number(match.maxDemandQty) + ' ' + (match.maxDemandUnit || 'Quintal');
-    }
-    return null;
-  },
-
-  updateMaxDemand() {
-    const el = document.getElementById('d-max-demand');
-    if (!el) return;
-    const crop = document.getElementById('d-crop') ? document.getElementById('d-crop').value : '';
-    const varieties = this.msValues('d-variety');
-    if (!varieties.length) { el.value = '—'; el.style.color = '#9E9E9E'; this.calculateEstPrice(document.getElementById('d-qty') ? document.getElementById('d-qty').value : ''); return; }
-    const maxes = varieties.map(v => this._maxDemandFor(crop, v));
-    // One variety: just the value. Several: "variety: value" for each.
-    el.value = varieties.length === 1
-      ? (maxes[0] || 'Not set for this variety')
-      : varieties.map((v, i) => v + ': ' + (maxes[i] || 'Not set')).join(' | ');
-    el.style.color = maxes.some(Boolean) ? '#2E7D32' : '#9E9E9E';
-    // The estimated price depends on how many varieties are selected.
-    this.calculateEstPrice(document.getElementById('d-qty') ? document.getElementById('d-qty').value : '');
+    // Selection was reset, so refresh the estimated price.
+    this._refreshDemandPrice();
   },
 
   calculateEstPrice(qty) {
@@ -1865,12 +1875,13 @@ const App = {
     const qty = parseInt(document.getElementById('d-qty')?.value) || 200;
     const crop = document.getElementById('d-crop')?.value || 'Wheat';
     const varieties = this.msValues('d-variety');
-    if (!varieties.length) { alert('Please select at least one crop variety.'); return; }
+    if (!varieties.length) { alert('Please select at least one First Choice variety.'); return; }
     const season = document.getElementById('d-season')?.value || 'Rabi';
-    // `qty` is per variety: the same quantity is demanded for every selected variety.
+    // `qty` is per First Choice variety. Second / Third choice are alternates, so they don't add to the quantity or cost.
     const total = qty * varieties.length;
     this.state.currentDemand = {
       season, crop, variety: varieties.join(', '), varieties, qty,
+      secondChoice: this.msValues('d-variety2'), thirdChoice: this.msValues('d-variety3'),
       cost: total * 2400, advance: total * 2400 * 0.25
     };
     this.navigate('demand-preview');
@@ -1902,7 +1913,7 @@ const App = {
     return `
     <div class="page-header">
       <h1>${isFull ? 'Full Payment Preview' : 'Demand Preview'}</h1>
-      <p>${isFull ? 'Review the balance payment before generating the full invoice' : 'Review your demand before generating invoice'}</p>
+      <p>${isFull ? 'Review the balance payment before paying' : 'Review your demand before making payment'}</p>
     </div>
     <div style="max-width:700px;margin:0 auto;">
       <div class="preview-card">
@@ -1912,14 +1923,12 @@ const App = {
           <div style="margin-left:auto;"><span class="badge ${isFull ? 'badge-info' : 'badge-warning'}">${isFull ? d.id : 'Draft'}</span></div>
         </div>
         <div class="preview-grid">
-          <div class="preview-item"><label>Season</label><span>${d.season} 2024-25</span></div>
+          <div class="preview-item"><label>Season</label><span>${d.season}</span></div>
           <div class="preview-item"><label>Crop</label><span>${d.crop}</span></div>
-          <div class="preview-item"><label>Variety</label><span>${d.variety}</span></div>
+          ${this._demandChoices(d).map(([l, v]) => `<div class="preview-item"><label>${l === 'Variety' ? 'Variety' : l + ' Variety'}</label><span>${v}</span></div>`).join('')}
           <div class="preview-item"><label>${isFull ? 'Quantity' : 'Requested Quantity'}</label><span>${this._demandQtyText(d)}</span></div>
           <div class="preview-item"><label>Available Stock</label><span style="color:#2E7D32;">850 Qt ✓</span></div>
           <div class="preview-item"><label>Rate per Quintal</label><span>₹${rate.toLocaleString()}/-</span></div>
-          <div class="preview-item"><label>Total Members</label><span>65</span></div>
-          <div class="preview-item"><label>Total Land Area</label><span>185.4 Ha</span></div>
         </div>
         <div class="preview-total">
           <div><div class="label">Estimated Total Cost</div><div class="value">₹${d.cost.toLocaleString()}</div></div>
@@ -1929,15 +1938,13 @@ const App = {
         : `<div><div class="label">Advance Payment Required (25%)</div><div class="value" style="color:#FFD54F;">₹${d.advance.toLocaleString()}</div></div>`}
         </div>
       </div>
-      <div class="alert alert-info">
+      ${isFull ? `<div class="alert alert-info">
         <span class="material-icons">info</span>
-        <div>${isFull
-        ? `This is the <b>final balance payment (75%)</b> of <b>₹${balance.toLocaleString()}</b> for demand <b>${d.id}</b>. On payment, the full invoice (100%) will be available for download.`
-        : `By submitting this demand, you agree to pay the advance amount of <b>₹${d.advance.toLocaleString()}</b> within 7 working days. Remaining payment to be made on delivery.`}</div>
-      </div>
+        <div>This is the <b>final balance payment (75%)</b> of <b>₹${balance.toLocaleString()}</b> for demand <b>${d.id}</b>. After payment, the full invoice (100%) will be generated.</div>
+      </div>` : ''}
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
         <button class="btn btn-gray" onclick="App.navigate('${backPage}')"><span class="material-icons">arrow_back</span> Back</button>
-        <button class="btn btn-primary btn-lg" onclick="App.navigate('payment')"><span class="material-icons">receipt</span> Generate Invoice & Pay</button>
+        <button class="btn btn-primary btn-lg" onclick="App.navigate('payment')"><span class="material-icons">payments</span> Payment Now</button>
       </div>
     </div>`;
   },
@@ -1952,7 +1959,6 @@ const App = {
     const rate = d.rate || 2400;
     const balance = d.balance != null ? d.balance : (d.cost - d.advance);
     const dueNow = isFull ? balance : d.advance;
-    const invNo = isFull ? ('INV-FULL-' + (d.id || 'DEM-2024-006')) : 'INV-2024-0089';
     return `
     <div class="page-header">
       <h1>Payment</h1>
@@ -1962,17 +1968,19 @@ const App = {
       <div class="invoice-box">
         <div class="invoice-header">
           <div>
-            <div class="invoice-title">🌾 ${isFull ? 'FULL INVOICE' : 'INVOICE'}</div>
-            <div class="invoice-no">Invoice #${invNo}</div>
-            <div class="invoice-no">Demand #${d.id || 'DEM-2024-006'}</div>
+            <div class="invoice-title">🌾 ${isFull ? 'BALANCE PAYMENT SUMMARY' : 'PAYMENT SUMMARY'}</div>
+            ${isFull && d.id ? `<div class="invoice-no">Demand #${d.id}</div>` : ''}
+            <div class="invoice-no">Invoice will be generated after payment</div>
           </div>
           <div style="text-align:right;">
             <div style="font-size:0.78rem;color:#666;">Date: ${new Date().toLocaleDateString('en-IN')}</div>
-            <div style="font-size:0.78rem;color:#666;">Season: ${d.season} 2024-25</div>
+            <div style="font-size:0.78rem;color:#666;">Season: ${d.season}</div>
           </div>
         </div>
         <div class="invoice-row"><span class="label">Society</span><span class="value">Rampur Krishi Samiti</span></div>
         <div class="invoice-row"><span class="label">Crop / Variety</span><span class="value">${d.crop} / ${d.variety}</span></div>
+        ${(d.secondChoice && d.secondChoice.length) ? `<div class="invoice-row"><span class="label">Second Choice</span><span class="value">${d.secondChoice.join(', ')}</span></div>` : ''}
+        ${(d.thirdChoice && d.thirdChoice.length) ? `<div class="invoice-row"><span class="label">Third Choice</span><span class="value">${d.thirdChoice.join(', ')}</span></div>` : ''}
         <div class="invoice-row"><span class="label">Quantity</span><span class="value">${this._demandQtyText(d)}</span></div>
         <div class="invoice-row"><span class="label">Rate</span><span class="value">₹${rate.toLocaleString()} per Qt</span></div>
         <div class="invoice-row"><span class="label">Total Amount</span><span class="value">₹${d.cost.toLocaleString()}</span></div>
@@ -2043,6 +2051,8 @@ const App = {
       const id = this._nextDemandId();
       this.state.demands.unshift({
         id, date, season: d.season, crop: d.crop, variety, qty: d.qty, rate: 2400,
+        // Alternates the society will accept if the first choice isn't available.
+        secondChoice: (d.secondChoice || []).slice(), thirdChoice: (d.thirdChoice || []).slice(),
         payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Under Review'
       });
       return id;
@@ -2050,26 +2060,57 @@ const App = {
     this.showPaymentSuccess('advance');
   },
 
+  // Invoices generated by the payment just made: one per demand created (advance) or the full invoice (balance).
+  _generatedInvoices(isFull) {
+    const cd = this.state.currentDemand || {};
+    if (isFull) {
+      if (!cd.id) return [];
+      return [{ id: cd.id, kind: 'full', no: 'INV-FULL-' + cd.id, label: `${cd.crop} · ${cd.variety}`, type: 'Full Payment (100%)', amount: cd.cost || 0 }];
+    }
+    return (this.state._lastDemandIds || []).map(id => {
+      const dm = this.state.demands.find(x => x.id === id);
+      if (!dm) return null;
+      const total = (dm.qty || 0) * (dm.rate || 2400);
+      return { id, kind: 'advance', no: 'INV-ADV-' + id, label: `${dm.crop} · ${dm.variety}`, type: 'Advance Payment (25%)', amount: Math.round(total * 0.25) };
+    }).filter(Boolean);
+  },
+
   showPaymentSuccess(mode) {
     const isFull = mode === 'full';
     const cd = this.state.currentDemand || {};
     const dueNow = isFull ? (cd.balance != null ? cd.balance : 0) : (cd.advance || 0);
+    const modeLabels = { upi: 'UPI Payment', netbanking: 'Net Banking', card: 'Debit Card', challan: 'Bank Challan' };
+    const payMode = modeLabels[this.state.paymentMode] || '—';
+    const invoices = this._generatedInvoices(isFull);
+    const row = (l, v) => `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;font-size:0.85rem;">${l}</span><span style="font-weight:600;font-size:0.85rem;">${v}</span></div>`;
     const app = document.getElementById('app');
     app.innerHTML = `
     <div style="min-height:100vh;background:#f1f8e9;display:flex;align-items:center;justify-content:center;padding:20px;">
-      <div style="background:#fff;border-radius:16px;padding:48px;text-align:center;max-width:480px;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+      <div style="background:#fff;border-radius:16px;padding:40px 36px;text-align:center;max-width:520px;width:100%;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
         <div style="width:80px;height:80px;background:#E8F5E9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:40px;">✅</div>
         <h2 style="color:#2E7D32;font-size:1.5rem;margin-bottom:8px;">Payment Successful!</h2>
         <p style="color:#666;margin-bottom:20px;">${isFull
-        ? 'Your balance (75%) payment is complete. This demand is now <b>Fully Paid</b> and the full invoice is available to download.'
-        : 'Your demand has been submitted successfully. Admin will review and approve shortly.'}</p>
-        <div style="background:#F1F8E9;border-radius:8px;padding:16px;margin-bottom:24px;text-align:left;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;font-size:0.85rem;">Transaction ID</span><span style="font-weight:600;font-size:0.85rem;">TXN-${Math.random().toString(36).substr(2, 9).toUpperCase()}</span></div>
-          ${dueNow ? `<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;font-size:0.85rem;">Amount Paid</span><span style="font-weight:600;font-size:0.85rem;">₹${dueNow.toLocaleString()}</span></div>` : ''}
-          <div style="display:flex;justify-content:space-between;"><span style="color:#666;font-size:0.85rem;">Payment Status</span><span class="badge badge-success">${isFull ? '✓ Fully Paid' : '✓ Advance Paid'}</span></div>
+        ? 'Your balance (75%) payment is complete. This demand is now <b>Fully Paid</b> and your invoice has been generated.'
+        : 'Your payment is received and your demand has been submitted. Your invoice has been generated. Admin will review and approve shortly.'}</p>
+        <div style="background:#F1F8E9;border-radius:8px;padding:16px 16px 8px;margin-bottom:20px;text-align:left;">
+          ${row('Transaction ID', 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase())}
+          ${row('Payment Mode', payMode)}
+          ${dueNow ? row('Amount Paid', '₹' + dueNow.toLocaleString()) : ''}
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;font-size:0.85rem;">Payment Status</span><span class="badge badge-success">${isFull ? '✓ Fully Paid' : '✓ Advance Paid'}</span></div>
         </div>
+        ${invoices.length ? `
+        <div style="text-align:left;margin-bottom:22px;">
+          <div style="font-size:0.74rem;font-weight:700;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">${invoices.length > 1 ? 'Invoices Generated' : 'Invoice Generated'}</div>
+          ${invoices.map(inv => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #C8E6C9;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+            <div style="min-width:0;">
+              <div style="font-weight:700;font-size:0.88rem;color:#1B5E20;">${inv.no}</div>
+              <div style="font-size:0.75rem;color:#757575;">${inv.label} · ${inv.type}${inv.amount ? ' · ₹' + inv.amount.toLocaleString() : ''}</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="flex-shrink:0;" onclick="App.downloadInvoice('${inv.id}','${inv.kind}')"><span class="material-icons" style="font-size:16px;">download</span> Download</button>
+          </div>`).join('')}
+        </div>` : ''}
         <div style="display:flex;gap:12px;justify-content:center;">
-          ${isFull && cd.id ? `<button class="btn btn-outline" onclick="App.downloadInvoice('${cd.id}','full')"><span class="material-icons">receipt_long</span> Full Invoice</button>` : `<button class="btn btn-outline" onclick="App.showToast('Receipt downloaded!')"><span class="material-icons">download</span> Download Receipt</button>`}
           <button class="btn btn-primary" onclick="App.navigate('raise-demand')"><span class="material-icons">history</span> View Demands</button>
         </div>
       </div>
@@ -2141,7 +2182,8 @@ const App = {
                 <td>${d.crop}</td>
                 <td>${d.date}</td>
                 <td>${d.season}</td>
-                <td>${d.variety}</td>
+                <td>${d.variety}${(d.secondChoice && d.secondChoice.length) || (d.thirdChoice && d.thirdChoice.length)
+          ? `<div style="font-size:0.72rem;color:#757575;">${[(d.secondChoice || []).length ? '2nd: ' + d.secondChoice.join(', ') : '', (d.thirdChoice || []).length ? '3rd: ' + d.thirdChoice.join(', ') : ''].filter(Boolean).join(' · ')}</div>` : ''}</td>
                 <td style="font-weight:600;">${d.qty} Qt</td>
                 <td style="color:#2E7D32;font-weight:600;">${approved > 0 ? approved + ' Qt' : '—'}</td>
                 <td style="color:${pending > 0 ? '#E65100' : '#9E9E9E'};font-weight:600;">${pending > 0 ? pending + ' Qt' : '—'}</td>
@@ -2187,7 +2229,7 @@ const App = {
     return base;
   },
 
-  // Pay the remaining 75% → run the full invoice + payment-mode flow (same as advance).
+  // Pay the remaining 75% → same flow as advance: preview → Payment Now → pay → invoice generated.
   payFullPayment(id) {
     const d = this.state.demands.find(x => x.id === id);
     if (!d) return;
@@ -2291,7 +2333,7 @@ const App = {
           ${row('Date', d.date)}
           ${row('Season', d.season)}
           ${row('Crop', d.crop)}
-          ${row('Variety', d.variety)}
+          ${this._demandChoices(d).map(([l, v]) => row(l === 'Variety' ? 'Variety' : l + ' Variety', v)).join('')}
           ${row('Requested Qty', d.qty + ' Qt')}
           ${row('Approved Qty', approved > 0 ? approved + ' Qt' : '—')}
           ${row('Pending Qty', pending > 0 ? pending + ' Qt' : '—')}
@@ -2329,7 +2371,7 @@ const App = {
     <div class="page-header"><h1>Distribution Register</h1><p>Member-wise seed distribution record</p></div>
     <div class="card">
       <div class="card-header">
-        <h3>Soybean JS-335 Distribution — Kharif 2024</h3>
+        <h3>Soybean JS-335 Distribution — Kharif</h3>
         <div style="display:flex;gap:8px;">
           <span class="badge badge-info">Approved: 120 Qt</span>
           <span class="badge badge-warning">Distributed: 2.5 Qt</span>
@@ -2451,7 +2493,7 @@ const App = {
     return `
     <div class="page-header">
       <h1>Admin Dashboard</h1>
-      <p>Beej Sangh Procurement Management — Rabi Season 2024-25</p>
+      <p>Beej Sangh Procurement Management — Rabi Season</p>
     </div>
     <div class="stats-grid">
       <div class="stat-card">
@@ -3432,7 +3474,7 @@ const App = {
     <div class="page-header"><h1>Distribution Management</h1><p>Manage dispatch of seeds to societies</p></div>
     <div class="card">
       <div class="card-header">
-        <h3>Dispatch Orders — Rabi 2024-25</h3>
+        <h3>Dispatch Orders — Rabi</h3>
         <button class="btn btn-primary btn-sm" onclick="App.showToast('Dispatch orders generated!')"><span class="material-icons">receipt_long</span> Generate All Orders</button>
       </div>
       <div class="card-body" style="padding:0;">
@@ -4088,20 +4130,6 @@ const App = {
     return startY + '-' + (startY + 1);
   },
 
-  // ── Price per quintal by seed type + crop/variety (mock price list). ──
-  _distPrice(seedType, crop, variety) {
-    // Base rate per crop/variety (₹/Qt), then a seed-type multiplier.
-    const base = {
-      'JS-335': 2400, 'GW-322': 2200, 'HD-2967': 2300, 'JG-315': 2600,
-      'Pusa Bold': 2800, 'IR-64': 2100, 'Swarna': 2000, 'Pusa Basmati-1': 3200,
-      'MTU-7029': 2050,
-    };
-    const cropBase = { Soybean: 2400, Wheat: 2200, Gram: 2600, Mustard: 2800, Paddy: 2100, Maize: 1900 };
-    const rate = base[variety] || cropBase[crop] || 2400;
-    const mult = seedType === 'Breeder' ? 1.3 : seedType === 'Foundation' ? 1.15 : 1.0; // Certified / Hybrid = base rate
-    return Math.round(rate * mult);
-  },
-
   // ── Dropdown option helpers for the distribution form. ──
   _distCropOpts(sel) {
     const crops = ['Soybean', 'Wheat', 'Gram', 'Mustard', 'Paddy', 'Maize'];
@@ -4109,21 +4137,13 @@ const App = {
   },
   // Variety multi-select for the distribution form (crop-wise).
   _distMs(crop) {
-    return this.msRender('nd-variety', this.varietiesForCrop(crop), !crop, 'Select Crop first', () => this.recalcDistAmount());
+    return this.msRender('nd-variety', this.varietiesForCrop(crop), !crop, 'Select Crop first');
   },
-  // Crop changed → rebuild the variety list in place (stale selection is dropped) and refresh the amount.
+  // Crop changed → rebuild the variety list in place (stale selection is dropped).
   onDistCropChange() {
     const crop = document.getElementById('nd-crop')?.value || '';
     this._distMs(crop);
     this._msRefresh('nd-variety');
-    this.recalcDistAmount();
-  },
-  // "₹3,120 / Qt" for one rate, "₹2,860 – ₹3,120 / Qt" when the selected varieties are priced differently.
-  _distRateText(seedType, crop, varieties) {
-    if (!varieties.length) return '—';
-    const rates = varieties.map(v => this._distPrice(seedType, crop, v));
-    const lo = Math.min(...rates), hi = Math.max(...rates);
-    return lo === hi ? '₹' + lo.toLocaleString() + ' / Qt' : '₹' + lo.toLocaleString() + ' – ₹' + hi.toLocaleString() + ' / Qt';
   },
 
   // ── Open / close the new-distribution form ──
@@ -4154,20 +4174,6 @@ const App = {
     }
   },
 
-  // Recalculate total amount = rate(seedType,crop,variety) × quantity.
-  recalcDistAmount() {
-    const seedType = document.getElementById('nd-seedtype')?.value || 'Breeder';
-    const crop = document.getElementById('nd-crop')?.value || '';
-    const varieties = this.msValues('nd-variety');
-    const qty = parseFloat(document.getElementById('nd-qty')?.value) || 0;
-    // Total = sum over the selected varieties of (rate × quantity); the same quantity applies to each variety.
-    const total = varieties.reduce((s, v) => s + Math.round(this._distPrice(seedType, crop, v) * qty), 0);
-    const rateEl = document.getElementById('nd-rate');
-    const amtEl = document.getElementById('nd-amount');
-    if (rateEl) rateEl.value = this._distRateText(seedType, crop, varieties);
-    if (amtEl) amtEl.value = '₹' + total.toLocaleString();
-  },
-
   // ── NEW DISTRIBUTION FORM ──
   renderNewDistributionForm() {
     const members = this.state.members.filter(m => m.status === 'Active');
@@ -4177,7 +4183,6 @@ const App = {
     const today = new Date().toISOString().split('T')[0];
     const seedType = 'Breeder', crop = 'Soybean';
     const varMs = this._distMs(crop);
-    const rateText = this._distRateText(seedType, crop, this.msValues('nd-variety'));
     return `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
       <div>
@@ -4204,7 +4209,7 @@ const App = {
             <input type="text" class="form-control" id="nd-village" value="${sm.village || ''}" readonly style="background:#f5f5f5;"/>
           </div>
           <div class="form-group">
-            <label>Financial Year</label>
+            <label>Procurement Year</label>
             <input type="text" class="form-control" id="nd-finyear" value="${finYear}" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/>
           </div>
           <div class="form-group">
@@ -4215,7 +4220,7 @@ const App = {
           </div>
           <div class="form-group">
             <label>Seed Type *</label>
-            <select class="form-control" id="nd-seedtype" onchange="App.recalcDistAmount()">
+            <select class="form-control" id="nd-seedtype">
               <option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option>
             </select>
           </div>
@@ -4231,16 +4236,14 @@ const App = {
             ${this.msHint()}
           </div>
           <div class="form-group">
-            <label>Quantity (Quintal) *</label>
-            <input type="number" class="form-control" id="nd-qty" min="0.1" step="0.1" placeholder="e.g. 2.5" oninput="App.recalcDistAmount()"/>
+            <label>Quantity *</label>
+            <input type="number" class="form-control" id="nd-qty" min="0.1" step="any" placeholder="e.g. 2.5"/>
           </div>
           <div class="form-group">
-            <label>Rate</label>
-            <input type="text" class="form-control" id="nd-rate" value="${rateText}" readonly style="background:#f5f5f5;"/>
-          </div>
-          <div class="form-group">
-            <label>Total Amount (auto)</label>
-            <input type="text" class="form-control" id="nd-amount" value="₹0" readonly style="background:#FFF9C4;color:#1B5E20;font-weight:700;"/>
+            <label>Unit *</label>
+            <select class="form-control" id="nd-unit">
+              <option>Quintal</option><option>Kg</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Distribution Date</label>
@@ -4267,17 +4270,18 @@ const App = {
     const crop = document.getElementById('nd-crop')?.value || 'Soybean';
     const varieties = this.msValues('nd-variety');
     const qty = parseFloat(document.getElementById('nd-qty')?.value);
+    const unit = document.getElementById('nd-unit')?.value || 'Quintal';
     const finYear = document.getElementById('nd-finyear')?.value || this._currentFinYear();
     const date = document.getElementById('nd-date')?.value || new Date().toISOString().split('T')[0];
     if (!varieties.length) { this.showToast('Please select at least one variety'); return; }
     if (!qty || qty <= 0) { this.showToast('Please enter a valid quantity'); return; }
     // One distribution record per selected variety, each with the same quantity.
     const records = varieties.map(variety => {
-      const rate = this._distPrice(seedType, crop, variety);
       const record = {
         receiptNo: 'RCP-' + String(this.state.distributionRecords.length + 1).padStart(3, '0'),
         memberId: m.id, memberName: m.name, mobile: m.mobile, village: m.village,
-        finYear, season, seedType, crop, variety, qty, rate, amount: Math.round(rate * qty), date,
+        // qty is stored as entered, together with its unit.
+        finYear, season, seedType, crop, variety, qty, unit, date,
         status: 'Completed', societyName: 'Rampur Krishi Samiti', societyCode: 'SOC-001',
       };
       this.state.distributionRecords.push(record);
@@ -4525,7 +4529,7 @@ const App = {
                 <span class="rv">${rec.village}</span>
               </div>
               ${rec.finYear ? `<div class="receipt-row">
-                <span class="rl">Financial Year</span>
+                <span class="rl">Procurement Year</span>
                 <span class="rv">${rec.finYear}</span>
               </div>` : ''}
               ${rec.season ? `<div class="receipt-row">
@@ -4544,13 +4548,9 @@ const App = {
                 <span class="rl">Variety</span>
                 <span class="rv">${rec.variety}</span>
               </div>
-              ${rec.amount ? `<div class="receipt-row">
-                <span class="rl">Total Amount</span>
-                <span class="rv">₹${rec.amount.toLocaleString()}</span>
-              </div>` : ''}
               <div class="receipt-total">
                 <span class="rt-label">Quantity Distributed</span>
-                <span class="rt-val">${rec.qty} Quintal</span>
+                <span class="rt-val">${rec.qty} ${rec.unit || 'Quintal'}</span>
               </div>
             </div>
             <div class="receipt-footer">
@@ -4616,13 +4616,12 @@ const App = {
               <tr>
                 <th>Member Name</th>
                 <th>Contact</th>
-                <th>Fin. Year</th>
+                <th>Proc. Year</th>
                 <th>Season</th>
                 <th>Seed Type</th>
                 <th>Crop</th>
                 <th>Variety</th>
-                <th>Quantity (Qt)</th>
-                <th>Total Amount</th>
+                <th>Quantity</th>
                 <th>Date</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -4641,8 +4640,7 @@ const App = {
                 <td>${r.seedType ? `<span class="badge badge-info">${r.seedType}</span>` : '—'}</td>
                 <td>${r.crop}</td>
                 <td>${r.variety}</td>
-                <td><b>${r.qty}</b> Qt</td>
-                <td style="font-weight:600;color:#1B5E20;">${r.amount ? '₹' + r.amount.toLocaleString() : '—'}</td>
+                <td><b>${r.qty}</b> ${r.unit === 'Kg' ? 'Kg' : 'Qt'}</td>
                 <td>${r.date}</td>
                 <td>
                   <span class="badge ${r.status === 'Completed' ? 'badge-success' : 'badge-warning'}">
@@ -5521,14 +5519,14 @@ Note: This is a computer-generated document.
         ${records.length === 0
         ? `<div style="padding:40px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:40px;display:block;margin-bottom:8px;">inbox</span><p>No member distributions yet.</p></div>`
         : `<div class="table-wrap"><table>
-              <thead><tr><th>Receipt No.</th><th>Society</th><th>Member</th><th>Crop</th><th>Qty (Qt)</th><th>Date</th><th>Status</th></tr></thead>
+              <thead><tr><th>Receipt No.</th><th>Society</th><th>Member</th><th>Crop</th><th>Quantity</th><th>Date</th><th>Status</th></tr></thead>
               <tbody>
                 ${records.slice().reverse().map(r => `<tr>
                   <td><b>${r.receiptNo}</b></td>
                   <td>${r.societyName}</td>
                   <td>${r.memberName}<div style="font-size:0.72rem;color:#757575;">${r.village}</div></td>
                   <td>${r.crop} / ${r.variety}</td>
-                  <td style="font-weight:600;">${r.qty}</td>
+                  <td style="font-weight:600;">${r.qty} ${r.unit === 'Kg' ? 'Kg' : 'Qt'}</td>
                   <td>${r.date}</td>
                   <td><span class="badge badge-success">✓ ${r.status}</span></td>
                 </tr>`).join('')}

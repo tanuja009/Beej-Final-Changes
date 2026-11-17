@@ -505,7 +505,6 @@ App.renderPriceForm = function (mode) {
       </div>
       <div class="form-actions">
         <button class="btn btn-gray" onclick="App.navigate('admin-price-list')"><span class="material-icons">close</span> Cancel</button>
-        <button class="btn btn-outline" onclick="App.savePriceForm('draft','${mode}')"><span class="material-icons">save</span> Save Draft</button>
         <button class="btn btn-primary" onclick="App.savePriceForm('publish','${mode}')"><span class="material-icons">publish</span> Publish</button>
       </div>
     </div>

@@ -1685,7 +1685,7 @@ const App = {
             </div>
             <div class="form-group">
               <label>Season *</label>
-              <select class="form-control" id="d-season">
+              <select class="form-control" id="d-season" onchange="App._refreshDemandPrice()">
                 <option value="">Select Season</option>
                 <option>Kharif</option>
                 <option selected>Rabi</option>
@@ -1746,20 +1746,21 @@ const App = {
           <div class="form-section-title"><span class="material-icons">calculate</span> Quantity & Delivery Details</div>
           <div class="form-grid">
             <div class="form-group">
-              <label>Unit *</label>
-              <select class="form-control" id="d-unit">
-                <option value="">Select Unit</option>
-                <option selected>Quintal</option>
-                <option>Kg</option>
-              </select>
+              <label>Number of Packets *</label>
+              <input type="number" class="form-control" id="d-packets" placeholder="Enter number of packets" min="1" step="1" oninput="App._refreshDemandPrice()"/>
+              <div id="d-pack-note" style="font-size:0.78rem;color:#2E7D32;margin-top:4px;">${App._packNoteText('', [])}</div>
             </div>
             <div class="form-group">
-              <label>Quantity Demanded (in Quintals or Kilograms) *</label>
-              <input type="number" class="form-control" id="d-qty" placeholder="Enter quantity" min="1" oninput="App.calculateEstPrice(this.value)"/>
+              <label>Price per Kg (₹)</label>
+              <input type="text" class="form-control" id="d-price-kg" placeholder="Auto-filled" readonly style="background:#f5f5f5;"/>
+            </div>
+            <div class="form-group">
+              <label>Quantity Demanded (Kg)</label>
+              <input type="text" class="form-control" id="d-qty" placeholder="Auto-calculated" readonly style="background:#f5f5f5;"/>
             </div>
             <div class="form-group">
               <label>Estimated Price (₹)</label>
-              <input type="number" class="form-control" id="d-est-price" placeholder="Auto-calculated" readonly style="background:#f5f5f5;"/>
+              <input type="text" class="form-control" id="d-est-price" placeholder="Auto-calculated" readonly style="background:#f5f5f5;"/>
             </div>
             <div class="form-group">
               <label>Expected Date of Delivery *</label>
@@ -1809,7 +1810,38 @@ const App = {
   },
   // The estimated price depends on the quantity and how many First Choice varieties are selected.
   _refreshDemandPrice() {
-    this.calculateEstPrice(document.getElementById('d-qty') ? document.getElementById('d-qty').value : '');
+    this.calculateEstPrice();
+  },
+
+  // ── Packets, pack size and per-Kg price (Raise Demand) ──
+  // Price per Kg from the Seeds Rate list: Breeder Seed price of the crop (this season / active preferred),
+  // else any price of the crop, else a default.
+  _demandPricePerKg(crop, season) {
+    const key = this._cropKey(crop);
+    const all = (this.state.beejPrices || []).filter(p => this._cropKey(p.crop) === key);
+    const breeder = all.filter(p => p.category === 'Breeder Seed');
+    const pool = breeder.length ? breeder : all;
+    const pick = pool.find(p => p.season === season && p.status === 'Active')
+      || pool.find(p => p.status === 'Active')
+      || pool.find(p => p.season === season)
+      || pool[0];
+    return pick && pick.sellingPrice > 0 ? pick.sellingPrice : 24;
+  },
+  // Pack size in Kg from Seed Packaging Management: Breeder / first-choice variety preferred; default 10 Kg.
+  _demandPackSizeKg(crop, varieties) {
+    const key = this._cropKey(crop);
+    const sets = (this.state.packagingSets || []).filter(p => this._cropKey(p.crop) === key);
+    const pick = sets.find(p => p.seedType === 'Breeder' && (varieties || []).indexOf(p.variety) !== -1)
+      || sets.find(p => p.seedType === 'Breeder')
+      || sets.find(p => (varieties || []).indexOf(p.variety) !== -1)
+      || sets[0];
+    if (!pick) return 10;
+    return pick.unit === 'Quintal' ? pick.quantity * 100 : pick.quantity;
+  },
+  _packNoteText(crop, varieties) {
+    if (!crop) return 'Select a crop to see the packet size.';
+    const kg = this._demandPackSizeKg(crop, varieties);
+    return `Note: Packets of this crop are of <b>${kg} Kg</b> each. Quantity demanded = number of packets × ${kg} Kg.`;
   },
   // Rows describing the varieties asked for: [label, text]. Plain "Variety" when there are no alternates.
   _demandChoices(d) {
@@ -1840,15 +1872,25 @@ const App = {
     this._refreshDemandPrice();
   },
 
-  calculateEstPrice(qty) {
-    const priceEl = document.getElementById('d-est-price');
-    if (!priceEl) return;
-    if (!qty) { priceEl.value = ''; return; }
-    // Mock price calculation: ₹5000 per quintal, for each selected variety (same quantity each)
-    const pricePerQt = 5000;
-    const count = Math.max(1, this.msValues('d-variety').length);
-    const totalPrice = parseFloat(qty) * pricePerQt * count;
-    priceEl.value = totalPrice.toFixed(2);
+  // Recompute everything that depends on crop / season / varieties / packets:
+  // pack-size note, price per Kg, quantity demanded (Kg) and estimated price.
+  // Quantity is per First Choice variety (same packets for each); the price covers all of them.
+  calculateEstPrice() {
+    const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const crop = val('d-crop');
+    const varieties = this.msValues('d-variety');
+    const noteEl = document.getElementById('d-pack-note');
+    if (noteEl) noteEl.innerHTML = this._packNoteText(crop, varieties);
+    if (!crop) { set('d-price-kg', ''); set('d-qty', ''); set('d-est-price', ''); return; }
+    const perKg = this._demandPricePerKg(crop, val('d-season'));
+    set('d-price-kg', perKg);
+    const packets = parseInt(val('d-packets'), 10);
+    if (!packets || packets < 1) { set('d-qty', ''); set('d-est-price', ''); return; }
+    const kg = packets * this._demandPackSizeKg(crop, varieties);
+    const count = Math.max(1, varieties.length);
+    set('d-qty', kg + ' Kg' + (count > 1 ? ' per variety (' + (kg * count) + ' Kg total)' : ''));
+    set('d-est-price', Math.round(kg * count * perKg));
   },
 
   saveDemandDraft() {
@@ -1872,17 +1914,25 @@ const App = {
   },
 
   previewDemand() {
-    const qty = parseInt(document.getElementById('d-qty')?.value) || 200;
-    const crop = document.getElementById('d-crop')?.value || 'Wheat';
+    const crop = document.getElementById('d-crop')?.value || '';
+    if (!crop) { alert('Please select a crop.'); return; }
     const varieties = this.msValues('d-variety');
     if (!varieties.length) { alert('Please select at least one First Choice variety.'); return; }
+    const packets = parseInt(document.getElementById('d-packets')?.value, 10);
+    if (!packets || packets < 1) { alert('Please enter the number of packets.'); document.getElementById('d-packets')?.focus(); return; }
     const season = document.getElementById('d-season')?.value || 'Rabi';
-    // `qty` is per First Choice variety. Second / Third choice are alternates, so they don't add to the quantity or cost.
-    const total = qty * varieties.length;
+    const packSizeKg = this._demandPackSizeKg(crop, varieties);
+    const pricePerKg = this._demandPricePerKg(crop, season);
+    // Packets are per First Choice variety. Second / Third choice are alternates, so they don't add to the quantity or cost.
+    // Demand quantity is stored in Quintal (1 Qt = 100 Kg) so the rest of the app keeps working unchanged.
+    const qtyKg = packets * packSizeKg;
+    const totalKg = qtyKg * varieties.length;
+    const cost = Math.round(totalKg * pricePerKg);
     this.state.currentDemand = {
-      season, crop, variety: varieties.join(', '), varieties, qty,
+      season, crop, variety: varieties.join(', '), varieties, qty: qtyKg / 100,
+      packets, packSizeKg, qtyKg, pricePerKg, rate: pricePerKg * 100,
       secondChoice: this.msValues('d-variety2'), thirdChoice: this.msValues('d-variety3'),
-      cost: total * 2400, advance: total * 2400 * 0.25
+      cost, advance: Math.round(cost * 0.25)
     };
     this.navigate('demand-preview');
   },
@@ -1890,6 +1940,11 @@ const App = {
   // "120 Quintal" for one variety; "120 Quintal each × 3 varieties = 360 Quintal" for several.
   _demandQtyText(d) {
     const n = d.varieties ? d.varieties.length : 1;
+    // Packet-based demand: "10 packets × 10 Kg = 100 Kg" (× varieties when several).
+    if (d.packets) {
+      const base = `${d.packets} packets × ${d.packSizeKg} Kg = ${d.qtyKg} Kg`;
+      return n > 1 ? `${base} each × ${n} varieties = ${d.qtyKg * n} Kg` : base;
+    }
     return n > 1 ? `${d.qty} Quintal each × ${n} varieties = ${d.qty * n} Quintal` : `${d.qty} Quintal`;
   },
 
@@ -1928,7 +1983,9 @@ const App = {
           ${this._demandChoices(d).map(([l, v]) => `<div class="preview-item"><label>${l === 'Variety' ? 'Variety' : l + ' Variety'}</label><span>${v}</span></div>`).join('')}
           <div class="preview-item"><label>${isFull ? 'Quantity' : 'Requested Quantity'}</label><span>${this._demandQtyText(d)}</span></div>
           <div class="preview-item"><label>Available Stock</label><span style="color:#2E7D32;">850 Qt ✓</span></div>
-          <div class="preview-item"><label>Rate per Quintal</label><span>₹${rate.toLocaleString()}/-</span></div>
+          ${d.pricePerKg
+        ? `<div class="preview-item"><label>Rate per Kg</label><span>₹${d.pricePerKg.toLocaleString()}/-</span></div>`
+        : `<div class="preview-item"><label>Rate per Quintal</label><span>₹${rate.toLocaleString()}/-</span></div>`}
         </div>
         <div class="preview-total">
           <div><div class="label">Estimated Total Cost</div><div class="value">₹${d.cost.toLocaleString()}</div></div>
@@ -1982,7 +2039,7 @@ const App = {
         ${(d.secondChoice && d.secondChoice.length) ? `<div class="invoice-row"><span class="label">Second Choice</span><span class="value">${d.secondChoice.join(', ')}</span></div>` : ''}
         ${(d.thirdChoice && d.thirdChoice.length) ? `<div class="invoice-row"><span class="label">Third Choice</span><span class="value">${d.thirdChoice.join(', ')}</span></div>` : ''}
         <div class="invoice-row"><span class="label">Quantity</span><span class="value">${this._demandQtyText(d)}</span></div>
-        <div class="invoice-row"><span class="label">Rate</span><span class="value">₹${rate.toLocaleString()} per Qt</span></div>
+        <div class="invoice-row"><span class="label">Rate</span><span class="value">${d.pricePerKg ? `₹${d.pricePerKg.toLocaleString()} per Kg` : `₹${rate.toLocaleString()} per Qt`}</span></div>
         <div class="invoice-row"><span class="label">Total Amount</span><span class="value">₹${d.cost.toLocaleString()}</span></div>
         ${isFull
         ? `<div class="invoice-row"><span class="label">Advance Paid (25%)</span><span class="value">₹${d.advance.toLocaleString()}</span></div>`
@@ -2050,7 +2107,8 @@ const App = {
     this.state._lastDemandIds = varieties.map(variety => {
       const id = this._nextDemandId();
       this.state.demands.unshift({
-        id, date, season: d.season, crop: d.crop, variety, qty: d.qty, rate: 2400,
+        id, date, season: d.season, crop: d.crop, variety, qty: d.qty, rate: d.rate || 2400,
+        packets: d.packets, packSizeKg: d.packSizeKg, qtyKg: d.qtyKg,
         // Alternates the society will accept if the first choice isn't available.
         secondChoice: (d.secondChoice || []).slice(), thirdChoice: (d.thirdChoice || []).slice(),
         payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Under Review'
@@ -3475,6 +3533,7 @@ const App = {
     <div class="card">
       <div class="card-header">
         <h3>Dispatch Orders — Rabi</h3>
+        <button class="btn btn-primary btn-sm" onclick="App.showToast('Dispatch orders generated!')"><span class="material-icons">receipt_long</span> Generate All Orders</button>
         <button class="btn btn-primary btn-sm" onclick="App.showToast('Dispatch orders generated!')"><span class="material-icons">receipt_long</span> Generate All Orders</button>
       </div>
       <div class="card-body" style="padding:0;">

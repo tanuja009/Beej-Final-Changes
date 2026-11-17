@@ -3,7 +3,7 @@
  * Complete functional module with demo/mock data.
  * Season → Crop → Variety → Sub-Variety hierarchy.
  * Pages: Dashboard, Inventory, Inward, Outward, Adjustment, Ledger,
- *        Variety Master, Sub-Variety Master, Reports.
+ *        Variety Master Mapping, Sub-Variety Master, Reports.
  */
 'use strict';
 
@@ -153,16 +153,17 @@ App._smSubRefresh = function (selectId, varieties) {
   App.renderAdminSidebar = function () {
     var html = _prev();
     var p = this.state.currentPage;
-    var ni = function (icon, label, page, sub) {
-      var c = 'nav-item' + (sub ? ' nav-sub-item' : '') + (p === page ? ' active' : '');
+    var ni = function (icon, label, page, sub, isActive) {
+      var c = 'nav-item' + (sub ? ' nav-sub-item' : '') + ((isActive !== undefined ? isActive : p === page) ? ' active' : '');
       return '<div class="' + c + '" onclick="App.navigate(\'' + page + '\')"><span class="material-icons">' + icon + '</span><span>' + label + '</span></div>';
     };
     var section = '<div class="nav-section"><div class="nav-section-title">Stock Management</div>'
       + ni('dashboard', 'Stock Dashboard', 'sm-dashboard')
       + ni('event', 'Season Master', 'sm-season', true)
-      + ni('grass', 'Crop Master', 'sm-crop', true)
+      + ni('grass', 'Crop Master Mapping', 'sm-crop', true)
       + ni('date_range', 'Procurement Year', 'sm-finyear', true)
-      + ni('category', 'Variety Master', 'sm-variety', true)
+      + ni('category', 'Variety Master Mapping', 'sm-variety', true)
+      + ni('sell', 'Seeds Rate Management', 'admin-beej-price', true, /^admin-(beej-price|price-)/.test(p))
       + ni('swap_horiz', 'Seed Buying/Selling Line Management', 'admin-seed-lines', true)
       + ni('inventory_2', 'Seed Packaging Management', 'admin-packaging', true)
       + '</div>';
@@ -213,10 +214,10 @@ App._smSubRefresh = function (selectId, varieties) {
     'sm-inventory-form': 'Add Inventory / Stock',
     'sm-inward': 'Stock Inward', 'sm-outward': 'Stock Outward',
     'sm-adjust': 'Stock Adjustment', 'sm-ledger': 'Stock Ledger',
-    'sm-variety': 'Variety Master', 'sm-variety-form': 'Variety Master',
+    'sm-variety': 'Variety Master Mapping', 'sm-variety-form': 'Variety Master Mapping',
     'sm-subvariety': 'Sub-Variety Master', 'sm-subvariety-form': 'Sub-Variety Master',
     'sm-season': 'Season Master', 'sm-season-form': 'Season Master',
-    'sm-crop': 'Crop Master', 'sm-crop-form': 'Crop Master',
+    'sm-crop': 'Crop Master Mapping', 'sm-crop-form': 'Crop Master Mapping',
     'sm-finyear': 'Procurement Year Master', 'sm-finyear-form': 'Procurement Year Master',
     'sm-reports': 'Stock Reports'
   };
@@ -530,7 +531,7 @@ App.smLedger = function () {
 // ═══════════════════════════════════════════════════════════
 App.smVarietyList = function () {
   var rows = SM.varieties;
-  return '<div class="page-header"><h1>Variety Master</h1><p>Manage seed varieties</p></div>'
+  return '<div class="page-header"><h1>Variety Master Mapping</h1><p>Manage seed varieties</p></div>'
     + '<div class="card"><div class="card-header"><h3>Varieties (' + rows.length + ')</h3>'
     + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-variety-form\')"><span class="material-icons">add</span> Create Variety</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
@@ -685,7 +686,6 @@ App.smSeasonList = function () {
   var rows = SM.seasons;
   return '<div class="page-header"><h1>Season Master</h1><p>Manage crop seasons</p></div>'
     + '<div class="card"><div class="card-header"><h3>Seasons (' + rows.length + ')</h3>'
-    + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-season-form\')"><span class="material-icons">add</span> Create Season</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
     + '<thead><tr><th>Sr.</th><th>Season Name</th><th>Code</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
     + rows.map(function (r, i) {
@@ -741,7 +741,7 @@ App.smSaveSeason = function () {
 // ═══════════════════════════════════════════════════════════
 App.smCropList = function () {
   var rows = SM.crops;
-  return '<div class="page-header"><h1>Crop Master</h1><p>Manage crops and their applicable seasons</p></div>'
+  return '<div class="page-header"><h1>Crop Master Mapping</h1><p>Manage crops and their applicable seasons</p></div>'
     + '<div class="card"><div class="card-header"><h3>Crops (' + rows.length + ')</h3>'
     + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-crop-form\')"><span class="material-icons">add</span> Create Crop</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'

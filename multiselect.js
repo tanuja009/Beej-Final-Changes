@@ -58,8 +58,9 @@
     if (!st) return '';
     var options = st.options, sel = st.selected, disabled = !!st.disabled;
     var summary;
-    if (sel.length === 0) summary = disabled ? (st.placeholder || 'Select Crop first') : 'Select Variety';
-    else if (sel.length === options.length && options.length > 1) summary = 'All Varieties (' + sel.length + ')';
+    var noun = st.noun || 'Variety', plural = noun === 'Variety' ? 'Varieties' : noun + 's';
+    if (sel.length === 0) summary = disabled ? (st.placeholder || 'Select Crop first') : 'Select ' + noun;
+    else if (sel.length === options.length && options.length > 1) summary = 'All ' + plural + ' (' + sel.length + ')';
     else summary = sel.join(', ');
     var allChecked = options.length > 0 && sel.length === options.length;
     var rows = options.map(function (o) {
@@ -71,7 +72,7 @@
     if (st.open && !disabled) {
       panel = '<div class="ms-panel">'
         + (options.length === 0
-          ? '<div class="ms-empty">No varieties available</div>'
+          ? '<div class="ms-empty">No ' + plural.toLowerCase() + ' available</div>'
           : '<label class="ms-option ms-select-all"><input type="checkbox"' + (allChecked ? ' checked' : '') + ' onchange="App.msToggleAll(\'' + key + '\')"><span>Select All</span></label>'
           + '<div class="ms-divider"></div>' + rows)
         + '</div>';
@@ -110,10 +111,11 @@
   // Render the checkbox multi-select. `options` = variety names;
   // `disabled` greys it out (e.g. before a Crop is chosen);
   // `onChange(selectedArray)` is optional and fires after any selection change.
-  App.msRender = function (key, options, disabled, placeholderWhenDisabled, onChange) {
+  App.msRender = function (key, options, disabled, placeholderWhenDisabled, onChange, noun) {
     var st = this._msEnsure(key, options || []);
     st.disabled = !!disabled;
     st.placeholder = placeholderWhenDisabled;
+    st.noun = noun || 'Variety';
     st.onChange = typeof onChange === 'function' ? onChange : null;
     return this._msHtml(key);
   };

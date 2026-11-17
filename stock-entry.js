@@ -257,7 +257,7 @@ App.seRenderForm = function () {
   var subs = App._seSubVarieties(f.variety);
   var classes = App._seSeedClasses(f.seedType);
   var varietyNote = (f.crop && varieties.length === 0)
-    ? '<div style="color:#E65100;font-size:0.78rem;margin-top:4px;">No variety configured for ' + f.crop + '. Please add one in Variety Master.</div>'
+    ? '<div style="color:#E65100;font-size:0.78rem;margin-top:4px;">No variety configured for ' + f.crop + '. Please add one in Variety Master Mapping.</div>'
     : (!isEdit ? '<div style="font-size:0.72rem;color:#757575;margin-top:4px;">Select one or more varieties. The same Lot/Quantity apply to each; one stock entry is created per variety.</div>' : '');
   // Re-seed the multi-select from the form buffer (its state is cleared on page navigation).
   if (!isEdit && !App.state._ms['se-variety'] && f.varieties && f.varieties.length) App.msSetValues('se-variety', f.varieties);

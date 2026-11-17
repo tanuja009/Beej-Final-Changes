@@ -8,22 +8,22 @@
 (function injectState() {
   // Beej Price Management data
   App.state.beejPrices = [
-    { id: 'PRC-001', category: 'Breeder Seed', crop: 'Wheat', variety: 'GW-322', seedClass: 'Foundation I', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 5200, subsidy: 800, sellingPrice: 4400, effectiveFrom: '2024-10-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Admin Sharma', createdDate: '2024-09-25', remarks: 'Revised for Rabi 2024-25' },
-    { id: 'PRC-002', category: 'Foundation Seed', crop: 'Soybean', variety: 'JS-335', seedClass: 'Certified', season: 'Kharif', cropYear: '2024-25', unit: 'Quintal', basePrice: 7800, subsidy: 1200, sellingPrice: 6600, effectiveFrom: '2024-06-01', effectiveTo: '2024-09-30', status: 'Expired', createdBy: 'Admin Sharma', createdDate: '2024-05-20', remarks: '' },
-    { id: 'PRC-003', category: 'Certified Seed', crop: 'Gram', variety: 'JG-315', seedClass: 'Foundation II', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 9200, subsidy: 1500, sellingPrice: 7700, effectiveFrom: '2024-11-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Dept User', createdDate: '2024-10-28', remarks: 'New variety pricing' },
-    { id: 'PRC-004', category: 'Breeder Seed', crop: 'Mustard', variety: 'Pusa Bold', seedClass: 'Breeder', season: 'Rabi', cropYear: '2024-25', unit: 'Quintal', basePrice: 8400, subsidy: 1000, sellingPrice: 7400, effectiveFrom: '2024-11-15', effectiveTo: '2025-02-28', status: 'Active', createdBy: 'Admin Sharma', createdDate: '2024-11-10', remarks: '' },
-    { id: 'PRC-005', category: 'Foundation Seed', crop: 'Paddy', variety: 'MTU-7029', seedClass: 'Foundation I', season: 'Kharif', cropYear: '2025-26', unit: 'Quintal', basePrice: 6500, subsidy: 900, sellingPrice: 5600, effectiveFrom: '2025-06-01', effectiveTo: '2025-09-30', status: 'Upcoming', createdBy: 'Dept User', createdDate: '2025-05-15', remarks: 'Pre-approved for next Kharif' },
+    { id: 'PRC-001', category: 'Breeder Seed', crop: 'Wheat', variety: 'GW-322', seedClass: 'Foundation I', season: 'Rabi', cropYear: '2024-25', unit: 'Kg', basePrice: 52, subsidy: 8, sellingPrice: 44, effectiveFrom: '2024-10-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Admin Sharma', createdDate: '2024-09-25', remarks: 'Revised for Rabi 2024-25' },
+    { id: 'PRC-002', category: 'Foundation Seed', crop: 'Soybean', variety: 'JS-335', seedClass: 'Certified', season: 'Kharif', cropYear: '2024-25', unit: 'Kg', basePrice: 78, subsidy: 12, sellingPrice: 66, effectiveFrom: '2024-06-01', effectiveTo: '2024-09-30', status: 'Expired', createdBy: 'Admin Sharma', createdDate: '2024-05-20', remarks: '' },
+    { id: 'PRC-003', category: 'Certified Seed', crop: 'Gram', variety: 'JG-315', seedClass: 'Foundation II', season: 'Rabi', cropYear: '2024-25', unit: 'Kg', basePrice: 92, subsidy: 15, sellingPrice: 77, effectiveFrom: '2024-11-01', effectiveTo: '2025-03-31', status: 'Active', createdBy: 'Dept User', createdDate: '2024-10-28', remarks: 'New variety pricing' },
+    { id: 'PRC-004', category: 'Breeder Seed', crop: 'Mustard', variety: 'Pusa Bold', seedClass: 'Breeder', season: 'Rabi', cropYear: '2024-25', unit: 'Kg', basePrice: 84, subsidy: 10, sellingPrice: 74, effectiveFrom: '2024-11-15', effectiveTo: '2025-02-28', status: 'Active', createdBy: 'Admin Sharma', createdDate: '2024-11-10', remarks: '' },
+    { id: 'PRC-005', category: 'Foundation Seed', crop: 'Paddy', variety: 'MTU-7029', seedClass: 'Foundation I', season: 'Kharif', cropYear: '2025-26', unit: 'Kg', basePrice: 65, subsidy: 9, sellingPrice: 56, effectiveFrom: '2025-06-01', effectiveTo: '2025-09-30', status: 'Upcoming', createdBy: 'Dept User', createdDate: '2025-05-15', remarks: 'Pre-approved for next Kharif' },
   ];
 
   App.state.priceHistory = [
-    { priceId: 'PRC-001', oldPrice: 5000, newPrice: 5200, modifiedBy: 'Admin Sharma', modifiedDate: '2024-09-15', reason: 'Annual price revision as per department order' },
-    { priceId: 'PRC-001', oldPrice: 4800, newPrice: 5000, modifiedBy: 'Admin Sharma', modifiedDate: '2024-04-01', reason: 'Kharif season adjustment' },
-    { priceId: 'PRC-003', oldPrice: 9000, newPrice: 9200, modifiedBy: 'Dept User', modifiedDate: '2024-10-20', reason: 'Input cost increase' },
+    { priceId: 'PRC-001', oldPrice: 50, newPrice: 52, modifiedBy: 'Admin Sharma', modifiedDate: '2024-09-15', reason: 'Annual price revision as per department order' },
+    { priceId: 'PRC-001', oldPrice: 48, newPrice: 50, modifiedBy: 'Admin Sharma', modifiedDate: '2024-04-01', reason: 'Kharif season adjustment' },
+    { priceId: 'PRC-003', oldPrice: 90, newPrice: 92, modifiedBy: 'Dept User', modifiedDate: '2024-10-20', reason: 'Input cost increase' },
   ];
 
   App.state.priceAuditLog = [
     { action: 'Create', priceId: 'PRC-005', performedBy: 'Dept User', date: '2024-12-01', detail: 'New price created for Paddy MTU-7029' },
-    { action: 'Update', priceId: 'PRC-001', performedBy: 'Admin Sharma', date: '2024-09-15', detail: 'Base price updated from ₹5000 to ₹5200' },
+    { action: 'Update', priceId: 'PRC-001', performedBy: 'Admin Sharma', date: '2024-09-15', detail: 'Base price updated from ₹50 to ₹52' },
     { action: 'Publish', priceId: 'PRC-003', performedBy: 'Admin Sharma', date: '2024-11-01', detail: 'Price published and made active' },
     { action: 'Delete', priceId: 'PRC-OLD', performedBy: 'Admin Sharma', date: '2024-05-10', detail: 'Expired price record soft-deleted' },
   ];
@@ -196,6 +196,7 @@ App._priceFiltered = function () {
     (!f.season || p.season === f.season) &&
     (!f.crop || p.crop === f.crop) &&
     (!f.category || p.category === f.category) &&
+
     (!f.variety || p.variety.toLowerCase().includes(f.variety.toLowerCase())) &&
     (!f.status || p.status === f.status) &&
     (!f.search || p.id.toLowerCase().includes(f.search.toLowerCase()) ||
@@ -304,7 +305,6 @@ App.renderPriceList = function () {
       <h3>Price Entries <span style="color:#757575;font-weight:400;font-size:0.85rem;">(${rows.length} records)</span></h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" onclick="App.navigate('admin-price-add')"><span class="material-icons">add</span> Add New Seed Price</button>
-        <button class="btn btn-info btn-sm" onclick="App.navigate('admin-price-bulk')"><span class="material-icons">upload_file</span> Bulk Upload</button>
         <button class="btn btn-success btn-sm"><span class="material-icons">table_chart</span> Excel</button>
         <button class="btn btn-danger btn-sm"><span class="material-icons">picture_as_pdf</span> PDF</button>
       </div>
@@ -442,6 +442,12 @@ App.renderPriceForm = function (mode) {
             </select>
           </div>
           <div class="form-group">
+            <label>Season <span style="color:#F44336">*</span></label>
+            <select class="form-control" id="pf-season">
+              ${['Kharif', 'Rabi', 'Summer'].map(s => `<option ${v('season') === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
             <label>Crop <span style="color:#F44336">*</span></label>
             <select class="form-control" id="pf-crop" ${isEdit && p?.status === 'Expired' ? 'disabled' : ''} ${isEdit ? '' : 'onchange="App.onPriceCropChange()"'}>
               <option value="">Select Crop</option>
@@ -455,21 +461,14 @@ App.renderPriceForm = function (mode) {
       : this.msRender('pf-variety', this._priceVarietyNames(v('crop')), !v('crop'), 'Select Crop first')}
             ${isEdit ? '' : this.msHint()}
           </div>
-
         </div>
       </div>
       <div class="form-section">
         <div class="form-section-title"><span class="material-icons">event</span> Season &amp; Validity</div>
         <div class="form-grid">
           <div class="form-group">
-            <label>Season <span style="color:#F44336">*</span></label>
-            <select class="form-control" id="pf-season">
-              ${['Kharif', 'Rabi', 'Summer'].map(s => `<option ${v('season') === s ? 'selected' : ''}>${s}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Crop Year <span style="color:#F44336">*</span></label>
-            <input type="text" class="form-control" id="pf-year" placeholder="e.g. 2024-25" value="${v('cropYear')}">
+            <label>Procurement Year <span style="color:#F44336">*</span></label>
+            <input type="text" class="form-control" id="pf-year" value="${(p && p.cropYear) || this._lineFinYear()}" readonly style="background:#F5F5F5;">
           </div>
           <div class="form-group">
             <label>Effective From <span style="color:#F44336">*</span></label>
@@ -486,26 +485,18 @@ App.renderPriceForm = function (mode) {
         <div class="form-grid">
           <div class="form-group">
             <label>Unit <span style="color:#F44336">*</span></label>
-            <select class="form-control" id="pf-unit">
-              ${['Quintal', 'Kg'].map(u => `<option ${v('unit') === u ? 'selected' : ''}>${u}</option>`).join('')}
-            </select>
+            <input type="text" class="form-control" id="pf-unit" value="Kg" readonly style="background:#F5F5F5;">
           </div>
           <div class="form-group">
             <label>Selling Price (₹) <span style="color:#F44336">*</span></label>
-            <input type="number" class="form-control" id="pf-selling" placeholder="e.g. 4400" value="${v('sellingPrice')}"
+            <input type="number" class="form-control" id="pf-selling" placeholder="e.g. 44" value="${v('sellingPrice')}"
               style="font-weight:600;">
           </div>
         </div>
       </div>
       <div class="form-section">
-        <div class="form-section-title"><span class="material-icons">tune</span> Status &amp; Remarks</div>
+        <div class="form-section-title"><span class="material-icons">tune</span> Remarks</div>
         <div class="form-grid">
-          <div class="form-group">
-            <label>Status</label>
-            <select class="form-control" id="pf-status">
-              ${['Draft', 'Active', 'Upcoming', 'Inactive'].map(s => `<option ${v('status') === s ? 'selected' : ''}>${s}</option>`).join('')}
-            </select>
-          </div>
           <div class="form-group" style="grid-column:span 2;">
             <label>Remarks</label>
             <textarea class="form-control" id="pf-remarks" rows="2" placeholder="Optional notes">${v('remarks')}</textarea>
@@ -543,7 +534,7 @@ App.savePriceForm = function (action, mode) {
     id,
     category: get('pf-category'), crop: get('pf-crop'), variety,
     seedClass: '', season: get('pf-season'), cropYear: get('pf-year'),
-    unit: get('pf-unit'), basePrice: 0, subsidy: 0,
+    unit: 'Kg', basePrice: 0, subsidy: 0,
     sellingPrice: +get('pf-selling'), effectiveFrom: get('pf-from'), effectiveTo: get('pf-to'),
     status: action === 'publish' ? 'Active' : 'Draft',
     createdBy: this.state.currentUser?.name || 'Admin',
@@ -593,7 +584,7 @@ App.renderPriceView = function () {
           ${row('Crop', p.crop)}
           ${row('Variety', p.variety)}
           ${row('Season', p.season)}
-          ${row('Crop Year', p.cropYear)}
+          ${row('Procurement Year', p.cropYear)}
           ${row('Unit', p.unit)}
         </div>
         <div>

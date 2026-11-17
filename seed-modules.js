@@ -81,9 +81,6 @@
 
       '<div class="nav-section">' + ni('dashboard', 'Dashboard', 'admin-dashboard') + '</div>',
 
-      '<div class="nav-section"><div class="nav-section-title">Price &amp; Stock</div>',
-      ni('sell', 'Seeds Rate Management', 'admin-beej-price'),
-      '</div>',
 
       '<div class="nav-section"><div class="nav-section-title">Management</div>',
       ni('groups', 'Society Members', 'admin-societies'),
@@ -812,8 +809,8 @@ App.smFCToggleActive = function (id) {
   // ── State ──
   App.state.seedLines = [
     { id: 'LINE-001', lineType: 'Buying', seedType: 'Breeder', finYear: '2024-2025', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', startDate: '2024-06-01', endDate: '2024-07-31' },
-    { id: 'LINE-002', lineType: 'Selling', seedType: 'Certified', finYear: '2024-2025', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', startDate: '2024-10-01', endDate: '2024-11-30' },
-    { id: 'LINE-003', lineType: 'Buying', seedType: 'Foundation', finYear: '2024-2025', season: 'Rabi', crop: 'Gram', variety: 'JG-315', startDate: '2024-10-15', endDate: '2024-12-15' },
+    { id: 'LINE-002', lineType: 'Buying/Selling', seedType: 'Certified', finYear: '2024-2025', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', startDate: '2024-10-01', endDate: '2024-11-30' },
+    { id: 'LINE-003', lineType: 'Buying/Selling', seedType: 'Foundation', finYear: '2024-2025', season: 'Rabi', crop: 'Gram', variety: 'JG-315', startDate: '2024-10-15', endDate: '2024-12-15' },
   ];
   App.state.showSeedLineForm = false;
 
@@ -843,20 +840,60 @@ App.smFCToggleActive = function (id) {
     var names = ['Paddy', 'Wheat', 'Soybean', 'Gram', 'Mustard', 'Maize'];
     return names.map(function (n) { return '<option value="' + n + '"' + (n === sel ? ' selected' : '') + '>' + n + '</option>'; }).join('');
   };
-  // Variety multi-select for the line form (crop-wise).
-  App._lineVarietyMs = function (crop) {
-    return App.msRender('sl-variety', App.varietiesForCrop(crop), !crop, 'Select Crop first');
+  // Line Type drives Seed Type:
+  //   Buying             -> Breeder Seed
+  //   Buying/Selling     -> Breeder, Foundation, Certified and Hybrid
+  App._lineTypeList = [
+    { value: 'Buying', label: 'Buying (Breeder Seed)', seedTypes: ['Breeder'] },
+    { value: 'Buying/Selling', label: 'Buying/Selling (Foundation and Certified)', seedTypes: ['Breeder', 'Foundation', 'Certified', 'Hybrid'] }
+  ];
+  App._lineSeedTypesFor = function (lineType) {
+    var lt = App._lineTypeList.filter(function (x) { return x.value === lineType; })[0];
+    return lt ? lt.seedTypes : [];
   };
-  // Crop changed → rebuild the variety list in place (any stale selection is dropped).
+  App._lineTypeOpts = function (sel) {
+    return App._lineTypeList.map(function (x) {
+      return '<option value="' + x.value + '"' + (x.value === sel ? ' selected' : '') + '>' + x.label + '</option>';
+    }).join('');
+  };
+  App._lineSeedTypeOpts = function (lineType, sel) {
+    return App._lineSeedTypesFor(lineType).map(function (s) {
+      return '<option' + (s === sel ? ' selected' : '') + '>' + s + '</option>';
+    }).join('');
+  };
+  // Line Type changed → rebuild the Seed Type options (keeps the current choice when still allowed).
+  App.onLineTypeChange = function () {
+    var lt = document.getElementById('sl-type'), st = document.getElementById('sl-seedtype');
+    if (!st || !lt) return;
+    st.innerHTML = App._lineSeedTypeOpts(lt.value, st.value);
+  };
+  // Crop names available for the line form's crop multi-select.
+  App._lineCropNames = function () {
+    var out = [], re = />([^<]+)<\/option>/g, m, html = App._lineCropOpts('');
+    while ((m = re.exec(html))) out.push(m[1]);
+    return out;
+  };
+  // Crop multi-select for the line form.
+  App._lineCropMs = function () {
+    return App.msRender('sl-crop', App._lineCropNames(), false, '', function () { App.onLineCropChange(); }, 'Crop');
+  };
+  // Variety multi-select for the line form: varieties of ALL selected crops.
+  App._lineVarietyMs = function (crops) {
+    var opts = [];
+    (crops || []).forEach(function (c) {
+      App.varietiesForCrop(c).forEach(function (v) { if (opts.indexOf(v) === -1) opts.push(v); });
+    });
+    return App.msRender('sl-variety', opts, !(crops && crops.length), 'Select Crop first');
+  };
+  // Crop selection changed → rebuild the variety list in place (stale selections are dropped).
   App.onLineCropChange = function () {
-    var crop = document.getElementById('sl-crop') ? document.getElementById('sl-crop').value : '';
-    App._lineVarietyMs(crop);
+    App._lineVarietyMs(App.msValues('sl-crop'));
     App._msRefresh('sl-variety');
   };
 
   // ── Open / close the form ──
   App.openSeedLineForm = function () { this.state.showSeedLineForm = true; this.render(); };
-  App.closeSeedLineForm = function () { this.msReset('sl-variety'); this.state.showSeedLineForm = false; this.render(); };
+  App.closeSeedLineForm = function () { this.msReset('sl-crop'); this.msReset('sl-variety'); this.state.showSeedLineForm = false; this.render(); };
 
   // ── Save a new line from the form ──
   App.saveSeedLine = function () {
@@ -865,17 +902,20 @@ App.smFCToggleActive = function (id) {
     var seedType = g('sl-seedtype');
     var finYear = g('sl-finyear') || this._lineFinYear();
     var season = g('sl-season');
-    var crop = g('sl-crop');
-    // One line can cover several varieties of the crop.
+    // One line can cover several crops and several varieties.
+    if (App._lineSeedTypesFor(lineType).indexOf(seedType) === -1) { this.showToast(lineType === 'Buying' ? 'Buying line is only for Breeder Seed' : 'Invalid Seed Type for this Line Type'); return; }
+    var crops = this.msValues('sl-crop');
+    var crop = crops.join(', ');
     var varieties = this.msValues('sl-variety');
     var variety = varieties.join(', ');
     var startDate = g('sl-start');
     var endDate = g('sl-end');
-    if (!crop || !varieties.length) { this.showToast('Please select crop and at least one variety'); return; }
+    if (!crops.length || !varieties.length) { this.showToast('Please select at least one crop and one variety'); return; }
     if (!startDate || !endDate) { this.showToast('Please set line start and end dates'); return; }
     if (endDate < startDate) { this.showToast('End date cannot be before start date'); return; }
     var id = 'LINE-' + String(this.state.seedLines.length + 1).padStart(3, '0');
-    this.state.seedLines.unshift({ id: id, lineType: lineType, seedType: seedType, finYear: finYear, season: season, crop: crop, variety: variety, varieties: varieties, startDate: startDate, endDate: endDate });
+    this.state.seedLines.unshift({ id: id, lineType: lineType, seedType: seedType, finYear: finYear, season: season, crop: crop, crops: crops, variety: variety, varieties: varieties, startDate: startDate, endDate: endDate });
+    this.msReset('sl-crop');
     this.msReset('sl-variety');
     this.state.showSeedLineForm = false;
     this.showToast('Seed ' + lineType.toLowerCase() + ' line ' + id + ' created.');
@@ -930,10 +970,10 @@ App.smFCToggleActive = function (id) {
       '<div class="form-grid">',
 
       '<div class="form-group"><label>Line Type <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-type"><option value="Buying">Buying (Procure from societies)</option><option value="Selling">Selling (Supply to societies)</option></select></div>',
+      '<select class="form-control" id="sl-type" onchange="App.onLineTypeChange()">' + App._lineTypeOpts('Buying') + '</select></div>',
 
       '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-seedtype"><option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option></select></div>',
+      '<select class="form-control" id="sl-seedtype">' + App._lineSeedTypeOpts('Buying', '') + '</select></div>',
 
       '<div class="form-group"><label>Procurement Year</label>',
       '<input type="text" class="form-control" id="sl-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
@@ -942,10 +982,12 @@ App.smFCToggleActive = function (id) {
       '<select class="form-control" id="sl-season"><option>Kharif</option><option>Rabi</option><option>Summer</option></select></div>',
 
       '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-crop" onchange="App.onLineCropChange()"><option value="">Select Crop</option>' + App._lineCropOpts('') + '</select></div>',
+      App._lineCropMs(),
+      App.msHint('Select one or more crops for this line.'),
+      '</div>',
 
       '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>',
-      App._lineVarietyMs(''),
+      App._lineVarietyMs(App.msValues('sl-crop')),
       App.msHint('Select one or more varieties for this line.'),
       '</div>',
 
@@ -994,16 +1036,23 @@ App.smFCToggleActive = function (id) {
   App._pkUnits = function () { return App._seUnits || ['Kg', 'Quintal']; };
 
   App.openPackagingForm = function () { this.state.showPackagingForm = true; this.render(); };
-  App.closePackagingForm = function () { this.msReset('pk-variety'); this.state.showPackagingForm = false; this.render(); };
+  App.closePackagingForm = function () { this.msReset('pk-crop'); this.msReset('pk-variety'); this.state.showPackagingForm = false; this.render(); };
 
   // Variety multi-select for the form (crop-wise).
-  App._pkVarietyMs = function (crop) {
-    return App.msRender('pk-variety', App.varietiesForCrop(crop), !crop, 'Select Crop first');
+  App._pkCropMs = function () {
+    return App.msRender('pk-crop', App._lineCropNames(), false, '', function () { App.onPackagingCropChange(); }, 'Crop');
+  };
+  // Variety multi-select: varieties of ALL selected crops.
+  App._pkVarietyMs = function (crops) {
+    var opts = [];
+    (crops || []).forEach(function (c) {
+      App.varietiesForCrop(c).forEach(function (v) { if (opts.indexOf(v) === -1) opts.push(v); });
+    });
+    return App.msRender('pk-variety', opts, !(crops && crops.length), 'Select Crop first');
   };
   // Crop changed → rebuild the variety list in place (any stale selection is dropped).
   App.onPackagingCropChange = function () {
-    var crop = document.getElementById('pk-crop') ? document.getElementById('pk-crop').value : '';
-    App._pkVarietyMs(crop);
+    App._pkVarietyMs(App.msValues('pk-crop'));
     App._msRefresh('pk-variety');
   };
 
@@ -1013,36 +1062,43 @@ App.smFCToggleActive = function (id) {
     var finYear = g('pk-finyear') || this._lineFinYear();
     var seedType = g('pk-seedtype');
     var season = g('pk-season');
-    var crop = g('pk-crop');
+    var crops = this.msValues('pk-crop');
     var varieties = this.msValues('pk-variety');
     var unit = g('pk-unit');
     var quantity = parseFloat(g('pk-qty'));
-    if (!seedType || !season || !crop) { this.showToast('Please select seed type, season and crop'); return; }
+    if (!seedType || !season || !crops.length) { this.showToast('Please select seed type, season and crop'); return; }
     if (!varieties.length) { this.showToast('Please select at least one variety'); return; }
     if (!unit) { this.showToast('Please select a unit'); return; }
     if (!quantity || quantity <= 0) { this.showToast('Please enter a valid quantity'); return; }
 
     // Block exact duplicates (same year/type/season/crop/variety/unit/quantity). Check every variety first.
     var list = this.state.packagingSets;
-    var dups = varieties.filter(function (variety) {
-      return list.some(function (p) {
-        return p.finYear === finYear && p.seedType === seedType && p.season === season && p.crop === crop
-          && p.variety === variety && p.unit === unit && Number(p.quantity) === quantity;
-      });
+    // One record per (crop, variety) pair: each selected variety is paired with the selected crop(s) it belongs to.
+    var pairs = [];
+    crops.forEach(function (c) {
+      var cv = App.varietiesForCrop(c);
+      varieties.forEach(function (v) { if (cv.indexOf(v) !== -1) pairs.push({ crop: c, variety: v }); });
     });
+    var dups = pairs.filter(function (pr) {
+      return list.some(function (p) {
+        return p.finYear === finYear && p.seedType === seedType && p.season === season && p.crop === pr.crop
+          && p.variety === pr.variety && p.unit === unit && Number(p.quantity) === quantity;
+      });
+    }).map(function (pr) { return pr.variety; });
     if (dups.length) {
       this.showToast('Packaging of ' + quantity + ' ' + unit + ' already exists for: ' + dups.join(', '));
       return;
     }
 
     var nextNo = Math.max(0, Math.max.apply(null, list.map(function (p) { return parseInt(String(p.id).replace(/\D/g, ''), 10) || 0; })));
-    varieties.forEach(function (variety) {
+    pairs.forEach(function (pr) {
       nextNo += 1;
-      list.unshift({ id: 'PKG-' + String(nextNo).padStart(3, '0'), finYear: finYear, seedType: seedType, season: season, crop: crop, variety: variety, unit: unit, quantity: quantity });
+      list.unshift({ id: 'PKG-' + String(nextNo).padStart(3, '0'), finYear: finYear, seedType: seedType, season: season, crop: pr.crop, variety: pr.variety, unit: unit, quantity: quantity });
     });
+    this.msReset('pk-crop');
     this.msReset('pk-variety');
     this.state.showPackagingForm = false;
-    this.showToast(varieties.length > 1 ? 'Packaging set added for ' + varieties.length + ' varieties.' : 'Packaging set added.');
+    this.showToast(pairs.length > 1 ? 'Packaging set added for ' + pairs.length + ' crop-variety combinations.' : 'Packaging set added.');
     this.render();
   };
 
@@ -1098,10 +1154,12 @@ App.smFCToggleActive = function (id) {
       '<select class="form-control" id="pk-season"><option value="">Select Season</option><option>Kharif</option><option>Rabi</option><option>Summer</option></select></div>',
 
       '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="pk-crop" onchange="App.onPackagingCropChange()"><option value="">Select Crop</option>' + App._lineCropOpts('') + '</select></div>',
+      App._pkCropMs(),
+      App.msHint('Select one or more crops.'),
+      '</div>',
 
       '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>',
-      App._pkVarietyMs(''),
+      App._pkVarietyMs(App.msValues('pk-crop')),
       App.msHint('Select one or more varieties. Same unit and quantity apply to each.'),
       '</div>',
 

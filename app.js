@@ -110,6 +110,7 @@ const App = {
     // Society: member distribution records
     distributionRecords: [
       { receiptNo: 'RCP-001', memberId: 'MBR-001', memberName: 'Ramesh Kumar', mobile: '9876543210', village: 'Rampur', finYear: '2024-2025', season: 'Kharif', seedType: 'Breeder', crop: 'Soybean', variety: 'JS-335', qty: 2.5, unit: 'Quintal', date: '2024-07-05', status: 'Completed', stockId: 'RS-001' },
+      { receiptNo: 'RCP-002', memberId: 'MBR-001', memberName: 'Ramesh Kumar', mobile: '9876543210', village: 'Rampur', finYear: '2024-2025', season: 'Rabi', seedType: 'Certified', crop: 'Wheat', variety: 'GW-322', qty: 200, unit: 'Kg', date: '2024-11-10', status: 'Completed', stockId: 'RS-002' },
     ],
 
     // UI helpers
@@ -1888,9 +1889,9 @@ const App = {
     const packets = parseInt(val('d-packets'), 10);
     if (!packets || packets < 1) { set('d-qty', ''); set('d-est-price', ''); return; }
     const kg = packets * this._demandPackSizeKg(crop, varieties);
-    const count = Math.max(1, varieties.length);
-    set('d-qty', kg + ' Kg' + (count > 1 ? ' per variety (' + (kg * count) + ' Kg total)' : ''));
-    set('d-est-price', Math.round(kg * count * perKg));
+    // Quantity = packets × pack size only; it does not multiply by the number of varieties selected.
+    set('d-qty', kg + ' Kg');
+    set('d-est-price', Math.round(kg * perKg));
   },
 
   saveDemandDraft() {
@@ -1923,11 +1924,10 @@ const App = {
     const season = document.getElementById('d-season')?.value || 'Rabi';
     const packSizeKg = this._demandPackSizeKg(crop, varieties);
     const pricePerKg = this._demandPricePerKg(crop, season);
-    // Packets are per First Choice variety. Second / Third choice are alternates, so they don't add to the quantity or cost.
+    // Quantity = packets × pack size, whatever the number of varieties selected. Second / Third choice are alternates and add nothing.
     // Demand quantity is stored in Quintal (1 Qt = 100 Kg) so the rest of the app keeps working unchanged.
     const qtyKg = packets * packSizeKg;
-    const totalKg = qtyKg * varieties.length;
-    const cost = Math.round(totalKg * pricePerKg);
+    const cost = Math.round(qtyKg * pricePerKg);
     this.state.currentDemand = {
       season, crop, variety: varieties.join(', '), varieties, qty: qtyKg / 100,
       packets, packSizeKg, qtyKg, pricePerKg, rate: pricePerKg * 100,
@@ -1939,13 +1939,9 @@ const App = {
 
   // "120 Quintal" for one variety; "120 Quintal each × 3 varieties = 360 Quintal" for several.
   _demandQtyText(d) {
-    const n = d.varieties ? d.varieties.length : 1;
-    // Packet-based demand: "10 packets × 10 Kg = 100 Kg" (× varieties when several).
-    if (d.packets) {
-      const base = `${d.packets} packets × ${d.packSizeKg} Kg = ${d.qtyKg} Kg`;
-      return n > 1 ? `${base} each × ${n} varieties = ${d.qtyKg * n} Kg` : base;
-    }
-    return n > 1 ? `${d.qty} Quintal each × ${n} varieties = ${d.qty * n} Quintal` : `${d.qty} Quintal`;
+    // Packet-based demand: "10 packets × 10 Kg = 100 Kg" (one total, however many varieties are selected).
+    if (d.packets) return `${d.packets} packets × ${d.packSizeKg} Kg = ${d.qtyKg} Kg`;
+    return `${d.qty} Quintal`;
   },
 
   // Next free demand id (max existing number + 1), so ids stay unique even when several demands are created at once.
@@ -2101,13 +2097,12 @@ const App = {
       this.showPaymentSuccess('full');
       return;
     }
-    // One demand per selected variety; the same quantity/season/crop apply to each.
-    const varieties = (d.varieties && d.varieties.length) ? d.varieties : [d.variety];
+    // One demand for the whole request: the quantity is shared by all selected varieties, so it is not split or repeated.
     const date = new Date().toISOString().split('T')[0];
-    this.state._lastDemandIds = varieties.map(variety => {
+    this.state._lastDemandIds = [d].map(() => {
       const id = this._nextDemandId();
       this.state.demands.unshift({
-        id, date, season: d.season, crop: d.crop, variety, qty: d.qty, rate: d.rate || 2400,
+        id, date, season: d.season, crop: d.crop, variety: d.variety, varieties: (d.varieties || []).slice(), qty: d.qty, rate: d.rate || 2400,
         packets: d.packets, packSizeKg: d.packSizeKg, qtyKg: d.qtyKg,
         // Alternates the society will accept if the first choice isn't available.
         secondChoice: (d.secondChoice || []).slice(), thirdChoice: (d.thirdChoice || []).slice(),

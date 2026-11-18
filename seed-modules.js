@@ -197,8 +197,8 @@
     'admin-hybrid-edit': 'Edit Hybrid Seed Allocation',
     'admin-hybrid-view': 'Hybrid Seed Allocation Details',
     'soc-fc-list': 'Foundation & Certified Seed Management',
-    'soc-fc-add': 'New Foundation & Certified Seed Allocation',
-    'soc-fc-edit': 'Edit Foundation & Certified Seed Allocation',
+    'soc-fc-add': 'New Foundation and Certified Seed Entry',
+    'soc-fc-edit': 'Edit Foundation and Certified Seed Entry',
     'soc-fc-view': 'Foundation & Certified Seed Details',
     'admin-seed-lines': 'Seed Buying/Selling Line Management',
     'admin-packaging': 'Seed Packaging Management',
@@ -426,7 +426,7 @@ App.smRenderHybridForm = function (mode) {
     + '<span class="material-icons">close</span> Cancel</button>'
     + '<button class="btn btn-primary" onclick="App.smHybridSave(\'' + mode + '\')">'
     + '<span class="material-icons">' + (isEdit ? 'save' : 'add_circle') + '</span> '
-    + (isEdit ? 'Update Allocation' : 'Save Allocation') + '</button>'
+    + (isEdit ? 'Update Entry' : 'Save Entry') + '</button>'
     + '</div>'
     + '</div></div>';
 };
@@ -549,6 +549,40 @@ App._fcVarietyNames = function (crop, current) {
 };
 
 // Crop changed on the form → rebuild the Variety control (single select when editing, multi-select when adding).
+// ── Earlier seed given to the selected member (shown on the F&C form as soon as a member is picked) ──
+// Everything given to a member before: distributions (Breeder Seeds Distribution to Member) + earlier F&C allocations.
+App._fcMemberHistory = function (memberId, excludeId) {
+  var rows = [];
+  var add = function (r, date) {
+    var qty = Number(r.qty !== undefined ? r.qty : r.allocQty) || 0;
+    rows.push({ finYear: r.finYear, season: r.season, seedType: r.seedType, crop: r.crop, variety: r.variety, qty: qty, unit: r.unit || 'Quintal', date: date || '' });
+  };
+  (App.state.distributionRecords || []).forEach(function (r) { if (r.memberId === memberId) add(r, r.date); });
+  (App.state.fcSeedStock || []).forEach(function (r) { if (r.memberId === memberId && r.id !== excludeId) add(r, r.allocDate); });
+  rows.sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+  return rows;
+};
+App._fcMemberHistoryHtml = function (memberId, excludeId) {
+  if (!memberId) return '';
+  var rows = App._fcMemberHistory(memberId, excludeId);
+  var m = (App.state.members || []).filter(function (x) { return x.id === memberId; })[0];
+  var title = '<div style="font-weight:600;color:#2E7D32;margin-bottom:8px;font-size:.88rem;"><span class="material-icons" style="font-size:18px;vertical-align:middle;margin-right:4px;">history</span>Seed given earlier to ' + (m ? m.name : memberId) + '</div>';
+  if (!rows.length) return '<div style="background:#F1F8E9;border:1px solid #C5E1A5;border-radius:8px;padding:12px 14px;">' + title + '<div style="color:#757575;font-size:.85rem;">No seed has been given to this member earlier.</div></div>';
+  var fmt = function (n) { return String(Math.round(n * 10) / 10); };
+  var body = rows.map(function (r) {
+    return '<tr><td>' + r.finYear + '</td><td>' + r.season + '</td><td>' + r.seedType + '</td><td>' + r.crop + '</td><td>' + r.variety + '</td>'
+      + '<td style="font-weight:600;">' + fmt(r.qty) + ' ' + r.unit + '</td></tr>';
+  }).join('');
+  return '<div style="background:#F1F8E9;border:1px solid #C5E1A5;border-radius:8px;padding:12px 14px;">' + title
+    + '<div class="table-wrap"><table><thead><tr><th>Proc. Year</th><th>Season</th><th>Seed Type</th><th>Crop</th><th>Variety</th><th>Quantity</th></tr></thead><tbody>' + body + '</tbody></table></div></div>';
+};
+// Member picked / changed → show that member's earlier seed in the panel under the member fields.
+App.onFCMemberChange = function () {
+  var el = document.getElementById('fc-member'), box = document.getElementById('fc-member-history');
+  if (!box) return;
+  box.innerHTML = App._fcMemberHistoryHtml(el ? el.value : '', App.state.currentPage === 'soc-fc-edit' ? App.state.fcSelId : '');
+};
+
 App.onFCCropChange = function () {
   var crop = document.getElementById('fc-crop') ? document.getElementById('fc-crop').value : '';
   var el = document.getElementById('fc-variety');
@@ -597,7 +631,7 @@ App.smRenderFCList = function () {
 
   /* Table */
   html += '<div class="card"><div class="card-header">'
-    + '<h3>Allocations <span style="color:#757575;font-weight:400;font-size:.85rem;">(' + rows.length + ' records)</span></h3></div>'
+    + '<h3>Entries <span style="color:#757575;font-weight:400;font-size:.85rem;">(' + rows.length + ' records)</span></h3></div>'
     + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
     + '<thead><tr><th>Member Name</th><th>Seed Type</th><th>Proc. Year</th><th>Season</th><th>Crop</th><th>Variety</th>'
     + '<th>Allocated Date</th><th>Procurement Date</th><th>Allocated Qty</th><th>Produce Qty</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
@@ -645,7 +679,7 @@ App.smRenderFCForm = function (mode) {
   var members = (this.state.members || []).filter(function (m) { return m.status === 'Active'; }).map(function (m) { return { id: m.id, name: m.name }; });
   if (rec && !members.some(function (m) { return m.id === rec.memberId; })) members.unshift({ id: rec.memberId, name: rec.memberName });
   var memberField = '<div class="form-group"><label>Member Name <span style="color:#F44336">*</span></label>'
-    + '<select id="fc-member" class="form-control"><option value="">Select Member</option>'
+    + '<select id="fc-member" class="form-control" onchange="App.onFCMemberChange()"><option value="">Select Member</option>'
     + members.map(function (m) { return '<option value="' + m.id + '"' + (v('memberId') === m.id ? ' selected' : '') + '>' + m.name + ' (' + m.id + ')</option>'; }).join('')
     + '</select><div id="smerr-fc-member" style="display:none;color:#C62828;font-size:.78rem;margin-top:4px;"></div></div>';
 
@@ -662,8 +696,8 @@ App.smRenderFCForm = function (mode) {
   var cropField = App._smFld('Crop', 'fc-crop', 'select', App._fcCrops, v('crop'), true)
     .replace('<select id="fc-crop" class="form-control">', '<select id="fc-crop" class="form-control" onchange="App.onFCCropChange()">');
 
-  return '<div class="page-header"><h1>' + (isEdit ? 'Edit' : 'New') + ' Foundation &amp; Certified Seed Allocation</h1>'
-    + '<p>' + (isEdit ? 'Update the allocation and produce details.' : 'Allocate foundation or certified seed to a member and record the produce procured.') + '</p></div>'
+  return '<div class="page-header"><h1>' + (isEdit ? 'Edit' : 'New') + ' Foundation and Certified Seed Entry</h1>'
+    + '<p>' + (isEdit ? 'Update the seed entry and produce details.' : 'Record foundation or certified seed given to a member and the produce procured.') + '</p></div>'
     + '<div class="card"><div class="card-body">'
 
     /* Section 1 */
@@ -676,6 +710,7 @@ App.smRenderFCForm = function (mode) {
     + App._smFld('Season', 'fc-season', 'select', App._fcSeasons, v('season'), true)
     + cropField
     + varietyField
+    + '<div id="fc-member-history" style="grid-column:1/-1;">' + App._fcMemberHistoryHtml(rec ? rec.memberId : '', rec ? rec.id : '') + '</div>'
     + '</div></div>'
 
     /* Section 2 */
@@ -692,7 +727,7 @@ App.smRenderFCForm = function (mode) {
     /* Actions */
     + '<div class="form-actions">'
     + '<button class="btn btn-gray" onclick="App.msReset(\'fc-variety\');App.navigate(\'soc-fc-list\')"><span class="material-icons">close</span> Cancel</button>'
-    + '<button class="btn btn-primary" onclick="App.smFCSave(\'' + mode + '\')"><span class="material-icons">' + (isEdit ? 'update' : 'check_circle') + '</span> ' + (isEdit ? 'Update Allocation' : 'Save Allocation') + '</button>'
+    + '<button class="btn btn-primary" onclick="App.smFCSave(\'' + mode + '\')"><span class="material-icons">' + (isEdit ? 'update' : 'check_circle') + '</span> ' + (isEdit ? 'Update Entry' : 'Save Entry') + '</button>'
     + '</div>'
     + '</div></div>';
 };
@@ -775,7 +810,7 @@ App.smFCSave = function (mode) {
       memberId: memberId, memberName: memberName, seedType: seedType, finYear: finYear, season: season, crop: crop, variety: varieties[0],
       allocDate: allocDate, procDate: procDate, unit: unit, allocQty: allocQty, produceQty: produceQty, updatedAt: now
     });
-    App._smToast('Allocation updated successfully!');
+    App._smToast('Entry updated successfully!');
   } else {
     // One record per selected variety; every other detail is shared.
     varieties.forEach(function (variety) {
@@ -785,7 +820,7 @@ App.smFCSave = function (mode) {
         activeStatus: 'Active', createdBy: by, createdAt: now, updatedAt: now
       });
     });
-    App._smToast(varieties.length > 1 ? varieties.length + ' allocations created successfully!' : 'Allocation created successfully!');
+    App._smToast(varieties.length > 1 ? varieties.length + ' entries created successfully!' : 'Entry created successfully!');
   }
   App.msReset('fc-variety');
   App.state.fcSelId = null;

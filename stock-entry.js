@@ -352,7 +352,6 @@ App.seRenderForm = function () {
     + '<div class="form-actions" style="justify-content:flex-end;gap:10px;">'
     + '<button class="btn btn-gray" onclick="App.seCancel()"><span class="material-icons">close</span> Cancel</button>'
     + '<button class="btn btn-outline" onclick="App.seReset()"><span class="material-icons">refresh</span> Reset</button>'
-    + '<button class="btn btn-warning" onclick="App.seSaveDraft()"><span class="material-icons">save</span> Save as Draft</button>'
     + '<button class="btn btn-primary" onclick="App.seSubmit()"><span class="material-icons">check_circle</span> Submit Stock Entry</button>'
     + '</div>'
 
@@ -637,8 +636,7 @@ App.seRenderList = function () {
           + '<td><div class="action-btns">'
           + '<button class="btn btn-outline btn-sm" title="View" onclick="App.seViewEntry(\'' + e.id + '\')"><span class="material-icons" style="font-size:14px;">visibility</span></button>'
           + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.seEditEntry(\'' + e.id + '\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
-          + '<button class="btn ' + ((e.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success') + ' btn-sm" onclick="App.seToggleActive(\'' + e.id + '\')">' + ((e.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate') + '</button>'
-          + '</div></td></tr>';
+            + '</div></td></tr>';
       }).join(''))
     + '</tbody></table></div></div></div>';
 };

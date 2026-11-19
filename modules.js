@@ -340,10 +340,6 @@ App.renderPriceList = function () {
                   onclick="App.state.selectedPriceId='${p.id}';App.navigate('admin-price-edit')">
                   <span class="material-icons">edit</span>
                 </button>
-                <button class="btn ${(p.activeStatus || 'Active') === 'Active' ? 'btn-danger' : 'btn-success'} btn-sm"
-                  onclick="App.togglePriceStatus('${p.id}')">
-                  ${(p.activeStatus || 'Active') === 'Active' ? 'Deactivate' : 'Activate'}
-                </button>
               </div>
             </td>
           </tr>`).join('')}

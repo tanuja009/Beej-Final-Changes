@@ -492,7 +492,7 @@ App.renderSocMyApplication = function () {
                   <td>${app.societyCode || '<span style="color:#9E9E9E;">Pending</span>'}</td>
                   <td>${app.district}</td>
                   <td>${app.registrationDate || '-'}</td>
-                  <td>${app.submittedDate ? new Date(app.submittedDate).toLocaleDateString() : '-'}</td>
+                  <td>${app.submittedDate ? App.fmtDate(new Date(app.submittedDate)) : '-'}</td>
                   <td>${this._socAppStatusBadge(app.status)}</td>
                   <td>
                     <div class="action-btns">
@@ -603,7 +603,7 @@ App.renderSocApplicationDetails = function () {
         ${row('Designation', app.designation)}
         ${row('Mobile Number', app.mobileNumber)}
         ${row('Email ID', app.emailId)}
-        ${row('Submitted Date', app.submittedDate ? new Date(app.submittedDate).toLocaleString() : '-')}
+        ${row('Submitted Date', app.submittedDate ? App.fmtDate(new Date(app.submittedDate)) + ' ' + new Date(app.submittedDate).toLocaleTimeString('en-IN') : '-')}
         ${row('Status', this._socAppStatusBadge(app.status))}
       </div>
     </div>
@@ -668,7 +668,7 @@ App.renderSocApplicationDetails = function () {
                     <div style="font-size:0.8rem;color:#757575;">by ${entry.actionBy} (${entry.role})</div>
                   </div>
                   <div style="font-size:0.75rem;color:#9E9E9E;">
-                    ${new Date(entry.actionDate).toLocaleString()}
+                    ${App.fmtDate(new Date(entry.actionDate))} ${new Date(entry.actionDate).toLocaleTimeString('en-IN')}
                   </div>
                 </div>
                 ${entry.previousStatus ? `
@@ -1135,7 +1135,7 @@ App.renderAdminRegistrationList = function () {
                 <td>${app.district}</td>
                 <td>${app.block}</td>
                 <td>${app.registrationDate || '-'}</td>
-                <td style="font-size:0.8rem;">${app.submittedDate ? new Date(app.submittedDate).toLocaleDateString() : '-'}</td>
+                <td style="font-size:0.8rem;">${app.submittedDate ? App.fmtDate(new Date(app.submittedDate)) : '-'}</td>
                 <td>${this._socAppStatusBadge(app.status)}</td>
                 <td>
                   ${isApproved

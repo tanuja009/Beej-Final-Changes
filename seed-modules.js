@@ -927,14 +927,57 @@ App.smFCToggleActive = function (id) {
   };
 
   // ── Open / close the form ──
-  App.openSeedLineForm = function () { this.state.showSeedLineForm = true; this.render(); };
-  App.closeSeedLineForm = function () { this.msReset('sl-crop'); this.msReset('sl-variety'); this.state.showSeedLineForm = false; this.render(); };
+  App.openSeedLineForm = function () {
+    this.state.seedLineEditId = null;
+    this.msReset('sl-crop'); this.msReset('sl-variety');
+    this.state.showSeedLineForm = true; this.render();
+  };
+  App.closeSeedLineForm = function () { this.msReset('sl-crop'); this.msReset('sl-variety'); this.state.seedLineEditId = null; this.state.showSeedLineForm = false; this.render(); };
+  // Crops / varieties of a line as arrays (older lines only have the comma-joined text).
+  App._lineList = function (arr, text) { return (arr && arr.length) ? arr.slice() : String(text || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); };
+  // Edit: open the form pre-filled with the line.
+  App.openSeedLineEdit = function (id) {
+    var l = this.state.seedLines.find(function (x) { return x.id === id; });
+    if (!l) return;
+    this.state.seedLineEditId = id;
+    this.state.seedLineViewId = null;
+    this.msReset('sl-crop'); this.msReset('sl-variety');
+    this.msSetValues('sl-crop', App._lineList(l.crops, l.crop));
+    this.msSetValues('sl-variety', App._lineList(l.varieties, l.variety));
+    this.state.showSeedLineForm = true; this.render();
+  };
+  // View: read-only popup.
+  App.openSeedLineView = function (id) { this.state.seedLineViewId = id; this.render(); };
+  App.closeSeedLineView = function () { this.state.seedLineViewId = null; this.render(); };
+  App.renderSeedLineView = function () {
+    var l = this.state.seedLines.find(function (x) { return x.id === App.state.seedLineViewId; });
+    if (!l) return '';
+    var row = function (k, v) { return '<div class="invoice-row"><span class="label">' + k + '</span><span class="value">' + v + '</span></div>'; };
+    return '<div class="modal-overlay" onclick="if(event.target===this)App.closeSeedLineView()"><div class="modal-box" style="max-width:520px;">'
+      + '<div class="modal-header"><h3>Trade Line Details</h3><button class="modal-close" onclick="App.closeSeedLineView()">\u2715</button></div>'
+      + '<div class="modal-body">'
+      + row('Line Type', l.lineType)
+      + row('Seed Type', l.seedType)
+      + row('Procurement Year', l.finYear)
+      + row('Season', l.season)
+      + row('Crop', l.crop)
+      + row('Variety', l.variety)
+      + row('Start Date', l.startDate)
+      + row('End Date', l.endDate)
+      + row('Status', App._lineStatusBadge(App._lineStatus(l)))
+      + '</div>'
+      + '<div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;">'
+      + '<button class="btn btn-warning" onclick="App.openSeedLineEdit(\'' + l.id + '\')"><span class="material-icons">edit</span> Edit</button>'
+      + '<button class="btn btn-gray" onclick="App.closeSeedLineView()">Close</button></div>'
+      + '</div></div>';
+  };
 
   // ── Save a new line from the form ──
   App.saveSeedLine = function () {
     var g = function (id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
     var lineType = g('sl-type');
     var seedType = g('sl-seedtype');
+    var editing = this.state.seedLineEditId ? this.state.seedLines.find(function (x) { return x.id === App.state.seedLineEditId; }) : null;
     var finYear = g('sl-finyear') || this._lineFinYear();
     var season = g('sl-season');
     // One line can cover several crops and several varieties.
@@ -948,12 +991,23 @@ App.smFCToggleActive = function (id) {
     if (!crops.length || !varieties.length) { this.showToast('Please select at least one crop and one variety'); return; }
     if (!startDate || !endDate) { this.showToast('Please set line start and end dates'); return; }
     if (endDate < startDate) { this.showToast('End date cannot be before start date'); return; }
-    var id = 'LINE-' + String(this.state.seedLines.length + 1).padStart(3, '0');
-    this.state.seedLines.unshift({ id: id, lineType: lineType, seedType: seedType, finYear: finYear, season: season, crop: crop, crops: crops, variety: variety, varieties: varieties, startDate: startDate, endDate: endDate });
+    var data = { lineType: lineType, seedType: seedType, finYear: finYear, season: season, crop: crop, crops: crops, variety: variety, varieties: varieties, startDate: startDate, endDate: endDate };
+    var msg;
+    if (editing) {
+      Object.keys(data).forEach(function (k) { editing[k] = data[k]; });
+      msg = 'Line ' + editing.id + ' updated.';
+    } else {
+      var nums = this.state.seedLines.map(function (x) { return parseInt(String(x.id).replace(/\D/g, ''), 10) || 0; });
+      var id = 'LINE-' + String((nums.length ? Math.max.apply(null, nums) : 0) + 1).padStart(3, '0');
+      data.id = id;
+      this.state.seedLines.unshift(data);
+      msg = 'Seed ' + lineType.toLowerCase() + ' line ' + id + ' created.';
+    }
     this.msReset('sl-crop');
     this.msReset('sl-variety');
+    this.state.seedLineEditId = null;
     this.state.showSeedLineForm = false;
-    this.showToast('Seed ' + lineType.toLowerCase() + ' line ' + id + ' created.');
+    this.showToast(msg);
     this.render();
   };
 
@@ -974,6 +1028,10 @@ App.smFCToggleActive = function (id) {
         + '<td>' + l.startDate + '</td>'
         + '<td>' + l.endDate + '</td>'
         + '<td>' + App._lineStatusBadge(st) + '</td>'
+        + '<td><div style="display:flex;gap:6px;">'
+        + '<button class="btn btn-outline btn-sm" title="View" onclick="App.openSeedLineView(\'' + l.id + '\')"><span class="material-icons" style="font-size:16px;">visibility</span></button>'
+        + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.openSeedLineEdit(\'' + l.id + '\')"><span class="material-icons" style="font-size:16px;">edit</span></button>'
+        + '</div></td>'
         + '</tr>';
     }).join('');
     return [
@@ -986,35 +1044,39 @@ App.smFCToggleActive = function (id) {
       lines.length === 0
         ? '<div style="padding:48px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">swap_horiz</span><p>No lines yet.</p></div>'
         : '<div class="table-wrap"><table><thead><tr>'
-        + '<th>Type</th><th>Seed Type</th><th>Proc. Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Start Date</th><th>End Date</th><th>Status</th>'
+        + '<th>Type</th><th>Seed Type</th><th>Proc. Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Actions</th>'
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
-      '</div></div>'
+      '</div></div>',
+      this.state.seedLineViewId ? this.renderSeedLineView() : ''
     ].join('');
   };
 
   // ── Form ──
   App.renderSeedLineForm = function () {
-    var fy = this._lineFinYear();
+    var e = this.state.seedLineEditId ? this.state.seedLines.find(function (x) { return x.id === App.state.seedLineEditId; }) : null;
+    var fy = (e && e.finYear) || this._lineFinYear();
     var today = new Date().toISOString().split('T')[0];
+    var lt = e ? e.lineType : 'Buying';
+    var seasonOpts = ['Kharif', 'Rabi', 'Summer'].map(function (s) { return '<option' + (e && e.season === s ? ' selected' : '') + '>' + s + '</option>'; }).join('');
     return [
       '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">',
-      '<div><h1>New Trade Line</h1><p>Open a new seed buying or selling line</p></div>',
+      '<div><h1>' + (e ? 'Edit Trade Line' : 'New Trade Line') + '</h1><p>' + (e ? 'Update the seed buying or selling line' : 'Open a new seed buying or selling line') + '</p></div>',
       '<button class="btn btn-gray" onclick="App.closeSeedLineForm()"><span class="material-icons">arrow_back</span> Back to List</button>',
       '</div>',
       '<div class="card" style="max-width:860px;"><div class="card-body">',
       '<div class="form-grid">',
 
       '<div class="form-group"><label>Line Type <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-type" onchange="App.onLineTypeChange()">' + App._lineTypeOpts('Buying') + '</select></div>',
+      '<select class="form-control" id="sl-type" onchange="App.onLineTypeChange()">' + App._lineTypeOpts(lt) + '</select></div>',
 
       '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-seedtype">' + App._lineSeedTypeOpts('Buying', '') + '</select></div>',
+      '<select class="form-control" id="sl-seedtype">' + App._lineSeedTypeOpts(lt, e ? e.seedType : '') + '</select></div>',
 
       '<div class="form-group"><label>Procurement Year</label>',
       '<input type="text" class="form-control" id="sl-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
 
       '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="sl-season"><option>Kharif</option><option>Rabi</option><option>Summer</option></select></div>',
+      '<select class="form-control" id="sl-season">' + seasonOpts + '</select></div>',
 
       '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label>',
       App._lineCropMs(),
@@ -1027,15 +1089,15 @@ App.smFCToggleActive = function (id) {
       '</div>',
 
       '<div class="form-group"><label>Line Start Date <span style="color:#F44336">*</span></label>',
-      '<input type="date" class="form-control" id="sl-start" value="' + today + '"/></div>',
+      '<input type="date" class="form-control" id="sl-start" value="' + (e ? e.startDate : today) + '"/></div>',
 
       '<div class="form-group"><label>Line End Date <span style="color:#F44336">*</span></label>',
-      '<input type="date" class="form-control" id="sl-end"/></div>',
+      '<input type="date" class="form-control" id="sl-end" value="' + (e ? e.endDate : '') + '"/></div>',
 
       '</div>',
       '<div style="display:flex;gap:12px;margin-top:20px;">',
       '<button class="btn btn-gray" onclick="App.closeSeedLineForm()">Cancel</button>',
-      '<button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.saveSeedLine()"><span class="material-icons">check_circle</span> Save Line</button>',
+      '<button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.saveSeedLine()"><span class="material-icons">check_circle</span> ' + (e ? 'Update Line' : 'Save Line') + '</button>',
       '</div>',
       '</div></div>'
     ].join('');
@@ -1044,8 +1106,8 @@ App.smFCToggleActive = function (id) {
   // Always land on the list (not the form) when opening the page.
   var _navPrev = App.navigate.bind(App);
   App.navigate = function (page) {
-    if (page === 'admin-seed-lines') this.state.showSeedLineForm = false;
-    if (page === 'admin-packaging') this.state.showPackagingForm = false;
+    if (page === 'admin-seed-lines') { this.state.showSeedLineForm = false; this.state.seedLineEditId = null; this.state.seedLineViewId = null; }
+    if (page === 'admin-packaging') { this.state.showPackagingForm = false; this.state.pkEditId = null; this.state.pkViewId = null; }
     return _navPrev(page);
   };
 }());
@@ -1070,8 +1132,38 @@ App.smFCToggleActive = function (id) {
   // Units follow the project-wide rule: Kg and Quintal only.
   App._pkUnits = function () { return App._seUnits || ['Kg', 'Quintal']; };
 
-  App.openPackagingForm = function () { this.state.showPackagingForm = true; this.render(); };
-  App.closePackagingForm = function () { this.msReset('pk-crop'); this.msReset('pk-variety'); this.state.showPackagingForm = false; this.render(); };
+  App.openPackagingForm = function () { this.state.pkEditId = null; this.msReset('pk-crop'); this.msReset('pk-variety'); this.state.showPackagingForm = true; this.render(); };
+  App.closePackagingForm = function () { this.msReset('pk-crop'); this.msReset('pk-variety'); this.state.pkEditId = null; this.state.showPackagingForm = false; this.render(); };
+  // Edit one packaging record (single crop + single variety, like other edit forms).
+  App.openPackagingEdit = function (id) {
+    if (!this.state.packagingSets.some(function (p) { return p.id === id; })) return;
+    this.state.pkEditId = id; this.state.pkViewId = null;
+    this.state.showPackagingForm = true; this.render();
+  };
+  // Edit form: crop changed → refill the single variety select.
+  App.onPkEditCropChange = function () {
+    var c = document.getElementById('pk-crop-one'), v = document.getElementById('pk-variety-one');
+    if (!c || !v) return;
+    v.innerHTML = '<option value="">Select Variety</option>' + App.varietiesForCrop(c.value).map(function (n) { return '<option>' + n + '</option>'; }).join('');
+  };
+  // View: read-only popup.
+  App.openPackagingView = function (id) { this.state.pkViewId = id; this.render(); };
+  App.closePackagingView = function () { this.state.pkViewId = null; this.render(); };
+  App.renderPackagingView = function () {
+    var p = this.state.packagingSets.find(function (x) { return x.id === App.state.pkViewId; });
+    if (!p) return '';
+    var row = function (k, v) { return '<div class="invoice-row"><span class="label">' + k + '</span><span class="value">' + v + '</span></div>'; };
+    return '<div class="modal-overlay" onclick="if(event.target===this)App.closePackagingView()"><div class="modal-box" style="max-width:480px;">'
+      + '<div class="modal-header"><h3>Packaging Details</h3><button class="modal-close" onclick="App.closePackagingView()">\u2715</button></div>'
+      + '<div class="modal-body">'
+      + row('Procurement Year', p.finYear) + row('Seed Type', p.seedType) + row('Season', p.season)
+      + row('Crop', p.crop) + row('Variety', p.variety) + row('Quantity', '<b>' + p.quantity + '</b>') + row('Unit', p.unit)
+      + '</div>'
+      + '<div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;">'
+      + '<button class="btn btn-warning" onclick="App.openPackagingEdit(\'' + p.id + '\')"><span class="material-icons">edit</span> Edit</button>'
+      + '<button class="btn btn-gray" onclick="App.closePackagingView()">Close</button></div>'
+      + '</div></div>';
+  };
 
   // Variety multi-select for the form (crop-wise).
   App._pkCropMs = function () {
@@ -1097,8 +1189,9 @@ App.smFCToggleActive = function (id) {
     var finYear = g('pk-finyear') || this._lineFinYear();
     var seedType = g('pk-seedtype');
     var season = g('pk-season');
-    var crops = this.msValues('pk-crop');
-    var varieties = this.msValues('pk-variety');
+    var editRec = this.state.pkEditId ? this.state.packagingSets.find(function (p) { return p.id === App.state.pkEditId; }) : null;
+    var crops = editRec ? [g('pk-crop-one')].filter(Boolean) : this.msValues('pk-crop');
+    var varieties = editRec ? [g('pk-variety-one')].filter(Boolean) : this.msValues('pk-variety');
     var unit = g('pk-unit');
     var quantity = parseFloat(g('pk-qty'));
     if (!seedType || !season || !crops.length) { this.showToast('Please select seed type, season and crop'); return; }
@@ -1110,13 +1203,14 @@ App.smFCToggleActive = function (id) {
     var list = this.state.packagingSets;
     // One record per (crop, variety) pair: each selected variety is paired with the selected crop(s) it belongs to.
     var pairs = [];
-    crops.forEach(function (c) {
+    if (editRec) pairs.push({ crop: crops[0], variety: varieties[0] });
+    else crops.forEach(function (c) {
       var cv = App.varietiesForCrop(c);
       varieties.forEach(function (v) { if (cv.indexOf(v) !== -1) pairs.push({ crop: c, variety: v }); });
     });
     var dups = pairs.filter(function (pr) {
       return list.some(function (p) {
-        return p.finYear === finYear && p.seedType === seedType && p.season === season && p.crop === pr.crop
+        return p !== editRec && p.finYear === finYear && p.seedType === seedType && p.season === season && p.crop === pr.crop
           && p.variety === pr.variety && p.unit === unit && Number(p.quantity) === quantity;
       });
     }).map(function (pr) { return pr.variety; });
@@ -1125,6 +1219,14 @@ App.smFCToggleActive = function (id) {
       return;
     }
 
+    if (editRec) {
+      editRec.seedType = seedType; editRec.season = season; editRec.crop = crops[0]; editRec.variety = varieties[0]; editRec.unit = unit; editRec.quantity = quantity;
+      this.state.pkEditId = null;
+      this.state.showPackagingForm = false;
+      this.showToast('Packaging set updated.');
+      this.render();
+      return;
+    }
     var nextNo = Math.max(0, Math.max.apply(null, list.map(function (p) { return parseInt(String(p.id).replace(/\D/g, ''), 10) || 0; })));
     pairs.forEach(function (pr) {
       nextNo += 1;
@@ -1149,6 +1251,10 @@ App.smFCToggleActive = function (id) {
         + '<td>' + p.variety + '</td>'
         + '<td style="font-weight:700;color:#2E7D32;">' + p.quantity + '</td>'
         + '<td>' + p.unit + '</td>'
+        + '<td><div style="display:flex;gap:6px;">'
+        + '<button class="btn btn-outline btn-sm" title="View" onclick="App.openPackagingView(\'' + p.id + '\')"><span class="material-icons" style="font-size:16px;">visibility</span></button>'
+        + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.openPackagingEdit(\'' + p.id + '\')"><span class="material-icons" style="font-size:16px;">edit</span></button>'
+        + '</div></td>'
         + '</tr>';
     }).join('');
     return [
@@ -1161,19 +1267,28 @@ App.smFCToggleActive = function (id) {
       this.state.packagingSets.length === 0
         ? '<div style="padding:48px;text-align:center;color:#9E9E9E;"><span class="material-icons" style="font-size:48px;display:block;margin-bottom:12px;">inventory_2</span><p>No packaging sets yet.</p></div>'
         : '<div class="table-wrap"><table><thead><tr>'
-        + '<th>Proc. Year</th><th>Seed Type</th><th>Season</th><th>Crop</th><th>Variety</th><th>Quantity</th><th>Unit</th>'
+        + '<th>Proc. Year</th><th>Seed Type</th><th>Season</th><th>Crop</th><th>Variety</th><th>Quantity</th><th>Unit</th><th>Actions</th>'
         + '</tr></thead><tbody>' + rows + '</tbody></table></div>',
-      '</div></div>'
+      '</div></div>',
+      this.state.pkViewId ? this.renderPackagingView() : ''
     ].join('');
   };
 
   // ── Form ──
   App.renderPackagingForm = function () {
-    var fy = this._lineFinYear();
-    var unitOpts = App._pkUnits().map(function (u) { return '<option>' + u + '</option>'; }).join('');
+    var e = this.state.pkEditId ? this.state.packagingSets.find(function (p) { return p.id === App.state.pkEditId; }) : null;
+    var fy = (e && e.finYear) || this._lineFinYear();
+    var opts = function (list, sel) { return list.map(function (x) { return '<option' + (x === sel ? ' selected' : '') + '>' + x + '</option>'; }).join(''); };
+    var unitOpts = opts(App._pkUnits(), e ? e.unit : '');
+    var cropField = e
+      ? '<select class="form-control" id="pk-crop-one" onchange="App.onPkEditCropChange()"><option value="">Select Crop</option>' + App._lineCropOpts(e.crop) + '</select>'
+      : App._pkCropMs() + App.msHint('Select one or more crops.');
+    var varietyField = e
+      ? '<select class="form-control" id="pk-variety-one"><option value="">Select Variety</option>' + opts(App.varietiesForCrop(e.crop), e.variety) + '</select>'
+      : App._pkVarietyMs(App.msValues('pk-crop')) + App.msHint('Select one or more varieties. Same unit and quantity apply to each.');
     return [
       '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">',
-      '<div><h1>New Packaging</h1><p>Set the pack size for a seed type, crop and variety</p></div>',
+      '<div><h1>' + (e ? 'Edit Packaging' : 'New Packaging') + '</h1><p>Set the pack size for a seed type, crop and variety</p></div>',
       '<button class="btn btn-gray" onclick="App.closePackagingForm()"><span class="material-icons">arrow_back</span> Back to List</button>',
       '</div>',
       '<div class="card" style="max-width:860px;"><div class="card-body">',
@@ -1183,32 +1298,30 @@ App.smFCToggleActive = function (id) {
       '<input type="text" class="form-control" id="pk-finyear" value="' + fy + '" readonly style="background:#f5f5f5;color:#2E7D32;font-weight:600;"/></div>',
 
       '<div class="form-group"><label>Seed Type <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="pk-seedtype"><option value="">Select Seed Type</option><option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option></select></div>',
+      '<select class="form-control" id="pk-seedtype"><option value="">Select Seed Type</option>' + opts(['Breeder', 'Foundation', 'Certified', 'Hybrid'], e ? e.seedType : '') + '</select></div>',
 
       '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label>',
-      '<select class="form-control" id="pk-season"><option value="">Select Season</option><option>Kharif</option><option>Rabi</option><option>Summer</option></select></div>',
+      '<select class="form-control" id="pk-season"><option value="">Select Season</option>' + opts(['Kharif', 'Rabi', 'Summer'], e ? e.season : '') + '</select></div>',
 
       '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label>',
-      App._pkCropMs(),
-      App.msHint('Select one or more crops.'),
+      cropField,
       '</div>',
 
       '<div class="form-group"><label>Variety <span style="color:#F44336">*</span></label>',
-      App._pkVarietyMs(App.msValues('pk-crop')),
-      App.msHint('Select one or more varieties. Same unit and quantity apply to each.'),
+      varietyField,
       '</div>',
 
       '<div class="form-group"><label>Unit <span style="color:#F44336">*</span></label>',
       '<select class="form-control" id="pk-unit"><option value="">Select Unit</option>' + unitOpts + '</select></div>',
 
       '<div class="form-group"><label>Quantity <span style="color:#F44336">*</span></label>',
-      '<input type="number" class="form-control" id="pk-qty" min="0.1" step="any" placeholder="e.g. 40"/>',
+      '<input type="number" class="form-control" id="pk-qty" min="0.1" step="any" placeholder="e.g. 40" value="' + (e ? e.quantity : '') + '"/>',
       '<div style="font-size:0.72rem;color:#757575;margin-top:4px;">Quantity of seed in one pack, in the selected unit.</div></div>',
 
       '</div>',
       '<div style="display:flex;gap:12px;margin-top:20px;">',
       '<button class="btn btn-gray" onclick="App.closePackagingForm()">Cancel</button>',
-      '<button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.savePackaging()"><span class="material-icons">check_circle</span> Save Packaging</button>',
+      '<button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.savePackaging()"><span class="material-icons">check_circle</span> ' + (e ? 'Update Packaging' : 'Save Packaging') + '</button>',
       '</div>',
       '</div></div>'
     ].join('');

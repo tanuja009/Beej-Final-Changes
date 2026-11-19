@@ -1772,9 +1772,6 @@ const App = {
           <button class="btn btn-gray" onclick="App.navigate('demand-history')">
             <span class="material-icons">arrow_back</span> Cancel
           </button>
-          <button class="btn btn-outline" onclick="App.saveDemandDraft()">
-            <span class="material-icons">save</span> Save Draft
-          </button>
           <button class="btn btn-primary" onclick="App.previewDemand()">
             <span class="material-icons">preview</span> Preview
           </button>
@@ -2353,7 +2350,7 @@ const App = {
     if (!d) return;
     if (kind === 'advance' && (!d.payStatus || d.payStatus === 'Pending')) { this.showToast('Advance not paid yet.'); return; }
     if (kind === 'full' && !d.fullyPaid && this._demandStatus(d) !== 'Received') { this.showToast('Full payment not completed yet.'); return; }
-    const html = this._invoiceHtml(d, kind);
+    const html = App._fmtDl(this._invoiceHtml(d, kind));
     try {
       const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
@@ -5375,7 +5372,7 @@ Note: This is a computer-generated document.
 `;
 
     // Create blob and download
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([App._fmtDl(content)], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -5395,7 +5392,7 @@ Note: This is a computer-generated document.
 
     // Create print window
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
+    printWindow.document.write(App._fmtDl(`
       <!DOCTYPE html>
       <html>
       <head>
@@ -5489,7 +5486,7 @@ Note: This is a computer-generated document.
         </div>
       </body>
       </html>
-    `);
+    `));
     printWindow.document.close();
 
     // Wait for content to load then print

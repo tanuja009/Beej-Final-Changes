@@ -250,11 +250,10 @@ App.smDashboard = function () {
     + '</div>'
     + '<div class="card" style="margin-top:20px;"><div class="card-header"><h3>Stock Summary</h3></div>'
     + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Season</th><th>Crop</th><th>Variety</th><th>Opening</th><th>Available</th></tr></thead><tbody>'
+    + '<thead><tr><th>Procurement Year</th><th>Season</th><th>Crop</th><th>Variety</th><th>Available</th></tr></thead><tbody>'
     + inv.map(function (r) {
       var a = App._smAvail(r);
-      return '<tr><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td>'
-        + '<td>' + r.opening + '</td>'
+      return '<tr><td>' + (r.finYear || App._lineFinYear()) + '</td><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td>'
         + '<td style="font-weight:700;color:' + (a > 0 ? '#2E7D32' : '#C62828') + ';">' + a + ' Quintal</td></tr>';
     }).join('')
     + '</tbody></table></div></div></div>';
@@ -558,9 +557,13 @@ App.smVarietyForm = function () {
     + '<div class="form-section"><div class="form-section-title"><span class="material-icons">category</span> Variety Details</div>'
     + '<div class="form-grid">'
     + '<div class="form-group"><label>Season <span style="color:#F44336">*</span></label><select class="form-control" id="vf-season"><option value="">Select</option>' + App._smSeasonOpts(r ? r.season : '') + '</select></div>'
-    + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="vf-crop"><option value="">Select</option>' + App._smCropOpts('', r ? r.crop : '') + '</select></div>'
-    + '<div class="form-group"><label>Variety Name <span style="color:#F44336">*</span></label><select class="form-control" id="vf-name"><option value="">Select Variety</option>' + App._smVarietyNameOpts(r ? r.name : '') + '</select></div>'
-    + '<div class="form-group"><label>Variety Code <span style="color:#F44336">*</span></label><input class="form-control" id="vf-code" value="' + (r ? r.code : '') + '" placeholder="e.g. IR64" style="text-transform:uppercase;"></div>'
+    + '<div class="form-group"><label>Crop <span style="color:#F44336">*</span></label><select class="form-control" id="vf-crop"' + (mode === 'edit' ? '' : ' onchange="App.onVfCropChange()"') + '><option value="">Select</option>' + App._smCropOpts('', r ? r.crop : '') + '</select></div>'
+    + (mode === 'edit'
+      ? '<div class="form-group"><label>Variety Name <span style="color:#F44336">*</span></label><select class="form-control" id="vf-name"><option value="">Select Variety</option>' + App._smVarietyNameOpts(r ? r.name : '') + '</select></div>'
+      + '<div class="form-group"><label>Variety Code <span style="color:#F44336">*</span></label><input class="form-control" id="vf-code" value="' + (r ? r.code : '') + '" placeholder="e.g. IR64" style="text-transform:uppercase;"></div>'
+      : '<div class="form-group"><label>Variety Name <span style="color:#F44336">*</span></label>' + App._vfVarietyMs('') + App.msHint() + '</div>'
+      + '<div class="form-group"><label>Variety Code</label><input class="form-control" id="vf-code" readonly placeholder="Auto-generated" style="background:#f5f5f5;">'
+      + '<div style="font-size:0.72rem;color:#757575;margin-top:4px;">Generated from each variety name (e.g. IR-64 → IR64).</div></div>')
     + '<div class="form-group" style="grid-column:1/-1;"><label>Description</label><textarea class="form-control" id="vf-desc" rows="2">' + (r ? r.desc : '') + '</textarea></div>'
     + '<div class="form-group"><label>Status</label><select class="form-control" id="vf-status"><option value="Active"' + (r && r.status === 'Active' ? ' selected' : '') + '>Active</option><option value="Inactive"' + (r && r.status === 'Inactive' ? ' selected' : '') + '>Inactive</option></select></div>'
     + '</div></div>'
@@ -568,8 +571,51 @@ App.smVarietyForm = function () {
     + '<button class="btn btn-primary" onclick="App.smSaveVariety()"><span class="material-icons">save</span> Save</button></div>'
     + '</div></div>';
 };
+// ── Create Variety: crop-wise multi-select of variety names ──
+// Code generated from a name: "IR-64" → "IR64", "Pusa Bold" → "PUSABOLD".
+App._vfCode = function (name) { return String(name || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); };
+// Varieties of the crop that are not yet in the Variety Master for that crop.
+App._vfVarietyNames = function (crop) {
+  if (!crop) return [];
+  var have = SM.varieties.filter(function (v) { return v.crop === crop; }).map(function (v) { return v.name; });
+  return App.varietiesForCrop(crop).filter(function (n) { return have.indexOf(n) === -1; });
+};
+App._vfVarietyMs = function (crop) {
+  return App.msRender('vf-name', App._vfVarietyNames(crop), !crop, 'Select Crop first', App._vfShowCodes);
+};
+App._vfShowCodes = function () {
+  var el = document.getElementById('vf-code');
+  if (el) el.value = App.msValues('vf-name').map(App._vfCode).join(', ');
+};
+App.onVfCropChange = function () {
+  var crop = document.getElementById('vf-crop') ? document.getElementById('vf-crop').value : '';
+  App._vfVarietyMs(crop);
+  App._msRefresh('vf-name');
+  App._vfShowCodes();
+};
+
 App.smSaveVariety = function () {
   var g = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  if (SM.formMode !== 'edit') {
+    // Add: one Variety Master record per selected variety, same season / crop / description / status.
+    var s = g('vf-season'), c = g('vf-crop'), names = App.msValues('vf-name');
+    if (!s || !c || !names.length) { alert('Please fill all required fields.\nSelect at least one Variety.'); return; }
+    var taken = SM.varieties.map(function (v) { return v.code; });
+    var dupName = names.filter(function (n) { return SM.varieties.some(function (v) { return v.name === n && v.crop === c; }); });
+    if (dupName.length) { alert('Already exists under ' + c + ': ' + dupName.join(', ')); return; }
+    var today = new Date().toISOString().split('T')[0];
+    names.forEach(function (n) {
+      // Keep codes unique: add a number if the generated code is already used.
+      var base = App._vfCode(n) || 'VAR', code = base, k = 2;
+      while (taken.indexOf(code) !== -1) code = base + '-' + (k++);
+      taken.push(code);
+      SM.varieties.push({ id: App._smNextId(SM.varieties, 'VAR-'), name: n, code: code, crop: c, season: s, desc: g('vf-desc'), status: g('vf-status') || 'Active', created: today });
+    });
+    App.msReset('vf-name');
+    App.showToast(names.length > 1 ? names.length + ' varieties created successfully.' : 'Variety created successfully.');
+    App.navigate('sm-variety');
+    return;
+  }
   var season = g('vf-season'), crop = g('vf-crop'), name = g('vf-name'), code = g('vf-code').toUpperCase();
   if (!season || !crop || !name || !code) { alert('Please fill all required fields.'); return; }
   // Duplicate checks
@@ -741,11 +787,11 @@ App.smSaveSeason = function () {
 // ═══════════════════════════════════════════════════════════
 App.smCropList = function () {
   var rows = SM.crops;
-  return '<div class="page-header"><h1>Crop Master Mapping</h1><p>Manage crops and their applicable seasons</p></div>'
+  return '<div class="page-header"><h1>Crop Master Mapping</h1><p>Manage crops and their seasons</p></div>'
     + '<div class="card"><div class="card-header"><h3>Crops (' + rows.length + ')</h3>'
     + '<button class="btn btn-primary btn-sm" onclick="App.state.sm.editId=null;App.state.sm.formMode=\'add\';App.navigate(\'sm-crop-form\')"><span class="material-icons">add</span> Create Crop</button>'
     + '</div><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
-    + '<thead><tr><th>Sr.</th><th>Crop Name</th><th>Code</th><th>Applicable Seasons</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
+    + '<thead><tr><th>Sr.</th><th>Crop Name</th><th>Code</th><th>Season</th><th>Description</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody>'
     + rows.map(function (r, i) {
       return '<tr><td>' + (i + 1) + '</td><td><b>' + r.name + '</b></td><td>' + (r.code || '—') + '</td><td style="font-size:0.8rem;">' + (r.seasons || []).join(', ') + '</td><td style="font-size:0.78rem;">' + (r.desc || '') + '</td>'
         + '<td>' + App._smBdg(r.status) + '</td><td style="font-size:0.78rem;">' + (r.created || '') + '</td>'
@@ -775,7 +821,7 @@ App.smCropForm = function () {
     + '<div class="form-grid">'
     + '<div class="form-group"><label>Crop Name <span style="color:#F44336">*</span></label><select class="form-control" id="cf-name"><option value="">Select Crop</option>' + App._smCropNameOpts(r ? r.name : '') + '</select></div>'
     + '<div class="form-group"><label>Crop Code <span style="color:#F44336">*</span></label><input class="form-control" id="cf-code" value="' + (r ? r.code : '') + '" placeholder="e.g. PDY" style="text-transform:uppercase;"></div>'
-    + '<div class="form-group" style="grid-column:1/-1;"><label>Applicable Seasons</label><div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 0;">' + (seasonChecks || '<span style="color:#9E9E9E;font-size:0.82rem;">No active seasons</span>') + '</div></div>'
+    + '<div class="form-group" style="grid-column:1/-1;"><label>Season</label><div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 0;">' + (seasonChecks || '<span style="color:#9E9E9E;font-size:0.82rem;">No active seasons</span>') + '</div></div>'
     + '<div class="form-group" style="grid-column:1/-1;"><label>Description</label><textarea class="form-control" id="cf-desc" rows="2">' + (r ? (r.desc || '') : '') + '</textarea></div>'
     + '<div class="form-group"><label>Status</label><select class="form-control" id="cf-status"><option value="Active"' + (r && r.status === 'Active' ? ' selected' : '') + '>Active</option><option value="Inactive"' + (r && r.status === 'Inactive' ? ' selected' : '') + '>Inactive</option></select></div>'
     + '</div></div>'

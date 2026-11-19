@@ -1747,20 +1747,17 @@ const App = {
           <div class="form-section-title"><span class="material-icons">calculate</span> Quantity & Delivery Details</div>
           <div class="form-grid">
             <div class="form-group">
-              <label>Number of Packets *</label>
-              <input type="number" class="form-control" id="d-packets" placeholder="Enter number of packets" min="1" step="1" oninput="App._refreshDemandPrice()"/>
+              <label>Quantity Demanded (Kg) *</label>
+              <input type="number" class="form-control" id="d-qty" placeholder="Enter quantity in Kg" min="1" step="any" oninput="App._refreshDemandPrice()"/>
               <div id="d-pack-note" style="font-size:0.78rem;color:#2E7D32;margin-top:4px;">${App._packNoteText('', [])}</div>
+              <div id="d-qty-err" style="display:none;font-size:0.78rem;color:#C62828;margin-top:4px;"></div>
             </div>
             <div class="form-group">
-              <label>Price per Kg (₹)</label>
-              <input type="text" class="form-control" id="d-price-kg" placeholder="Auto-filled" readonly style="background:#f5f5f5;"/>
+              <label>Price per Quintal (₹)</label>
+              <input type="text" class="form-control" id="d-price-qt" placeholder="Auto-filled" readonly style="background:#f5f5f5;"/>
             </div>
             <div class="form-group">
-              <label>Quantity Demanded (Kg)</label>
-              <input type="text" class="form-control" id="d-qty" placeholder="Auto-calculated" readonly style="background:#f5f5f5;"/>
-            </div>
-            <div class="form-group">
-              <label>Estimated Price (₹)</label>
+              <label>Total Amount (₹)</label>
               <input type="text" class="form-control" id="d-est-price" placeholder="Auto-calculated" readonly style="background:#f5f5f5;"/>
             </div>
             <div class="form-group">
@@ -1828,21 +1825,26 @@ const App = {
       || pool[0];
     return pick && pick.sellingPrice > 0 ? pick.sellingPrice : 24;
   },
-  // Pack size in Kg from Seed Packaging Management: Breeder / first-choice variety preferred; default 10 Kg.
-  _demandPackSizeKg(crop, varieties) {
+  // Packet sizes (Kg) of a crop from Seed Packaging Management, smallest first.
+  // Falls back to the standard 8 / 10 / 20 Kg packets when none is configured for the crop.
+  _demandPackSizes(crop) {
     const key = this._cropKey(crop);
-    const sets = (this.state.packagingSets || []).filter(p => this._cropKey(p.crop) === key);
-    const pick = sets.find(p => p.seedType === 'Breeder' && (varieties || []).indexOf(p.variety) !== -1)
-      || sets.find(p => p.seedType === 'Breeder')
-      || sets.find(p => (varieties || []).indexOf(p.variety) !== -1)
-      || sets[0];
-    if (!pick) return 10;
-    return pick.unit === 'Quintal' ? pick.quantity * 100 : pick.quantity;
+    const sizes = [];
+    (this.state.packagingSets || []).forEach(p => {
+      if (this._cropKey(p.crop) !== key) return;
+      const kg = p.unit === 'Quintal' ? p.quantity * 100 : Number(p.quantity);
+      if (kg > 0 && sizes.indexOf(kg) === -1) sizes.push(kg);
+    });
+    return (sizes.length ? sizes : [8, 10, 20]).sort((a, b) => a - b);
   },
-  _packNoteText(crop, varieties) {
-    if (!crop) return 'Select a crop to see the packet size.';
-    const kg = this._demandPackSizeKg(crop, varieties);
-    return `Note: Packets of this crop are of <b>${kg} Kg</b> each. Quantity demanded = number of packets × ${kg} Kg.`;
+  // Quantity is valid only if it is a whole multiple of one of the crop's packet sizes.
+  _demandQtyValid(crop, kg) {
+    return kg > 0 && this._demandPackSizes(crop).some(s => Math.abs(kg / s - Math.round(kg / s)) < 1e-9);
+  },
+  _packNoteText(crop) {
+    if (!crop) return 'Select a crop to see the packet sizes.';
+    const sizes = this._demandPackSizes(crop).map(s => s + ' Kg').join(', ');
+    return `Note: Packets of this crop are of <b>${sizes}</b>. Enter the quantity in multiples of these packet sizes only.`;
   },
   // Rows describing the varieties asked for: [label, text]. Plain "Variety" when there are no alternates.
   _demandChoices(d) {
@@ -1873,24 +1875,28 @@ const App = {
     this._refreshDemandPrice();
   },
 
-  // Recompute everything that depends on crop / season / varieties / packets:
-  // pack-size note, price per Kg, quantity demanded (Kg) and estimated price.
-  // Quantity is per First Choice variety (same packets for each); the price covers all of them.
+  // Recompute everything that depends on crop / season / quantity:
+  // packet-size note, price per Quintal and total amount.
+  // The quantity is one total for the demand; it is not multiplied by the number of varieties.
   calculateEstPrice() {
     const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     const crop = val('d-crop');
-    const varieties = this.msValues('d-variety');
     const noteEl = document.getElementById('d-pack-note');
-    if (noteEl) noteEl.innerHTML = this._packNoteText(crop, varieties);
-    if (!crop) { set('d-price-kg', ''); set('d-qty', ''); set('d-est-price', ''); return; }
+    if (noteEl) noteEl.innerHTML = this._packNoteText(crop);
+    const errEl = document.getElementById('d-qty-err');
+    const showErr = msg => { if (errEl) { errEl.textContent = msg || ''; errEl.style.display = msg ? 'block' : 'none'; } };
+    showErr('');
+    if (!crop) { set('d-price-qt', ''); set('d-est-price', ''); return; }
     const perKg = this._demandPricePerKg(crop, val('d-season'));
-    set('d-price-kg', perKg);
-    const packets = parseInt(val('d-packets'), 10);
-    if (!packets || packets < 1) { set('d-qty', ''); set('d-est-price', ''); return; }
-    const kg = packets * this._demandPackSizeKg(crop, varieties);
-    // Quantity = packets × pack size only; it does not multiply by the number of varieties selected.
-    set('d-qty', kg + ' Kg');
+    set('d-price-qt', Math.round(perKg * 100));
+    const kg = parseFloat(val('d-qty'));
+    if (!kg || kg <= 0) { set('d-est-price', ''); return; }
+    if (!this._demandQtyValid(crop, kg)) {
+      showErr('Quantity must be a multiple of ' + this._demandPackSizes(crop).map(s => s + ' Kg').join(' / ') + '.');
+      set('d-est-price', '');
+      return;
+    }
     set('d-est-price', Math.round(kg * perKg));
   },
 
@@ -1919,18 +1925,20 @@ const App = {
     if (!crop) { alert('Please select a crop.'); return; }
     const varieties = this.msValues('d-variety');
     if (!varieties.length) { alert('Please select at least one First Choice variety.'); return; }
-    const packets = parseInt(document.getElementById('d-packets')?.value, 10);
-    if (!packets || packets < 1) { alert('Please enter the number of packets.'); document.getElementById('d-packets')?.focus(); return; }
+    const qtyKg = parseFloat(document.getElementById('d-qty')?.value);
+    if (!qtyKg || qtyKg <= 0) { alert('Please enter the quantity demanded.'); document.getElementById('d-qty')?.focus(); return; }
+    if (!this._demandQtyValid(crop, qtyKg)) {
+      alert('Quantity must be a multiple of the packet sizes: ' + this._demandPackSizes(crop).map(s => s + ' Kg').join(', ') + '.');
+      document.getElementById('d-qty')?.focus(); return;
+    }
     const season = document.getElementById('d-season')?.value || 'Rabi';
-    const packSizeKg = this._demandPackSizeKg(crop, varieties);
     const pricePerKg = this._demandPricePerKg(crop, season);
-    // Quantity = packets × pack size, whatever the number of varieties selected. Second / Third choice are alternates and add nothing.
+    // One total quantity for the demand, whatever the number of varieties. Second / Third choice are alternates and add nothing.
     // Demand quantity is stored in Quintal (1 Qt = 100 Kg) so the rest of the app keeps working unchanged.
-    const qtyKg = packets * packSizeKg;
     const cost = Math.round(qtyKg * pricePerKg);
     this.state.currentDemand = {
       season, crop, variety: varieties.join(', '), varieties, qty: qtyKg / 100,
-      packets, packSizeKg, qtyKg, pricePerKg, rate: pricePerKg * 100,
+      qtyKg, rate: Math.round(pricePerKg * 100),
       secondChoice: this.msValues('d-variety2'), thirdChoice: this.msValues('d-variety3'),
       cost, advance: Math.round(cost * 0.25)
     };
@@ -1939,8 +1947,8 @@ const App = {
 
   // "120 Quintal" for one variety; "120 Quintal each × 3 varieties = 360 Quintal" for several.
   _demandQtyText(d) {
-    // Packet-based demand: "10 packets × 10 Kg = 100 Kg" (one total, however many varieties are selected).
-    if (d.packets) return `${d.packets} packets × ${d.packSizeKg} Kg = ${d.qtyKg} Kg`;
+    // Kg-based demand: "800 Kg (8 Quintal)" — one total, however many varieties are selected.
+    if (d.qtyKg) return `${d.qtyKg} Kg (${Math.round(d.qtyKg) / 100} Quintal)`;
     return `${d.qty} Quintal`;
   },
 
@@ -1984,7 +1992,7 @@ const App = {
         : `<div class="preview-item"><label>Rate per Quintal</label><span>₹${rate.toLocaleString()}/-</span></div>`}
         </div>
         <div class="preview-total">
-          <div><div class="label">Estimated Total Cost</div><div class="value">₹${d.cost.toLocaleString()}</div></div>
+          <div><div class="label">Total Amount</div><div class="value">₹${d.cost.toLocaleString()}</div></div>
           ${isFull
         ? `<div><div class="label">Advance Already Paid (25%)</div><div class="value" style="color:#A5D6A7;">₹${d.advance.toLocaleString()}</div></div>
              <div><div class="label">Balance Payment Due (75%)</div><div class="value" style="color:#FFD54F;">₹${balance.toLocaleString()}</div></div>`
@@ -2103,7 +2111,7 @@ const App = {
       const id = this._nextDemandId();
       this.state.demands.unshift({
         id, date, season: d.season, crop: d.crop, variety: d.variety, varieties: (d.varieties || []).slice(), qty: d.qty, rate: d.rate || 2400,
-        packets: d.packets, packSizeKg: d.packSizeKg, qtyKg: d.qtyKg,
+        qtyKg: d.qtyKg,
         // Alternates the society will accept if the first choice isn't available.
         secondChoice: (d.secondChoice || []).slice(), thirdChoice: (d.thirdChoice || []).slice(),
         payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Under Review'

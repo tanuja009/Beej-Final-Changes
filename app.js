@@ -53,11 +53,11 @@ const App = {
     adminSocViewCode: null,
     adminSocMemberViewId: null,
     adminDemands: [
-      { id: 'DEM-2024-001', society: 'Rampur Krishi Samiti', socCode: 'SOC-001', district: 'Chhindwara', date: '2024-06-15', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', requestedQty: 120, approvedQty: 120, pendingQty: 0, members: 65, payStatus: 'Paid', approvalStatus: 'Approved', remarks: '' },
-      { id: 'DEM-2024-004', society: 'Sehora Kisan Sabha', socCode: 'SOC-002', district: 'Seoni', date: '2024-11-20', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', requestedQty: 180, approvedQty: 0, pendingQty: 180, members: 72, payStatus: 'Paid', approvalStatus: 'Pending', remarks: '' },
-      { id: 'DEM-2024-005', society: 'Patan Krishi Vikas Samiti', socCode: 'SOC-004', district: 'Chhindwara', date: '2024-11-22', season: 'Rabi', crop: 'Mustard', variety: 'Pusa Bold', requestedQty: 60, approvedQty: 0, pendingQty: 60, members: 91, payStatus: 'Paid', approvalStatus: 'Hold', remarks: 'Awaiting field verification' },
-      { id: 'DEM-2024-006', society: 'Bargaon Beej Samiti', socCode: 'SOC-003', district: 'Narsinghpur', date: '2024-11-25', season: 'Rabi', crop: 'Gram', variety: 'JG-315', requestedQty: 100, approvedQty: 60, pendingQty: 40, members: 58, payStatus: 'Paid', approvalStatus: 'Partially Approved', remarks: 'Only 60 Qt available in stock' },
-      { id: 'DEM-2024-007', society: 'Rampur Krishi Samiti', socCode: 'SOC-001', district: 'Chhindwara', date: '2024-11-28', season: 'Rabi', crop: 'Wheat', variety: 'HD-2967', requestedQty: 90, approvedQty: 0, pendingQty: 90, members: 65, payStatus: 'Paid', approvalStatus: 'Rejected', remarks: 'Duplicate demand for same season' },
+      { id: 'DEM-2024-001', society: 'Rampur Krishi Samiti', socCode: 'SOC-001', district: 'Chhindwara', date: '2024-06-15', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', secondChoice: ['NRC-37'], thirdChoice: ['JS-9560'], requestedQty: 120, approvedQty: 120, pendingQty: 0, members: 65, payStatus: 'Paid', approvalStatus: 'Approved', remarks: '' },
+      { id: 'DEM-2024-004', society: 'Sehora Kisan Sabha', socCode: 'SOC-002', district: 'Seoni', date: '2024-11-20', season: 'Rabi', crop: 'Wheat', variety: 'GW-322', secondChoice: ['HD-2967'], thirdChoice: ['GW-496'], requestedQty: 180, approvedQty: 0, pendingQty: 180, members: 72, payStatus: 'Paid', approvalStatus: 'Pending', remarks: '' },
+      { id: 'DEM-2024-005', society: 'Patan Krishi Vikas Samiti', socCode: 'SOC-004', district: 'Chhindwara', date: '2024-11-22', season: 'Rabi', crop: 'Mustard', variety: 'Pusa Bold', secondChoice: ['RH-30'], thirdChoice: ['Varuna'], requestedQty: 60, approvedQty: 0, pendingQty: 60, members: 91, payStatus: 'Paid', approvalStatus: 'Hold', remarks: 'Awaiting field verification' },
+      { id: 'DEM-2024-006', society: 'Bargaon Beej Samiti', socCode: 'SOC-003', district: 'Narsinghpur', date: '2024-11-25', season: 'Rabi', crop: 'Gram', variety: 'JG-315', secondChoice: ['JG-14'], thirdChoice: [], requestedQty: 100, approvedQty: 60, pendingQty: 40, members: 58, payStatus: 'Paid', approvalStatus: 'Partially Approved', remarks: 'Only 60 Qt available in stock' },
+      { id: 'DEM-2024-007', society: 'Rampur Krishi Samiti', socCode: 'SOC-001', district: 'Chhindwara', date: '2024-11-28', season: 'Rabi', crop: 'Wheat', variety: 'HD-2967', secondChoice: ['GW-322'], thirdChoice: [], requestedQty: 90, approvedQty: 0, pendingQty: 90, members: 65, payStatus: 'Paid', approvalStatus: 'Rejected', remarks: 'Duplicate demand for same season' },
     ],
     // UI: which demand is currently under review
     reviewDemandId: null,
@@ -70,6 +70,13 @@ const App = {
       { crop: 'Soybean', variety: 'JS-335', available: 600, allocated: 240, distributed: 120 },
       { crop: 'Gram', variety: 'JG-315', available: 400, allocated: 150, distributed: 80 },
       { crop: 'Mustard', variety: 'Pusa Bold', available: 300, allocated: 80, distributed: 40 },
+      { crop: 'Wheat', variety: 'HD-2967', available: 300, allocated: 100, distributed: 50 },
+      { crop: 'Wheat', variety: 'GW-496', available: 250, allocated: 80, distributed: 30 },
+      { crop: 'Soybean', variety: 'NRC-37', available: 200, allocated: 50, distributed: 20 },
+      { crop: 'Soybean', variety: 'JS-9560', available: 90, allocated: 30, distributed: 10 },
+      { crop: 'Mustard', variety: 'RH-30', available: 150, allocated: 40, distributed: 10 },
+      { crop: 'Mustard', variety: 'Varuna', available: 120, allocated: 20, distributed: 0 },
+      { crop: 'Gram', variety: 'JG-14', available: 180, allocated: 60, distributed: 20 },
     ],
     distributions: [
       { society: 'Rampur Krishi Samiti', approvedQty: 120, dispatchQty: 120, dispatchDate: '2024-07-01', status: 'Delivered' },
@@ -86,9 +93,9 @@ const App = {
     // ── NEW: Allocation & Distribution Workflow ──
     // Admin: society-level allocations
     societyAllocations: [
-      { id: 'ALLOC-001', society: 'Rampur Krishi Samiti', socCode: 'SOC-001', demandId: 'DEM-2024-001', crop: 'Soybean', variety: 'JS-335', requestedQty: 120, approvedQty: 120, availableStock: 600, allocatedQty: 120, status: 'Dispatched', season: 'Kharif' },
-      { id: 'ALLOC-002', society: 'Sehora Kisan Sabha', socCode: 'SOC-002', demandId: 'DEM-2024-004', crop: 'Wheat', variety: 'GW-322', requestedQty: 180, approvedQty: 180, availableStock: 850, allocatedQty: 0, status: 'Pending', season: 'Rabi' },
-      { id: 'ALLOC-003', society: 'Patan Krishi Vikas Samiti', socCode: 'SOC-004', demandId: 'DEM-2024-005', crop: 'Mustard', variety: 'Pusa Bold', requestedQty: 60, approvedQty: 60, availableStock: 300, allocatedQty: 0, status: 'Approved', season: 'Rabi' },
+      { id: 'ALLOC-001', society: 'Rampur Krishi Samiti', socCode: 'SOC-001', demandId: 'DEM-2024-001', crop: 'Soybean', variety: 'JS-335', secondChoice: ['NRC-37'], thirdChoice: ['JS-9560'], requestedQty: 120, approvedQty: 120, availableStock: 600, allocatedQty: 120, status: 'Dispatched', season: 'Kharif' },
+      { id: 'ALLOC-002', society: 'Sehora Kisan Sabha', socCode: 'SOC-002', demandId: 'DEM-2024-004', crop: 'Wheat', variety: 'GW-322', secondChoice: ['HD-2967'], thirdChoice: ['GW-496'], requestedQty: 180, approvedQty: 180, availableStock: 850, allocatedQty: 0, status: 'Pending', season: 'Rabi' },
+      { id: 'ALLOC-003', society: 'Patan Krishi Vikas Samiti', socCode: 'SOC-004', demandId: 'DEM-2024-005', crop: 'Mustard', variety: 'Pusa Bold', secondChoice: ['RH-30'], thirdChoice: ['Varuna'], requestedQty: 60, approvedQty: 60, availableStock: 300, allocatedQty: 0, status: 'Approved', season: 'Rabi' },
     ],
 
     // Admin: dispatch orders
@@ -1332,6 +1339,17 @@ const App = {
   },
 
   submitMemberOnboarding() {
+    // Save the member exactly as filled in the onboarding form.
+    const g = id => { const e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; };
+    const f = {};
+    this._MEMBER_FORM_FIELDS.forEach(([, key, id]) => { f[key] = g(id); });
+    if (f.firstName || f.samagraId) {
+      const nums = this.state.members.map(x => parseInt(String(x.id).replace(/\D/g, ''), 10) || 0);
+      f.id = 'MBR-' + String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, '0');
+      f.name = [f.firstName, f.middleName, f.lastName].filter(Boolean).join(' ');
+      f.status = f.memberStatus || 'Active';
+      this.state.members.push(f);
+    }
     // Reset the onboarding flow state after submission
     if (this._moResendTimer) { clearInterval(this._moResendTimer); this._moResendTimer = null; }
     this.state.memberOnboarding = { samagraId: '', stage: 'idle', fetched: false, details: null };
@@ -1512,6 +1530,33 @@ const App = {
   },
 
   // Member View page
+  // Fields of the Society Member Onboarding form: [label, record key, form element id].
+  _MEMBER_FORM_FIELDS: [
+    ['Samagra ID', 'samagraId', 'm-samagra-display'], ['Family ID', 'familyId', 'm-familyid'], ['Title', 'title', 'm-title'],
+    ['First Name', 'firstName', 'm-firstname'], ['Middle Name', 'middleName', 'm-middlename'], ['Last Name', 'lastName', 'm-lastname'],
+    ["Father's Name", 'father', 'm-father'], ["Mother's Name", 'mother', 'm-mother'], ['Date of Birth', 'dob', 'm-dob'],
+    ['Gender', 'gender', 'm-gender'], ['Marital Status', 'maritalStatus', 'm-marital'], ['Nationality', 'nationality', 'm-nationality'],
+    ['Profession', 'profession', 'm-profession'], ['Email', 'email', 'm-email'], ['Category', 'category', 'm-category'],
+    ['Mobile Number', 'mobile', 'm-mobile'], ['Address', 'address', 'm-address'], ['District', 'district', 'm-district'],
+    ['Block', 'block', 'm-block'], ['Local Body', 'localBody', 'm-localbody'], ['Village / Ward', 'village', 'm-village'],
+    ['Pincode', 'pincode', 'm-pincode'], ['Aadhaar Name', 'aadhaarName', 'm-aadhaar-name'], ['Aadhaar (last 4)', 'aadhaarId', 'm-aadhaar-id'],
+    ['eKYC Date', 'ekycDate', 'm-ekyc-date'], ['Member Status', 'memberStatus', 'm-status'], ['Joining Date', 'joiningDate', 'm-joining-date'],
+    ['eKYC Status', 'ekyc', 'm-ekyc']
+  ],
+  // Value of one onboarding field for a member (older demo records only have some fields).
+  _memberFieldVal(m, key) {
+    if (m[key] != null && m[key] !== '' && m[key] !== '-') return m[key];
+    const parts = String(m.name || '').trim().split(/\s+/);
+    if (key === 'firstName') return parts[0] || '';
+    if (key === 'lastName') return parts.length > 1 ? parts[parts.length - 1] : '';
+    if (key === 'middleName') return parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+    if (key === 'memberStatus') return m.status || '';
+    if (key === 'aadhaarId') return m.aadhaar && /\d{4}$/.test(m.aadhaar) ? m.aadhaar.slice(-4) : '';
+    return '';
+  },
+  _memberRows(m, row) {
+    return this._MEMBER_FORM_FIELDS.map(([label, key]) => row(label, this._memberFieldVal(m, key))).join('');
+  },
   renderMemberView() {
     const m = this.state.members.find(x => x.id === this.state.memberViewId);
     if (!m) return this.renderMemberList();
@@ -1519,33 +1564,21 @@ const App = {
       <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
         <span style="color:#757575;">${label}</span><span style="font-weight:600;color:#212121;">${val || '—'}</span>
       </div>`;
+    const rows = this._MEMBER_FORM_FIELDS.map(([label, key]) => row(label, this._memberFieldVal(m, key)));
+    const half = Math.ceil(rows.length / 2);
     return `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
       <button class="btn btn-gray btn-sm" onclick="App.navigate('member-list')"><span class="material-icons" style="font-size:16px;">arrow_back</span> Back to Member List</button>
       <button class="btn btn-warning btn-sm" onclick="App.openMemberEdit('${m.id}')"><span class="material-icons" style="font-size:16px;">edit</span> Edit</button>
     </div>
-    <div class="page-header"><h1>Member Details</h1><p>${m.name}</p></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card"><div class="card-header"><h3>Personal Information</h3></div><div class="card-body">
-        ${row('Member Name', m.name)}
-        ${row('Gender', m.gender)}
-        ${row('Category', m.category)}
-        ${row('Father / Husband Name', m.father)}
-        ${row('Mobile', m.mobile)}
-        ${row('Email', m.email)}
-      </div></div>
-      <div class="card"><div class="card-header"><h3>Address & Status</h3></div><div class="card-body">
-        ${row('Address', m.address)}
-        ${row('District', m.district)}
-        ${row('Block', m.block)}
-        ${row('Village', m.village)}
-        ${row('Pincode', m.pincode)}
-        ${row('Status', m.status)}
-        ${row('Joining Date', m.joiningDate)}
-      </div></div>
-    </div>`;
+    <div class="page-header"><h1>Member Details</h1></div>
+    <div class="card"><div class="card-header"><h3>Member Details</h3></div><div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 32px;">
+        <div>${rows.slice(0, half).join('')}</div>
+        <div>${rows.slice(half).join('')}</div>
+      </div>
+    </div></div>`;
   },
-
   // Member Edit page (pre-filled with existing details)
   renderMemberEdit() {
     const m = this.state.members.find(x => x.id === this.state.memberEditId);
@@ -1936,6 +1969,9 @@ const App = {
     this.state.currentDemand = {
       season, crop, variety: varieties.join(', '), varieties, qty: qtyKg / 100,
       qtyKg, rate: Math.round(pricePerKg * 100),
+      procYear: document.getElementById('d-proc-year')?.value || '',
+      demandDate: document.getElementById('d-demand-date')?.value || '',
+      expectedDelivery: document.getElementById('d-expected-delivery')?.value || '',
       secondChoice: this.msValues('d-variety2'), thirdChoice: this.msValues('d-variety3'),
       cost, advance: Math.round(cost * 0.25)
     };
@@ -2108,7 +2144,7 @@ const App = {
       const id = this._nextDemandId();
       this.state.demands.unshift({
         id, date, season: d.season, crop: d.crop, variety: d.variety, varieties: (d.varieties || []).slice(), qty: d.qty, rate: d.rate || 2400,
-        qtyKg: d.qtyKg,
+        qtyKg: d.qtyKg, procYear: d.procYear, demandDate: d.demandDate, expectedDelivery: d.expectedDelivery,
         // Alternates the society will accept if the first choice isn't available.
         secondChoice: (d.secondChoice || []).slice(), thirdChoice: (d.thirdChoice || []).slice(),
         payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Under Review'
@@ -2367,14 +2403,27 @@ const App = {
     }
   },
 
+  // Fields of the Raise Breeder Seed Demand form, in form order, for one saved demand.
+  _demandViewRows(d) {
+    const join = a => (a && a.length) ? a.join(', ') : '';
+    const kg = d.qtyKg != null ? d.qtyKg : Math.round((d.qty || 0) * 100);
+    const rate = d.rate || 2400;
+    // Older demands have no Procurement Year saved: take the year from the demand date (Apr–Mar).
+    let procYear = d.procYear;
+    const dd = d.demandDate || d.date;
+    if (!procYear && dd) { const y = +dd.slice(0, 4), m = +dd.slice(5, 7); const s = m >= 4 ? y : y - 1; procYear = s + '-' + String((s + 1) % 100).padStart(2, '0'); }
+    return [
+      ['Society Name', 'Rampur Krishi Samiti'], ['Society Code', 'SOC-001'], ['District', 'Chhindwara'], ['Block', 'Patan'],
+      ['Procurement Year', procYear], ['Demand Date', dd], ['Season', d.season], ['Crop', d.crop],
+      ['First Choice Variety', join(d.varieties) || d.variety], ['Second Choice Variety', join(d.secondChoice)], ['Third Choice Variety', join(d.thirdChoice)],
+      ['Quantity Demanded (Kg)', kg], ['Price per Quintal (₹)', '₹' + rate.toLocaleString()], ['Total Amount (₹)', '₹' + Math.round(kg * rate / 100).toLocaleString()],
+      ['Expected Date of Delivery', d.expectedDelivery]
+    ];
+  },
+
   renderDemandHistoryModal() {
     const d = this.state.demands.find(x => x.id === this.state.demandHistoryViewId);
     if (!d) return '';
-    const adm = this.state.adminDemands.find(x => x.id === d.id);
-    const approved = adm ? adm.approvedQty : (d.approvedQty != null ? d.approvedQty : (d.approvalStatus === 'Approved' ? d.qty : 0));
-    const pending = adm ? adm.pendingQty : (d.pendingQty != null ? d.pendingQty : (d.approvalStatus === 'Approved' ? 0 : d.qty));
-    const status = this._demandStatus(d);
-    const remarks = adm && adm.remarks ? adm.remarks : '—';
     const row = (label, val) => `
       <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
         <span style="color:#757575;">${label}</span><span style="font-weight:600;color:#212121;">${val || '—'}</span>
@@ -2383,21 +2432,11 @@ const App = {
     <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandHistoryView()">
       <div class="modal-box" style="max-width:480px;">
         <div class="modal-header">
-          <h3>Demand Details — ${d.id}</h3>
+          <h3>Demand Details</h3>
           <button class="modal-close" onclick="App.closeDemandHistoryView()">✕</button>
         </div>
-        <div class="modal-body">
-          ${row('Demand ID', d.id)}
-          ${row('Date', d.date)}
-          ${row('Season', d.season)}
-          ${row('Crop', d.crop)}
-          ${this._demandChoices(d).map(([l, v]) => row(l === 'Variety' ? 'Variety' : l + ' Variety', v)).join('')}
-          ${row('Requested Qty', d.qty + ' Qt')}
-          ${row('Approved Qty', approved > 0 ? approved + ' Qt' : '—')}
-          ${row('Pending Qty', pending > 0 ? pending + ' Qt' : '—')}
-          ${row('Payment Status', d.payStatus)}
-          ${row('Approval Status', status)}
-          ${row('Remarks', remarks)}
+        <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+          ${this._demandViewRows(d).map(([l, v]) => row(l, v)).join('')}
         </div>
         <div class="modal-footer">
           <button class="btn btn-gray" onclick="App.closeDemandHistoryView()">Close</button>
@@ -2768,23 +2807,11 @@ const App = {
     <div class="modal-overlay" onclick="if(event.target===this)App.closeAdminSocMember()">
       <div class="modal-box" style="max-width:480px;">
         <div class="modal-header">
-          <h3>Member Details — ${m.id}</h3>
+          <h3>Member Details</h3>
           <button class="modal-close" onclick="App.closeAdminSocMember()">✕</button>
         </div>
-        <div class="modal-body">
-          ${row('Name', m.name)}
-          ${row("Father's Name", m.father)}
-          ${row('Gender', m.gender)}
-          ${row('Category', m.category)}
-          ${row('Mobile', m.mobile)}
-          ${row('Email', m.email)}
-          ${row('Village', m.village)}
-          ${row('Block', m.block)}
-          ${row('District', m.district)}
-          ${row('Pincode', m.pincode)}
-          ${row('Total Land (acres)', m.totalLand)}
-          ${row('Status', m.status)}
-          ${row('Joining Date', m.joiningDate)}
+        <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+          ${this._memberRows(m, row)}
         </div>
         <div class="modal-footer">
           <button class="btn btn-gray" onclick="App.closeAdminSocMember()">Close</button>
@@ -2865,7 +2892,7 @@ const App = {
       return `<tr>
                   <td><div style="font-weight:500;font-size:0.85rem;">${dem.society}</div>
                       <div style="font-size:0.72rem;color:#9E9E9E;">${dem.socCode} | ${dem.season} | ${dem.date}</div></td>
-                  <td>${dem.crop}<div style="font-size:0.72rem;color:#9E9E9E;">${dem.variety}</div></td>
+                  <td>${dem.crop}<div style="font-size:0.72rem;color:#9E9E9E;">${dem.variety}</div>${dem.approvedVariety && dem.approvedVariety !== dem.variety ? `<div style="font-size:0.7rem;color:#2E7D32;">Approved: ${dem.approvedVariety}</div>` : ''}</td>
                   <td style="font-weight:600;">${dem.requestedQty} Qt</td>
                   <td style="color:#2E7D32;font-weight:600;">${dem.approvedQty > 0 ? dem.approvedQty + ' Qt' : '—'}</td>
                   <td style="color:${dem.pendingQty > 0 ? '#E65100' : '#9E9E9E'};font-weight:600;">${dem.pendingQty > 0 ? dem.pendingQty + ' Qt' : '—'}</td>
@@ -3060,26 +3087,91 @@ const App = {
     this.navigate('demand-review');
   },
 
-  // Full Approve directly from table
+  // ── The society's 3 variety choices on a demand ──
+  // [{ key:'first'|'second'|'third', label, variety }] — only choices that were given.
+  _demChoiceList(dem) {
+    const out = [{ key: 'first', label: 'First Choice', variety: dem.variety }];
+    (dem.secondChoice || []).forEach(v => out.push({ key: 'second', label: 'Second Choice', variety: v }));
+    (dem.thirdChoice || []).forEach(v => out.push({ key: 'third', label: 'Third Choice', variety: v }));
+    return out;
+  },
+  // Free stock (Qt) of a crop + variety.
+  _varAvail(crop, variety) {
+    const stk = this.state.stock.find(s => s.crop === crop && s.variety === variety);
+    return stk ? (stk.available - stk.allocated) : 0;
+  },
+  // Variety picked in the approve / partial popup (defaults to the first choice).
+  _approveVariety(dem) {
+    const list = this._demChoiceList(dem);
+    const sel = list.find(c => c.variety === this.state.approveVariety);
+    return sel ? sel : list[0];
+  },
+  // Radio list of the 3 choices with their free stock.
+  _choicePickerHtml(dem) {
+    const cur = this._approveVariety(dem).variety;
+    return `<div class="form-group">
+      <label>Approve Variety (from society's choices) *</label>
+      <div style="display:grid;gap:8px;">
+        ${this._demChoiceList(dem).map(c => {
+          const av = this._varAvail(dem.crop, c.variety);
+          return `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid ${c.variety === cur ? '#4CAF50' : '#E0E0E0'};border-radius:8px;cursor:pointer;background:${c.variety === cur ? '#E8F5E9' : '#fff'};">
+            <input type="radio" name="approve-variety" value="${c.variety}" ${c.variety === cur ? 'checked' : ''} onchange="App.onApproveChoice(this.value)"/>
+            <div style="flex:1;"><div style="font-size:0.72rem;color:#757575;">${c.label}</div><div style="font-weight:600;">${c.variety}</div></div>
+            <div style="font-size:0.8rem;font-weight:600;color:${av >= dem.requestedQty ? '#2E7D32' : av > 0 ? '#E65100' : '#C62828'};">${av} Qt available</div>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  },
+  onApproveChoice(variety) {
+    this.state.approveVariety = variety;
+    const qty = document.getElementById('partial-qty');
+    const keep = qty ? qty.value : '';
+    const rmk = document.getElementById('partial-remarks');
+    const keepR = rmk ? rmk.value : '';
+    this.render();
+    const q2 = document.getElementById('partial-qty'); if (q2) { q2.value = keep; if (keep) q2.oninput && q2.oninput(); }
+    const r2 = document.getElementById('partial-remarks'); if (r2) r2.value = keepR;
+  },
+
+  // Full Approve (table / review page): pick one of the society's 3 choices first.
   quickApproveDemand(id) {
     const dem = this.state.adminDemands.find(d => d.id === id);
     if (!dem) return;
-    const stk = this.state.stock.find(s => s.crop === dem.crop && s.variety === dem.variety);
-    const avail = stk ? (stk.available - stk.allocated) : 0;
-    if (dem.requestedQty > avail) {
-      this.showToast(`Only ${avail} Qt available — use Partial Approve`); return;
-    }
+    this.state.reviewDemandIdBefore = this.state.currentPage === 'demand-review' ? this.state.reviewDemandId : null;
+    this.state.reviewDemandId = id;
+    this.state.approveVariety = null;
+    this.state.demandActionPopup = 'approve';
+    this.render();
+  },
+  confirmFullApproval() {
+    const dem = this.state.adminDemands.find(d => d.id === this.state.reviewDemandId);
+    if (!dem) return;
+    const ch = this._approveVariety(dem);
+    const avail = this._varAvail(dem.crop, ch.variety);
+    if (dem.requestedQty > avail) { this.showToast(`Only ${avail} Qt of ${ch.variety} available — choose another variety or use Partial Approve`); return; }
     dem.approvedQty = dem.requestedQty;
     dem.pendingQty = 0;
     dem.approvalStatus = 'Approved';
+    dem.approvedVariety = ch.variety;
+    dem.approvedChoice = ch.label;
     dem.remarks = '';
-    this.showToast(`✓ DEM ${id} fully approved (${dem.approvedQty} Qt)`);
-    this.render();
+    this._afterDecision(`✓ ${dem.id} fully approved — ${dem.approvedQty} Qt of ${ch.variety} (${ch.label})`);
+  },
+  // Close the popup after Approve / Partial; from the review page go back to the demand list.
+  _afterDecision(msg) {
+    const fromReview = this.state.currentPage === 'demand-review';
+    this.state.demandActionPopup = null;
+    this.state.reviewDemandId = null;
+    this.state.approveVariety = null;
+    this.showToast(msg);
+    if (fromReview) this.navigate('admin-demands'); else this.render();
   },
 
   // ─── Popup helpers ───────────────────────────────────────────
   openPartialPopup(id) {
     this.state.reviewDemandId = id;
+    this.state.approveVariety = null;
     this.state.demandActionPopup = 'partial';
     this.render();
   },
@@ -3095,7 +3187,9 @@ const App = {
   },
   closeDemandPopup() {
     this.state.demandActionPopup = null;
-    this.state.reviewDemandId = null;
+    this.state.approveVariety = null;
+    // Stay on the review page if the popup was opened from there.
+    if (this.state.currentPage !== 'demand-review') this.state.reviewDemandId = null;
     this.render();
   },
 
@@ -3103,8 +3197,33 @@ const App = {
     const type = this.state.demandActionPopup;
     const dem = this.state.adminDemands.find(d => d.id === this.state.reviewDemandId);
     if (!dem) return '';
-    const stk = this.state.stock.find(s => s.crop === dem.crop && s.variety === dem.variety);
-    const avail = stk ? (stk.available - stk.allocated) : 0;
+    const ch = this._approveVariety(dem);
+    const avail = this._varAvail(dem.crop, ch.variety);
+
+    if (type === 'approve') return `
+    <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandPopup()">
+      <div class="modal-box" style="max-width:500px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);">
+          <h3>✅ Full Approval — ${dem.id}</h3>
+          <button class="modal-close" onclick="App.closeDemandPopup()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="background:#E8F5E9;border-radius:8px;padding:12px;margin-bottom:16px;font-size:0.85rem;">
+            <b>${dem.society}</b> | ${dem.crop} | Requested: <b>${dem.requestedQty} Qt</b>
+          </div>
+          ${this._choicePickerHtml(dem)}
+          <div style="font-size:0.8rem;color:${avail >= dem.requestedQty ? '#2E7D32' : '#C62828'};">
+            ${avail >= dem.requestedQty ? `✓ ${dem.requestedQty} Qt of <b>${ch.variety}</b> will be approved.` : `⚠ Only ${avail} Qt of ${ch.variety} available — choose another variety or use Partial Approve.`}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-gray" onclick="App.closeDemandPopup()">Cancel</button>
+          <button class="btn btn-success" onclick="App.confirmFullApproval()">
+            <span class="material-icons" style="font-size:16px;">check_circle</span> Confirm Approval
+          </button>
+        </div>
+      </div>
+    </div>`;
 
     if (type === 'partial') return `
     <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandPopup()">
@@ -3116,10 +3235,11 @@ const App = {
         <div class="modal-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#E3F2FD;border-radius:8px;padding:14px;margin-bottom:18px;">
             <div><div style="font-size:0.72rem;color:#555;">Requested Qty</div><div style="font-size:1.3rem;font-weight:700;color:#1565C0;">${dem.requestedQty} Qt</div></div>
-            <div><div style="font-size:0.72rem;color:#555;">Available Stock</div><div style="font-size:1.3rem;font-weight:700;color:${avail > 0 ? '#2E7D32' : '#C62828'};">${avail} Qt</div></div>
+            <div><div style="font-size:0.72rem;color:#555;">Available Stock (${ch.variety})</div><div style="font-size:1.3rem;font-weight:700;color:${avail > 0 ? '#2E7D32' : '#C62828'};">${avail} Qt</div></div>
             <div><div style="font-size:0.72rem;color:#555;">Society</div><div style="font-size:0.85rem;font-weight:600;">${dem.society}</div></div>
-            <div><div style="font-size:0.72rem;color:#555;">Crop / Variety</div><div style="font-size:0.85rem;font-weight:600;">${dem.crop} / ${dem.variety}</div></div>
+            <div><div style="font-size:0.72rem;color:#555;">Crop</div><div style="font-size:0.85rem;font-weight:600;">${dem.crop}</div></div>
           </div>
+          ${this._choicePickerHtml(dem)}
           <div class="form-group">
             <label>Approved Quantity (Quintal) *</label>
             <input type="number" class="form-control" id="partial-qty"
@@ -3244,20 +3364,19 @@ const App = {
     const qty = parseFloat(document.getElementById('partial-qty')?.value);
     const rmk = document.getElementById('partial-remarks')?.value?.trim();
     if (!dem) return;
-    const stk = this.state.stock.find(s => s.crop === dem.crop && s.variety === dem.variety);
-    const avail = stk ? (stk.available - stk.allocated) : 0;
+    const ch = this._approveVariety(dem);
+    const avail = this._varAvail(dem.crop, ch.variety);
     if (!qty || qty <= 0) { this.showToast('Enter approved quantity'); return; }
     if (qty > dem.requestedQty) { this.showToast('Cannot exceed requested quantity'); return; }
-    if (qty > avail) { this.showToast(`Only ${avail} Qt available`); return; }
+    if (qty > avail) { this.showToast(`Only ${avail} Qt of ${ch.variety} available`); return; }
     if (!rmk) { this.showToast('Remarks are required'); return; }
     dem.approvedQty = qty;
     dem.pendingQty = +(dem.requestedQty - qty).toFixed(2);
     dem.approvalStatus = qty === dem.requestedQty ? 'Approved' : 'Partially Approved';
     dem.remarks = rmk;
-    this.state.demandActionPopup = null;
-    this.state.reviewDemandId = null;
-    this.showToast(`✓ Partial approval: ${qty} Qt approved, ${dem.pendingQty} Qt pending`);
-    this.render();
+    dem.approvedVariety = ch.variety;
+    dem.approvedChoice = ch.label;
+    this._afterDecision(`✓ Partial approval: ${qty} Qt of ${ch.variety} (${ch.label}) approved, ${dem.pendingQty} Qt pending`);
   },
 
   confirmRejectDemand() {
@@ -3302,7 +3421,6 @@ const App = {
     const avail = stk ? (stk.available - stk.allocated) : 0;
     const badgeCls = s => s === 'Approved' ? 'badge-success' : s === 'Partially Approved' ? 'badge-info' : s === 'Pending' ? 'badge-warning' : s === 'Rejected' ? 'badge-danger' : 'badge-purple';
     const checks = [
-      { label: 'Minimum Members Rule', ok: dem.members >= 50, ok_txt: `${dem.members} members ≥ 50 ✓`, fail_txt: `Only ${dem.members} members — below minimum 50` },
       { label: 'Available Stock Rule', ok: avail >= dem.requestedQty, ok_txt: `${avail} Qt available ≥ ${dem.requestedQty} Qt ✓`, fail_txt: `Only ${avail} Qt available — insufficient` },
       { label: 'Advance Payment', ok: dem.payStatus === 'Paid', ok_txt: 'Advance payment received ✓', fail_txt: 'Advance payment not yet received' },
       { label: 'Duplicate Demand', ok: dem.approvalStatus !== 'Rejected', ok_txt: 'No duplicate demand found ✓', fail_txt: 'Duplicate demand detected' },
@@ -3358,7 +3476,9 @@ const App = {
         <div class="card">
           <div class="card-header"><h3><span class="material-icons" style="font-size:18px;vertical-align:middle;color:#4CAF50;">grass</span> Demand Details</h3></div>
           <div class="card-body" style="display:grid;gap:10px;">
-            ${[['Demand ID', dem.id], ['Crop', dem.crop], ['Variety', dem.variety],
+            ${[['Demand ID', dem.id], ['Crop', dem.crop],
+      ...this._demChoiceList(dem).reduce((acc, c) => { const r = acc.find(x => x[0] === c.label + ' Variety'); if (r) r[1] += ', ' + c.variety; else acc.push([c.label + ' Variety', c.variety]); return acc; }, []),
+      ...(dem.approvedVariety ? [['Approved Variety', dem.approvedVariety + ' (' + dem.approvedChoice + ')']] : []),
       ['Requested Qty', dem.requestedQty + ' Quintal'],
       ['Approved Qty', dem.approvedQty ? dem.approvedQty + ' Quintal' : '— Not yet approved'],
       ['Pending Qty', dem.pendingQty + ' Quintal'],
@@ -3395,7 +3515,7 @@ const App = {
           <div class="card-body">
             <div style="display:grid;gap:12px;">
               <button class="btn btn-success" style="justify-content:flex-start;padding:12px 16px;"
-                onclick="App.quickApproveDemand('${dem.id}');App.navigate('admin-demands')">
+                onclick="App.quickApproveDemand('${dem.id}')">
                 <span class="material-icons">check_circle</span>
                 <div style="text-align:left;margin-left:4px;">
                   <div style="font-weight:600;">Full Approve</div>
@@ -3473,7 +3593,7 @@ const App = {
               </tr>`).join('')}
             </tbody>
           </table>
-        </div>
+        </div>/*  */
       </div>
     </div>
     <div class="card">
@@ -4246,7 +4366,7 @@ const App = {
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
       <div>
         <h1>New Distribution</h1>
-        <p>Distribute breeder / foundation / certified seed to a society member</p>
+        <p>Distribute breeder seed to a society member</p>
       </div>
       <button class="btn btn-gray" onclick="App.closeNewDistForm()"><span class="material-icons">arrow_back</span> Back to List</button>
     </div>
@@ -4280,7 +4400,7 @@ const App = {
           <div class="form-group">
             <label>Seed Type *</label>
             <select class="form-control" id="nd-seedtype">
-              <option>Breeder</option><option>Foundation</option><option>Certified</option><option>Hybrid</option>
+              <option>Breeder</option>
             </select>
           </div>
           <div class="form-group">
@@ -4560,70 +4680,19 @@ const App = {
                 <div class="rh-title">SEED DISTRIBUTION RECEIPT</div>
                 <div class="rh-sub">Beej Sangh Procurement Portal — MP Govt.</div>
               </div>
-              <div class="rh-no">${rec.receiptNo}</div>
             </div>
             <div class="receipt-body">
-              <div class="receipt-row">
-                <span class="rl">Receipt No.</span>
-                <span class="rv">${rec.receiptNo}</span>
-              </div>
-              <div class="receipt-row">
-                <span class="rl">Date</span>
-                <span class="rv">${rec.date}</span>
-              </div>
-              <div class="receipt-row">
-                <span class="rl">Member ID</span>
-                <span class="rv">${rec.memberId}</span>
-              </div>
-              <div class="receipt-row">
-                <span class="rl">Member Name</span>
-                <span class="rv">${rec.memberName}</span>
-              </div>
-              ${rec.mobile ? `<div class="receipt-row">
-                <span class="rl">Contact Number</span>
-                <span class="rv">${rec.mobile}</span>
-              </div>` : ''}
-              <div class="receipt-row">
-                <span class="rl">Village</span>
-                <span class="rv">${rec.village}</span>
-              </div>
-              ${rec.finYear ? `<div class="receipt-row">
-                <span class="rl">Procurement Year</span>
-                <span class="rv">${rec.finYear}</span>
-              </div>` : ''}
-              ${rec.season ? `<div class="receipt-row">
-                <span class="rl">Season</span>
-                <span class="rv">${rec.season}</span>
-              </div>` : ''}
-              ${rec.seedType ? `<div class="receipt-row">
-                <span class="rl">Seed Type</span>
-                <span class="rv">${rec.seedType}</span>
-              </div>` : ''}
-              <div class="receipt-row">
-                <span class="rl">Crop</span>
-                <span class="rv">${rec.crop}</span>
-              </div>
-              <div class="receipt-row">
-                <span class="rl">Variety</span>
-                <span class="rv">${rec.variety}</span>
-              </div>
-              <div class="receipt-total">
-                <span class="rt-label">Quantity Distributed</span>
-                <span class="rt-val">${rec.qty} ${rec.unit || 'Quintal'}</span>
-              </div>
-            </div>
-            <div class="receipt-footer">
-              ✓ Distribution Completed &nbsp;|&nbsp; Digitally Generated &nbsp;|&nbsp; No Signature Required
+              ${this._distReceiptRows(rec).map(([l, v]) => `<div class="receipt-row">
+                <span class="rl">${l}</span>
+                <span class="rv">${v}</span>
+              </div>`).join('')}
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-gray" onclick="App.closeReceipt()">Close</button>
-          <button class="btn btn-outline" onclick="App.showToast('Receipt downloaded!')">
-            <span class="material-icons" style="font-size:16px;">download</span> Download PDF
-          </button>
-          <button class="btn btn-primary" onclick="App.showToast('Sent to printer!')">
-            <span class="material-icons" style="font-size:16px;">print</span> Print Receipt
+          <button class="btn btn-primary" onclick="App.downloadDistReceipt('${rec.receiptNo}')">
+            <span class="material-icons" style="font-size:16px;">download</span> Download Receipt
           </button>
         </div>
       </div>
@@ -4636,17 +4705,88 @@ const App = {
     this.navigate('soc-member-distribution');
   },
 
+  // ── Downloads for the Breeder Seeds Distribution page ──
+  _distRows() {
+    return this.state.distributionRecords.filter(r => (r.seedType || 'Breeder') === 'Breeder').slice().reverse();
+  },
+  // Fields of the New Distribution form, in form order (used by the receipt popup and the downloaded receipt).
+  _distReceiptRows(r) {
+    return [['Society Member', r.memberName + ' (' + r.memberId + ')'], ['Contact Number', r.mobile || '—'], ['Village', r.village || '—'],
+    ['Procurement Year', r.finYear || '—'], ['Season', r.season || '—'], ['Seed Type', r.seedType || 'Breeder'], ['Crop', r.crop],
+    ['Variety', r.variety], ['Quantity', r.qty], ['Unit', r.unit || 'Quintal'], ['Distribution Date', r.date]];
+  },
+  _distQty(r) { return r.qty + ' ' + (r.unit === 'Kg' ? 'Kg' : 'Quintal'); },
+  _saveFile(content, name, type) {
+    try {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return true;
+    } catch (e) { return false; }
+  },
+  // One receipt as an HTML file (opens in any browser; can be saved / printed as PDF from there).
+  downloadDistReceipt(receiptNo) {
+    const r = this.state.distributionRecords.find(x => x.receiptNo === receiptNo);
+    if (!r) return;
+    const rows = this._distReceiptRows(r);
+    const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Seed Distribution Receipt</title>'
+      + '<style>body{font-family:Arial,sans-serif;max-width:560px;margin:30px auto;color:#222}h2{color:#1B5E20;margin:0}p.s{color:#666;margin:4px 0 18px}'
+      + 'table{width:100%;border-collapse:collapse}td{padding:8px 10px;border-bottom:1px solid #eee}td:first-child{color:#666}td:last-child{text-align:right;font-weight:600}'
+      + 'tr.t td{background:#E8F5E9;color:#1B5E20;font-size:1.05rem}.f{margin-top:18px;font-size:.8rem;color:#777;text-align:center}</style></head><body>'
+      + '<h2>SEED DISTRIBUTION RECEIPT</h2><p class="s">Beej Sangh Procurement Portal — MP Govt. · ' + (r.societyName || 'Rampur Krishi Samiti') + '</p><table>'
+      + rows.map(x => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td></tr>').join('')
+      + '</table></body></html>';
+    const name = 'Distribution-Receipt-' + String(r.memberName).replace(/\s+/g, '-') + '-' + (r.date || '') + '.html';
+    this._saveFile(App._fmtDl(html), name, 'text/html');
+    this.showToast('Receipt downloaded.');
+  },
+  _distTableData() {
+    const head = ['Member Name', 'Member ID', 'Village', 'Contact', 'Proc. Year', 'Season', 'Seed Type', 'Crop', 'Variety', 'Quantity', 'Date', 'Status'];
+    const body = this._distRows().map(r => [r.memberName, r.memberId, r.village, r.mobile || '', r.finYear || '', r.season || '', r.seedType || 'Breeder',
+    r.crop, r.variety, this._distQty(r), App.fmtDate(r.date), r.status]);
+    return { head, body };
+  },
+  // Excel: CSV file (opens directly in Excel). BOM keeps Hindi / ₹ characters readable.
+  exportDistExcel() {
+    const { head, body } = this._distTableData();
+    if (!body.length) { this.showToast('No records to export.'); return; }
+    const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = '\uFEFF' + [head].concat(body).map(row => row.map(esc).join(',')).join('\r\n');
+    this._saveFile(csv, 'Breeder-Seed-Distribution.csv', 'text/csv;charset=utf-8');
+    this.showToast('Excel file downloaded.');
+  },
+  // PDF: opens a print-ready page; choose "Save as PDF" in the print dialog.
+  exportDistPdf() {
+    const { head, body } = this._distTableData();
+    if (!body.length) { this.showToast('No records to export.'); return; }
+    const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Breeder Seed Distribution</title>'
+      + '<style>body{font-family:Arial,sans-serif;margin:24px;color:#222}h2{color:#1B5E20;margin:0 0 4px}p{color:#666;margin:0 0 14px;font-size:.85rem}'
+      + 'table{width:100%;border-collapse:collapse;font-size:.8rem}th{background:#E8F5E9;color:#1B5E20;text-align:left}th,td{border:1px solid #ddd;padding:6px 8px}</style></head><body>'
+      + '<h2>Breeder Seeds Distribution to Member</h2><p>Rampur Krishi Samiti (SOC-001) · Generated on ' + App.fmtDate(new Date()) + ' · ' + body.length + ' records</p>'
+      + '<table><thead><tr>' + head.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>'
+      + body.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('')
+      + '</tbody></table><script>window.onload=function(){window.print();}<\/script></body></html>';
+    const w = window.open('', '_blank');
+    if (!w) { this.showToast('Please allow popups to export PDF.'); return; }
+    w.document.write(html); w.document.close();
+    this.showToast('Choose "Save as PDF" in the print window.');
+  },
+
   // ============================================================
   // DISTRIBUTION REGISTER PAGE
   // ============================================================
   renderSocDistRegister() {
-    const records = this.state.distributionRecords;
+    // This page is for Breeder seed only.
+    const records = this.state.distributionRecords.filter(r => (r.seedType || 'Breeder') === 'Breeder');
     const receipt = this.state.receiptPopup;
     return `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
       <div>
         <h1>Breeder Seeds Distribution to Member</h1>
-        <p>All seed distributions to society members — add new or review records</p>
+        <p>All breeder seed distributions to society members — add new or review records</p>
       </div>
       <button class="btn btn-primary" onclick="App.openNewDistForm()">
         <span class="material-icons">add</span> New Distribution
@@ -4656,9 +4796,14 @@ const App = {
     <div class="card">
       <div class="card-header">
         <h3>All Distribution Records</h3>
-        <button class="btn btn-outline btn-sm" onclick="App.showToast('Excel downloaded!')">
-          <span class="material-icons" style="font-size:14px;">grid_on</span> Export
-        </button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-success btn-sm" title="Export to Excel" onclick="App.exportDistExcel()">
+            <span class="material-icons" style="font-size:16px;">table_chart</span> Excel
+          </button>
+          <button class="btn btn-danger btn-sm" title="Export to PDF" onclick="App.exportDistPdf()">
+            <span class="material-icons" style="font-size:16px;">picture_as_pdf</span> PDF
+          </button>
+        </div>
       </div>
       <div class="card-body" style="padding:0;">
         ${records.length === 0 ? `
@@ -4711,8 +4856,8 @@ const App = {
                     <button class="btn btn-info btn-sm" onclick="App.viewReceipt('${r.receiptNo}')">
                       <span class="material-icons" style="font-size:14px;">visibility</span> View
                     </button>
-                    <button class="btn btn-gray btn-sm" onclick="App.showToast('Printing receipt ${r.receiptNo}...')">
-                      <span class="material-icons" style="font-size:14px;">print</span>
+                    <button class="btn btn-success btn-sm" title="Download Receipt" onclick="App.downloadDistReceipt('${r.receiptNo}')">
+                      <span class="material-icons" style="font-size:14px;">download</span>
                     </button>
                   </div>
                 </td>
@@ -4965,7 +5110,7 @@ const App = {
         <div style="padding:22px;">
           <div class="form-grid">
             <div class="form-group"><label>Society</label><input class="form-control" value="${dem.society}" readonly style="background:#f5f5f5;"></div>
-            <div class="form-group"><label>Crop / Variety</label><input class="form-control" value="${dem.crop} / ${dem.variety}" readonly style="background:#f5f5f5;"></div>
+            <div class="form-group"><label>Crop / Variety</label><input class="form-control" value="${dem.crop} / ${dem.approvedVariety || dem.variety}" readonly style="background:#f5f5f5;"></div>
             <div class="form-group"><label>Quantity (Qt)</label><input class="form-control" value="${dem.approvedQty}" readonly style="background:#f5f5f5;"></div>
             <div class="form-group"><label>Dispatch Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="df-date" value="${today}"></div>
             <div class="form-group"><label>Vehicle Number <span style="color:#F44336">*</span></label><input class="form-control" id="df-vehicle" placeholder="MP-XX-XX-0000"></div>
@@ -4999,7 +5144,7 @@ const App = {
         id: newId,
         society: dem.society,
         crop: dem.crop,
-        variety: dem.variety,
+        variety: dem.approvedVariety || dem.variety,
         qty: dem.approvedQty,
         dispatchDate: date,
         vehicleNo: vehicle,
@@ -5023,7 +5168,7 @@ const App = {
     if (!dem) return;
 
     // Check stock availability
-    const stk = this.state.stock.find(s => s.crop === dem.crop && s.variety === dem.variety);
+    const stk = this.state.stock.find(s => s.crop === dem.crop && s.variety === (dem.approvedVariety || dem.variety));
     if (!stk) {
       this.showToast('❌ Stock not found for this crop/variety');
       return;
@@ -5118,7 +5263,7 @@ const App = {
       id: newId,
       society: dem.society,
       crop: dem.crop,
-      variety: dem.variety,
+      variety: dem.approvedVariety || dem.variety,
       qty: dem.approvedQty,
       dispatchDate: new Date().toISOString().split('T')[0],
       vehicleNo: '',

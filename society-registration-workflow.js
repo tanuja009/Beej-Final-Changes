@@ -534,7 +534,6 @@ App.renderSocApplicationDetails = function () {
   const app = this.getApplicationByNumber(this.state.socAppSelectedId);
   if (!app) return '<div class="page-header"><h1>Application Not Found</h1></div>';
 
-  const audit = this.getApplicationAudit(app.applicationNumber);
   const canEdit = this.canEditApplication(app);
 
   const row = (label, value) => `
@@ -546,7 +545,6 @@ App.renderSocApplicationDetails = function () {
   return `
   <div class="page-header">
     <h1>Application Details</h1>
-    <p>Application Number: <b>${app.applicationNumber}</b></p>
   </div>
 
   ${app.status === App.SOC_STATUS.RESUBMISSION && app.resubmissionRemarks ? `
@@ -582,29 +580,43 @@ App.renderSocApplicationDetails = function () {
   <div class="card" style="margin-bottom:20px;">
     <div class="card-header">
       <h3>Society Information</h3>
-      ${this._socAppStatusBadge(app.status)}
     </div>
     <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
       <div>
-        ${row('Application Number', `<b>${app.applicationNumber}</b>`)}
+        ${row('Society Code', app.societyCode)}
         ${row('Society Name', app.societyName)}
-        ${row('Society Code', app.societyCode || '<span style="color:#9E9E9E;">Will be assigned after approval</span>')}
         ${row('Society Type', app.societyType)}
         ${row('Registration Number', app.registrationNumber)}
         ${row('Registration Date', app.registrationDate)}
-        ${row('District', app.district)}
-        ${row('Block', app.block)}
-        ${row('Village', app.village)}
       </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>Location Details</h3></div>
+    <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
       <div>
         ${row('Address', app.address)}
+        ${row('Village', app.village)}
+        ${row('Block', app.block)}
+      </div>
+      <div>
+        ${row('District', app.district)}
         ${row('PIN Code', app.pinCode)}
-        ${row('Contact Person', app.contactPersonName)}
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>Contact Person Details</h3></div>
+    <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div>
+        ${row('Contact Person Name', app.contactPersonName)}
         ${row('Designation', app.designation)}
+      </div>
+      <div>
         ${row('Mobile Number', app.mobileNumber)}
         ${row('Email ID', app.emailId)}
-        ${row('Submitted Date', app.submittedDate ? App.fmtDate(new Date(app.submittedDate)) + ' ' + new Date(app.submittedDate).toLocaleTimeString('en-IN') : '-')}
-        ${row('Status', this._socAppStatusBadge(app.status))}
       </div>
     </div>
   </div>
@@ -634,7 +646,6 @@ App.renderSocApplicationDetails = function () {
               <div style="flex:1;">
                 <div style="font-weight:500;font-size:0.9rem;">${doc.name}</div>
                 <div style="font-size:0.75rem;color:#757575;">${doc.fileName}</div>
-                <div style="font-size:0.72rem;color:#9E9E9E;">Uploaded: ${doc.uploadDate}</div>
               </div>
               <button class="btn btn-outline btn-sm" title="Download">
                 <span class="material-icons" style="font-size:16px;">download</span>
@@ -645,51 +656,6 @@ App.renderSocApplicationDetails = function () {
       </div>
     </div>
   ` : ''}
-
-  <div class="card">
-    <div class="card-header"><h3>Application History</h3></div>
-    <div class="card-body">
-      ${audit.length === 0 ? '<p style="color:#9E9E9E;text-align:center;padding:20px;">No history available</p>' : `
-        <div style="position:relative;padding-left:40px;">
-          ${audit.map((entry, index) => `
-            <div style="position:relative;margin-bottom:${index < audit.length - 1 ? '24px' : '0'};">
-              <div style="position:absolute;left:-40px;top:0;width:32px;height:32px;
-                          background:${entry.action === 'Approved' ? '#4CAF50' : entry.action === 'Rejected' ? '#F44336' : '#2196F3'};
-                          border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;">
-                <span class="material-icons" style="font-size:18px;">
-                  ${entry.action === 'Approved' ? 'check' : entry.action === 'Rejected' ? 'close' : 'edit'}
-                </span>
-              </div>
-              ${index < audit.length - 1 ? '<div style="position:absolute;left:-24px;top:32px;bottom:-24px;width:2px;background:#E0E0E0;"></div>' : ''}
-              <div style="padding:12px;background:#F5F5F5;border-radius:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">
-                  <div>
-                    <div style="font-weight:600;font-size:0.95rem;">${entry.action}</div>
-                    <div style="font-size:0.8rem;color:#757575;">by ${entry.actionBy} (${entry.role})</div>
-                  </div>
-                  <div style="font-size:0.75rem;color:#9E9E9E;">
-                    ${App.fmtDate(new Date(entry.actionDate))} ${new Date(entry.actionDate).toLocaleTimeString('en-IN')}
-                  </div>
-                </div>
-                ${entry.previousStatus ? `
-                  <div style="font-size:0.8rem;margin-bottom:6px;">
-                    Status: <span class="badge badge-gray">${entry.previousStatus}</span>
-                    <span class="material-icons" style="font-size:14px;vertical-align:middle;margin:0 4px;">arrow_forward</span>
-                    ${this._socAppStatusBadge(entry.newStatus)}
-                  </div>
-                ` : ''}
-                ${entry.remarks ? `
-                  <div style="font-size:0.85rem;color:#616161;margin-top:6px;padding-top:6px;border-top:1px solid #E0E0E0;">
-                    <b>Remarks:</b> ${entry.remarks}
-                  </div>
-                ` : ''}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `}
-    </div>
-  </div>
 
   <div style="margin-top:20px;display:flex;gap:12px;">
     <button class="btn btn-gray" onclick="App.navigate('soc-my-application')">

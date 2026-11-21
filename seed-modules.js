@@ -438,23 +438,19 @@ App.smRenderHybridView = function () {
   var r = this.state.hybridAllocs.find(function (x) { return x.id === App.state.hybridSelId; });
   if (!r) return '<div class="page-header"><h1>Not Found</h1></div>';
   var row = function (l, v) { return '<div class="invoice-row"><span class="label">' + l + '</span><span class="value">' + (v || '—') + '</span></div>'; };
-  return '<div class="page-header"><h1>Hybrid Seed Allocation Details</h1><p>' + r.id + '</p></div>'
+  return '<div class="page-header"><h1>Hybrid Seed Allocation Details</h1></div>'
     + '<div class="card" style="max-width:700px;">'
-    + '<div class="card-header"><h3>' + r.variety + ' — ' + r.season + '</h3>' + App._smBadge(r.status) + '</div>'
     + '<div class="card-body">'
-    + row('Allocation ID', '<b>' + r.id + '</b>')
     + row('Procurement Year', r.finYear)
     + row('Season', r.season)
-    + row('Hybrid Variety', r.variety)
-    + row('Parent Variety', r.parentVariety)
-    + row('Society', r.society)
-    + row('Allocated Qty', r.allocQty + ' Quintal')
-    + row('Expected Production', r.expectedProd + ' Quintal')
+    + row('Hybrid Seed Variety', r.variety)
+    + row('Parent Seed Variety (if applicable)', r.parentVariety)
+    + row('Society Name', r.society)
+    + row('Allocated Quantity (Qt)', r.allocQty)
+    + row('Expected Production Qty (Qt)', r.expectedProd)
     + row('Allocation Date', r.allocDate)
+    + row('Status', r.status)
     + row('Remarks', r.remarks)
-    + row('Status', App._smBadge(r.status))
-    + row('Created By', r.createdBy)
-    + row('Created At', r.createdAt)
     + '</div>'
     + '<div class="card-header" style="border-top:1px solid #E0E0E0;border-bottom:none;justify-content:flex-end;">'
     + '<div style="display:flex;gap:8px;">'
@@ -738,11 +734,9 @@ App.smRenderFCForm = function (mode) {
 App.smRenderFCView = function () {
   var r = this.state.fcSeedStock.find(function (x) { return x.id === App.state.fcSelId; });
   if (!r) return '<div class="page-header"><h1>Not Found</h1><p>The record could not be found.</p></div>';
-  var act = r.activeStatus || 'Active';
   var row = function (l, val) { return '<div class="invoice-row"><span class="label">' + l + '</span><span class="value">' + (val || '—') + '</span></div>'; };
-  return '<div class="page-header"><h1>Foundation &amp; Certified Seed Details</h1><p>' + r.memberName + ' — ' + r.crop + ' / ' + r.variety + '</p></div>'
+  return '<div class="page-header"><h1>Foundation &amp; Certified Seed Details</h1></div>'
     + '<div class="card" style="max-width:700px;">'
-    + '<div class="card-header"><h3>' + r.seedType + ' Seed</h3><span class="badge ' + (act === 'Active' ? 'badge-success' : 'badge-danger') + '">' + act + '</span></div>'
     + '<div class="card-body">'
     + row('Member Name', r.memberName + ' (' + r.memberId + ')')
     + row('Seed Type', r.seedType)
@@ -752,9 +746,9 @@ App.smRenderFCView = function () {
     + row('Variety', r.variety)
     + row('Allocated Date', r.allocDate)
     + row('Procurement Date', r.procDate)
-    + row('Unit', r.unit)
-    + row('Allocated Quantity', App._fcQtyText(r.allocQty, r.unit))
-    + row('Produce Quantity', App._fcQtyText(r.produceQty, r.unit))
+    + row('Unit (for Allocated & Produce Quantity)', r.unit)
+    + row('Allocated Quantity', r.allocQty)
+    + row('Produce Quantity', r.produceQty == null ? '' : String(r.produceQty))
     + '</div>'
     + '<div class="card-header" style="border-top:1px solid #E0E0E0;border-bottom:none;justify-content:flex-end;">'
     + '<div style="display:flex;gap:8px;">'
@@ -962,9 +956,8 @@ App.smFCToggleActive = function (id) {
       + row('Season', l.season)
       + row('Crop', l.crop)
       + row('Variety', l.variety)
-      + row('Start Date', l.startDate)
-      + row('End Date', l.endDate)
-      + row('Status', App._lineStatusBadge(App._lineStatus(l)))
+      + row('Line Start Date', l.startDate)
+      + row('Line End Date', l.endDate)
       + '</div>'
       + '<div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;">'
       + '<button class="btn btn-warning" onclick="App.openSeedLineEdit(\'' + l.id + '\')"><span class="material-icons">edit</span> Edit</button>'
@@ -1157,7 +1150,7 @@ App.smFCToggleActive = function (id) {
       + '<div class="modal-header"><h3>Packaging Details</h3><button class="modal-close" onclick="App.closePackagingView()">\u2715</button></div>'
       + '<div class="modal-body">'
       + row('Procurement Year', p.finYear) + row('Seed Type', p.seedType) + row('Season', p.season)
-      + row('Crop', p.crop) + row('Variety', p.variety) + row('Quantity', '<b>' + p.quantity + '</b>') + row('Unit', p.unit)
+      + row('Crop', p.crop) + row('Variety', p.variety) + row('Unit', p.unit) + row('Quantity', p.quantity)
       + '</div>'
       + '<div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;">'
       + '<button class="btn btn-warning" onclick="App.openPackagingEdit(\'' + p.id + '\')"><span class="material-icons">edit</span> Edit</button>'

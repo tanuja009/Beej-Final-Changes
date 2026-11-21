@@ -24,7 +24,7 @@ if (!App.state.stockEntries) {
   App.state.stockEntries = [
     {
       id: 'SE-2026-001', seedType: 'Breeder Seed', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', seedClass: 'Breeder', sourceType: 'Production', availableQty: 1000, addQty: 500, unit: 'Quintal', minDemandQty: 50, minDemandUnit: 'Quintal', maxDemandQty: 300, maxDemandUnit: 'Quintal',
-      prodYear: '2026', prodDate: '2026-06-15', receiptDate: '2026-06-20', storage: 'Cold Storage A', warehouse: 'Central Warehouse, Bhopal',
+      finYear: '2026-2027', prodYear: '2026', prodDate: '2026-06-15', receiptDate: '2026-06-20', storage: 'Cold Storage A', warehouse: 'Central Warehouse, Bhopal',
       rack: 'R-12', quality: 'Approved', certStatus: 'Certified', germination: 92, purity: 98, moisture: 11,
       lab: 'State Seed Testing Lab, Bhopal', reportNo: 'TR-2026-001', reportDate: '2026-06-18',
       specific: { institute: 'IARI, New Delhi', parentDetails: 'Nucleus seed', prodArea: '5 ha', prodYear: '2026', lot: 'BS-P-001' },
@@ -34,7 +34,7 @@ if (!App.state.stockEntries) {
     {
       id: 'SE-2026-002', seedType: 'Foundation Seed', season: 'Rabi', crop: 'Wheat', variety: 'GW-322',
       seedClass: 'Foundation I', sourceType: 'Procurement', availableQty: 800, addQty: 300, unit: 'Quintal', minDemandQty: 40, minDemandUnit: 'Quintal', maxDemandQty: 250, maxDemandUnit: 'Quintal',
-      prodYear: '2025', prodDate: '2025-11-10', receiptDate: '2025-11-20', storage: 'Godown B', warehouse: 'Divisional Store, Jabalpur',
+      finYear: '2025-2026', prodYear: '2025', prodDate: '2025-11-10', receiptDate: '2025-11-20', storage: 'Godown B', warehouse: 'Divisional Store, Jabalpur',
       rack: 'R-05', quality: 'Tested', certStatus: 'Under Process', germination: 88, purity: 97, moisture: 12,
       lab: 'Regional Seed Lab, Jabalpur', reportNo: 'TR-2025-045', reportDate: '2025-11-15',
       specific: { parentLot: 'BS-W-010', agency: 'Rampur Krishi Samiti', prodArea: '10 ha', prodYear: '2025', lot: 'FS-W-001' },
@@ -43,7 +43,7 @@ if (!App.state.stockEntries) {
     {
       id: 'SE-2026-003', seedType: 'Certified Seed', season: 'Kharif', crop: 'Soybean', variety: 'JS-335',
       seedClass: 'Certified', sourceType: 'Production', availableQty: 500, addQty: 250, unit: 'Quintal', minDemandQty: 30, minDemandUnit: 'Quintal', maxDemandQty: 180, maxDemandUnit: 'Quintal',
-      prodYear: '2026', prodDate: '2026-05-20', receiptDate: '2026-05-28', storage: 'Godown C', warehouse: 'Regional Depot, Indore',
+      finYear: '2026-2027', prodYear: '2026', prodDate: '2026-05-20', receiptDate: '2026-05-28', storage: 'Godown C', warehouse: 'Regional Depot, Indore',
       rack: 'R-08', quality: 'Pending Testing', certStatus: 'Not Certified', germination: 0, purity: 0, moisture: 0,
       lab: '', reportNo: '', reportDate: '',
       specific: { foundationLot: 'FS-S-002', society: 'Sehora Kisan Sabha', certAgency: 'MP State Seed Cert Agency', certNo: 'CERT-2026-100', lot: 'CS-S-001' },
@@ -563,21 +563,23 @@ App.seRenderView = function () {
     return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:0.85rem;"><span style="color:#757575;">' + label + '</span><span style="font-weight:600;">' + (val || '—') + '</span></div>';
   }
   var justSubmitted = SE().lastSubmitted && SE().lastSubmitted.id === rec.id;
-  return '<div class="page-header"><h1>Stock Entry Details</h1><p>' + rec.id + '</p></div>'
+  var num = function (v) { return (v === undefined || v === null || v === '') ? '' : String(v); };
+  var avail = Number(rec.availableQty) || 0, add = Number(rec.addQty) || 0;
+  // Exactly the fields of the Stock Entry form, in the same order and sections.
+  return '<div class="page-header"><h1>Stock Entry Details</h1></div>'
     + (justSubmitted ? '<div class="card" style="margin-bottom:16px;border-left:4px solid #4CAF50;"><div class="card-body" style="display:flex;align-items:center;gap:12px;">'
       + '<span class="material-icons" style="color:#2E7D32;font-size:32px;">check_circle</span>'
-      + '<div><div style="font-weight:700;color:#1B5E20;">Stock entry successfully submitted.</div>'
-      + '<div style="font-size:0.85rem;color:#555;">ID: <b>' + rec.id + '</b> | ' + rec.seedType + ' | Qty: <b>' + rec.addQty + ' ' + rec.unit + '</b> | Lot: <b>' + rec.lot + '</b></div></div></div></div>' : '')
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'
-    + '<div class="card"><div class="card-header"><h3>Seed &amp; Stock</h3></div><div class="card-body">'
-    + row('Seed Type', rec.seedType) + row('Seed Class', rec.seedClass) + row('Season', rec.season) + row('Crop', rec.crop)
-    + row('Variety', rec.variety) + row('Sub-Variety', rec.subVariety) + row('Lot Number', rec.lot)
-    + row('Source Type', rec.sourceType) + row('Quantity Added', rec.addQty + ' ' + rec.unit) + row('Status', rec.status) + '</div></div>'
-    + '<div class="card"><div class="card-header"><h3>Quality &amp; Storage</h3></div><div class="card-body">'
-    + row('Quality Status', rec.quality) + row('Certification', rec.certStatus) + row('Germination %', rec.germination)
-    + row('Purity %', rec.purity) + row('Moisture %', rec.moisture) + row('Warehouse', rec.warehouse)
-    + row('Storage', rec.storage) + row('Rack', rec.rack) + row('Entry Date', rec.entryDate) + '</div></div>'
-    + '</div>'
+      + '<div style="font-weight:700;color:#1B5E20;">Stock entry successfully submitted.</div></div></div>' : '')
+    + '<div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>1. Seed Information</h3></div><div class="card-body">'
+    + row('Seed Type', rec.seedType) + row('Season', rec.season) + row('Crop', rec.crop)
+    + row('Variety', rec.variety) + row('Sub-Variety', rec.subVariety) + '</div></div>'
+    + '<div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>2. Stock Details</h3></div><div class="card-body">'
+    + row('Lot Number', rec.lot) + row('Available / Existing Stock', num(rec.availableQty)) + row('Quantity to be Added', num(rec.addQty))
+    + row('Total Stock', String(avail + add)) + row('Unit', rec.unit) + row('Procurement Year', rec.finYear) + row('Production Date', rec.prodDate)
+    + row('Min Demand Quantity (per crop & variety)', num(rec.minDemandQty)) + row('Min Demand Quantity Unit', rec.minDemandUnit)
+    + row('Max Demand Quantity (per crop & variety)', num(rec.maxDemandQty)) + row('Max Demand Quantity Unit', rec.maxDemandUnit) + '</div></div>'
+    + '<div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>3. Remarks</h3></div><div class="card-body">'
+    + row('Remarks', rec.remarks) + '</div></div>'
     + '<div class="form-actions" style="justify-content:flex-end;gap:10px;margin-top:16px;">'
     + '<button class="btn btn-outline" onclick="App.navigate(\'se-list\')"><span class="material-icons">list</span> Go to Stock Entry List</button>'
     + '<button class="btn btn-primary" onclick="App.state.stockEntry.form=null;App.state.stockEntry.editId=null;App.navigate(\'se-form\')"><span class="material-icons">add_box</span> New Stock Entry</button>'

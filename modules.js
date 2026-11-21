@@ -562,32 +562,27 @@ App.renderPriceView = function () {
   const row = (label, value) => `<div class="invoice-row"><span class="label">${label}</span><span class="value">${value}</span></div>`;
   return `
   <div class="page-header">
-    <h1>Price Details — ${p.id}</h1>
-    <p>Read-only view of price record</p>
+    <h1>Price Details</h1>
   </div>
   <div class="card" style="max-width:760px;">
-    <div class="card-header">
-      <h3>${p.crop} — ${p.variety}</h3>
-      ${this._priceBadge(p.status)}
-    </div>
     <div class="card-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
         <div>
-          <p style="font-size:0.78rem;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Seed Details</p>
-          ${row('Price ID', `<b>${p.id}</b>`)}
+          <p style="font-size:0.78rem;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Seed Classification</p>
           ${row('Seed Category', p.category)}
-          ${row('Crop', p.crop)}
-          ${row('Variety', p.variety)}
           ${row('Season', p.season)}
+          ${row('Crop', p.crop)}
+          ${row('Seed Variety', p.variety)}
+          <p style="font-size:0.78rem;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;">Season &amp; Validity</p>
           ${row('Procurement Year', p.cropYear)}
-          ${row('Unit', p.unit)}
+          ${row('Effective From', p.effectiveFrom)}
+          ${row('Effective To', p.effectiveTo)}
         </div>
         <div>
           <p style="font-size:0.78rem;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Pricing</p>
-          ${row('Selling Price', `<b style="color:#2E7D32;font-size:1.1rem;">₹${p.sellingPrice.toLocaleString()}</b>`)}
-          ${row('Effective From', p.effectiveFrom)}
-          ${row('Effective To', p.effectiveTo)}
-          ${row('Created Date', p.createdDate || '—')}
+          ${row('Unit', p.unit)}
+          ${row('Selling Price (₹)', `<b style="color:#2E7D32;font-size:1.1rem;">₹${p.sellingPrice.toLocaleString()}</b>`)}
+          <p style="font-size:0.78rem;font-weight:600;color:#2E7D32;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;">Remarks</p>
           ${row('Remarks', p.remarks || '—')}
         </div>
       </div>

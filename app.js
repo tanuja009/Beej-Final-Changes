@@ -20,8 +20,8 @@ const App = {
       { id: 'DEM-2024-003', date: '2024-11-05', season: 'Rabi', crop: 'Gram', variety: 'JG-315', qty: 80, rate: 2400, payStatus: 'Fully Paid', fullyPaid: true, approvalStatus: 'Approved' },
       { id: 'DEM-2024-008', date: '2024-11-12', season: 'Rabi', crop: 'Mustard', variety: 'Pusa Bold', qty: 60, rate: 2600, payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Hold' },
       { id: 'DEM-2024-009', date: '2024-11-18', season: 'Rabi', crop: 'Wheat', variety: 'HD-2967', qty: 150, approvedQty: 90, pendingQty: 60, rate: 2400, payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Partially Approved' },
-      { id: 'DEM-2024-010', date: '2024-07-01', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', qty: 100, rate: 2400, payStatus: 'Fully Paid', fullyPaid: true, approvalStatus: 'Approved' },
-      { id: 'DEM-2024-011', date: '2024-07-05', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', qty: 90, rate: 2200, payStatus: 'Fully Paid', fullyPaid: true, approvalStatus: 'Approved' },
+      { id: 'DEM-2024-010', date: '2024-07-01', season: 'Kharif', crop: 'Soybean', variety: 'JS-335', qty: 100, rate: 2400, payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Approved' },
+      { id: 'DEM-2024-011', date: '2024-07-05', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', qty: 90, rate: 2200, payStatus: 'Advance Paid (25%)', fullyPaid: false, approvalStatus: 'Approved' },
       { id: 'DEM-2024-012', date: '2024-11-28', season: 'Rabi', crop: 'Wheat', variety: 'HD-2967', qty: 70, rate: 2400, payStatus: 'Pending', fullyPaid: false, approvalStatus: 'Rejected' },
     ],
     societies: [
@@ -2264,14 +2264,16 @@ const App = {
       const badgeCls = s => s === 'Approved' ? 'badge-success' : s === 'Received' ? 'badge-success' : s === 'Partially Approved' ? 'badge-info' : s === 'Dispatched' ? 'badge-info' : s === 'Pending' || s === 'Under Review' ? 'badge-warning' : s === 'Rejected' ? 'badge-danger' : 'badge-purple';
       // Once the demand is Received, payment is settled; show a dedicated "Received" payment status.
       const isReceived = status === 'Received';
-      const fullyPaidEff = d.fullyPaid || isReceived;
-      const payStatusEff = status === 'Rejected' ? 'Pending' : (isReceived ? 'Received' : (fullyPaidEff ? 'Fully Paid' : d.payStatus));
+      const fullyPaidEff = !!d.fullyPaid;
+      const isDispatched = status === 'Dispatched';
+      const payStatusEff = status === 'Rejected' ? 'Pending' : (fullyPaidEff ? 'Fully Paid' : d.payStatus);
       // Payment badge
       const payCls = fullyPaidEff ? 'badge-success' : payStatusEff === 'Pending' ? 'badge-warning' : 'badge-info';
       // Full payment allowed once the demand is beyond "Pending/Under Review"/"Rejected" and advance is paid (not fully paid yet).
       const advancePaid = !!payStatusEff && payStatusEff !== 'Pending';
       const demandDecided = d.approvalStatus !== 'Pending' && d.approvalStatus !== 'Under Review' && status !== 'Rejected';
-      const canPayFull = advancePaid && !fullyPaidEff && demandDecided;
+      // Pay Full appears only after the society has marked the dispatched stock as Received.
+      const canPayFull = advancePaid && !fullyPaidEff && demandDecided && isReceived;
       return `<tr>
                 <td>${d.crop}</td>
                 <td>${d.date}</td>
@@ -2286,6 +2288,7 @@ const App = {
                 <td>
                   <div class="action-btns">
                     <button class="btn btn-info btn-sm" title="View" onclick="App.viewDemandHistory('${d.id}')"><span class="material-icons" style="font-size:16px;">visibility</span></button>
+                    ${isDispatched ? `<button class="btn btn-primary btn-sm" title="Mark Received" onclick="App.societyMarkReceived('${d.id}')"><span class="material-icons" style="font-size:16px;">inventory</span> Mark Received</button>` : ''}
                     ${canPayFull ? `<button class="btn btn-success btn-sm" title="Pay Full Payment" onclick="App.payFullPayment('${d.id}')"><span class="material-icons" style="font-size:16px;">payments</span> Pay Full</button>` : ''}
                   </div>
                 </td>
@@ -2332,6 +2335,7 @@ const App = {
       return;
     }
     if (d.fullyPaid) { this.showToast('This demand is already fully paid.'); return; }
+    if (this._demandStatus(d) !== 'Received') { this.showToast('Mark the stock as Received before paying the full payment.'); return; }
     const rate = d.rate || 2400;
     const cost = (d.qty || 0) * rate;
     const advance = Math.round(cost * 0.25);
@@ -2385,7 +2389,7 @@ const App = {
     const d = this.state.demands.find(x => x.id === id);
     if (!d) return;
     if (kind === 'advance' && (!d.payStatus || d.payStatus === 'Pending')) { this.showToast('Advance not paid yet.'); return; }
-    if (kind === 'full' && !d.fullyPaid && this._demandStatus(d) !== 'Received') { this.showToast('Full payment not completed yet.'); return; }
+    if (kind === 'full' && !d.fullyPaid) { this.showToast('Full payment not completed yet.'); return; }
     const html = App._fmtDl(this._invoiceHtml(d, kind));
     try {
       const blob = new Blob([html], { type: 'text/html' });
@@ -2866,6 +2870,7 @@ const App = {
         if (dem.refunded) { payStage = 'Refunded'; payCls = 'badge-success'; }
         else { payStage = 'Refund Due'; payCls = 'badge-danger'; }
       }
+      else if (ord && ord.status === 'Received' && !(this.state.demands.find(x => x.id === dem.id) || {}).fullyPaid) { payStage = 'Advance Paid (25%)'; payCls = 'badge-info'; }
       else if (ord && ord.status === 'Received') { payStage = 'Full Paid (100%)'; payCls = 'badge-success'; }
       else if (isApproved || (ord && ord.status === 'Dispatched')) { payStage = 'Advance Paid (25%)'; payCls = 'badge-info'; }
       else { payStage = 'Pending'; payCls = 'badge-warning'; }
@@ -2885,7 +2890,7 @@ const App = {
       } else if (isApproved && !ord) {
         actions += `<button class="btn btn-primary btn-sm" title="Dispatch" onclick="App.openDispatchForm('${dem.id}')"><span class="material-icons" style="font-size:14px;">local_shipping</span> Dispatch</button>`;
       } else if (ord && ord.status === 'Dispatched') {
-        actions += `<button class="btn btn-success btn-sm" title="Mark Received" onclick="App.markDemandReceived('${dem.id}')"><span class="material-icons" style="font-size:14px;">inventory</span> Mark Received</button>`;
+        actions += `<span class="badge badge-info" style="align-self:center;" title="Society will mark this as Received">Dispatched</span>`;
       } else if (ord && ord.status === 'Received') {
         actions += `<span class="badge badge-success" style="align-self:center;">✓ Received</span>`;
       }
@@ -3067,6 +3072,13 @@ const App = {
   refundBackToInvoice() { if (this.state.refundFlow) { this.state.refundFlow.step = 'invoice'; this.render(); } },
 
   // Mark a demand's dispatch order as Received (from the merged Demand Management page).
+  societyMarkReceived(demandId) {
+    const ord = this.state.dispatchOrders.find(o => o.demandId === demandId)
+      || this.state.dispatchOrders.find(o => (this.state.adminDemands.find(d => d.id === demandId) || {}).dispatchOrderId === o.id);
+    if (!ord) { this.showToast('No dispatch order found for this demand.'); return; }
+    if (ord.status === 'Received') return;
+    this.markReceived(ord.id);
+  },
   markDemandReceived(demandId) {
     const dem = this.state.adminDemands.find(d => d.id === demandId);
     if (!dem) return;
@@ -3113,13 +3125,13 @@ const App = {
       <label>Approve Variety (from society's choices) *</label>
       <div style="display:grid;gap:8px;">
         ${this._demChoiceList(dem).map(c => {
-          const av = this._varAvail(dem.crop, c.variety);
-          return `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid ${c.variety === cur ? '#4CAF50' : '#E0E0E0'};border-radius:8px;cursor:pointer;background:${c.variety === cur ? '#E8F5E9' : '#fff'};">
+      const av = this._varAvail(dem.crop, c.variety);
+      return `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid ${c.variety === cur ? '#4CAF50' : '#E0E0E0'};border-radius:8px;cursor:pointer;background:${c.variety === cur ? '#E8F5E9' : '#fff'};">
             <input type="radio" name="approve-variety" value="${c.variety}" ${c.variety === cur ? 'checked' : ''} onchange="App.onApproveChoice(this.value)"/>
             <div style="flex:1;"><div style="font-size:0.72rem;color:#757575;">${c.label}</div><div style="font-weight:600;">${c.variety}</div></div>
             <div style="font-size:0.8rem;font-weight:600;color:${av >= dem.requestedQty ? '#2E7D32' : av > 0 ? '#E65100' : '#C62828'};">${av} Qt available</div>
           </label>`;
-        }).join('')}
+    }).join('')}
       </div>
     </div>`;
   },
@@ -5102,24 +5114,25 @@ const App = {
     const today = new Date().toISOString().split('T')[0];
     return `
     <div class="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)App.closeDispatchForm()">
-      <div class="modal-box" style="background:#fff;border-radius:12px;max-width:520px;width:100%;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.3);">
-        <div style="background:linear-gradient(135deg,#1B5E20,#4CAF50);padding:16px 22px;display:flex;justify-content:space-between;align-items:center;">
+      <div class="modal-box" style="background:#fff;border-radius:12px;max-width:520px;width:100%;overflow:hidden;max-height:calc(100vh - 32px);display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,0.3);">
+        <div style="background:linear-gradient(135deg,#1B5E20,#4CAF50);padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
           <h3 style="margin:0;color:#fff;font-size:1.05rem;">Generate Dispatch Order</h3>
           <button onclick="App.closeDispatchForm()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">&times;</button>
         </div>
-        <div style="padding:22px;">
+        <div style="padding:22px;overflow-y:auto;flex:1 1 auto;min-height:0;">
           <div class="form-grid">
             <div class="form-group"><label>Society</label><input class="form-control" value="${dem.society}" readonly style="background:#f5f5f5;"></div>
             <div class="form-group"><label>Crop / Variety</label><input class="form-control" value="${dem.crop} / ${dem.approvedVariety || dem.variety}" readonly style="background:#f5f5f5;"></div>
             <div class="form-group"><label>Quantity (Qt)</label><input class="form-control" value="${dem.approvedQty}" readonly style="background:#f5f5f5;"></div>
             <div class="form-group"><label>Dispatch Date <span style="color:#F44336">*</span></label><input type="date" class="form-control" id="df-date" value="${today}"></div>
-            <div class="form-group"><label>Vehicle Number <span style="color:#F44336">*</span></label><input class="form-control" id="df-vehicle" placeholder="MP-XX-XX-0000"></div>
+            <div class="form-group"><label>Vehicle Number</label><input class="form-control" id="df-vehicle" placeholder="MP-XX-XX-0000"></div>
             <div class="form-group"><label>Driver Name</label><input class="form-control" id="df-driver" placeholder="Driver name"></div>
+            <div class="form-group"><label>Driver Contact Number</label><input type="tel" class="form-control" id="df-driver-mobile" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
             <div class="form-group" style="grid-column:1/-1;"><label>Remarks</label><textarea class="form-control" id="df-remarks" rows="2" placeholder="Optional remarks"></textarea></div>
           </div>
           <div id="df-err" style="display:none;color:#F44336;font-size:0.8rem;margin-top:6px;"></div>
         </div>
-        <div style="padding:0 22px 22px;display:flex;justify-content:flex-end;gap:10px;">
+        <div style="padding:12px 22px 18px;flex-shrink:0;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;">
           <button class="btn btn-gray" onclick="App.closeDispatchForm()">Cancel</button>
           <button class="btn btn-primary" onclick="App.confirmDispatchForm('${dem.id}')"><span class="material-icons" style="font-size:16px;">local_shipping</span> Create Dispatch Order</button>
         </div>
@@ -5130,12 +5143,12 @@ const App = {
     const dem = this.state.adminDemands.find(d => d.id === demandId);
     if (!dem) return;
     const g = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
-    const date = g('df-date'), vehicle = g('df-vehicle');
+    const date = g('df-date'), vehicle = g('df-vehicle'), driverMobile = g('df-driver-mobile');
     const err = document.getElementById('df-err');
-    if (!date || !vehicle) {
-      if (err) { err.textContent = 'Dispatch Date and Vehicle Number are required.'; err.style.display = 'block'; }
-      return;
-    }
+    const showErr = msg => { if (err) { err.textContent = msg; err.style.display = 'block'; } };
+    // Only Dispatch Date is mandatory. Vehicle Number, Driver Name and Driver Contact are optional.
+    if (!date) { showErr('Dispatch Date is required.'); return; }
+    if (driverMobile && !/^[0-9]{10}$/.test(driverMobile)) { showErr('Driver Contact Number must be exactly 10 digits.'); return; }
     // Prevent duplicate
     let existing = this.state.dispatchOrders.find(d => d.demandId === demandId);
     if (!existing) {
@@ -5149,6 +5162,7 @@ const App = {
         dispatchDate: date,
         vehicleNo: vehicle,
         driver: g('df-driver'),
+        driverMobile: driverMobile,
         remarks: g('df-remarks'),
         status: 'Dispatched',
         demandId: demandId,

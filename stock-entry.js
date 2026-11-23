@@ -23,7 +23,7 @@ if (!App.state.stockEntry) {
 if (!App.state.stockEntries) {
   App.state.stockEntries = [
     {
-      id: 'SE-2026-001', seedType: 'Breeder Seed', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', seedClass: 'Breeder', sourceType: 'Production', availableQty: 1000, addQty: 500, unit: 'Quintal', minDemandQty: 50, minDemandUnit: 'Quintal', maxDemandQty: 300, maxDemandUnit: 'Quintal',
+      id: 'SE-2026-001', seedType: 'Breeder Seed', season: 'Kharif', crop: 'Paddy', variety: 'IR-64', seedClass: 'Breeder', sourceType: 'Production', availableQty: 1000, addQty: 500, unit: 'Quintal',
       finYear: '2026-2027', prodYear: '2026', prodDate: '2026-06-15', receiptDate: '2026-06-20', storage: 'Cold Storage A', warehouse: 'Central Warehouse, Bhopal',
       rack: 'R-12', quality: 'Approved', certStatus: 'Certified', germination: 92, purity: 98, moisture: 11,
       lab: 'State Seed Testing Lab, Bhopal', reportNo: 'TR-2026-001', reportDate: '2026-06-18',
@@ -33,7 +33,7 @@ if (!App.state.stockEntries) {
     },
     {
       id: 'SE-2026-002', seedType: 'Foundation Seed', season: 'Rabi', crop: 'Wheat', variety: 'GW-322',
-      seedClass: 'Foundation I', sourceType: 'Procurement', availableQty: 800, addQty: 300, unit: 'Quintal', minDemandQty: 40, minDemandUnit: 'Quintal', maxDemandQty: 250, maxDemandUnit: 'Quintal',
+      seedClass: 'Foundation I', sourceType: 'Procurement', availableQty: 800, addQty: 300, unit: 'Quintal',
       finYear: '2025-2026', prodYear: '2025', prodDate: '2025-11-10', receiptDate: '2025-11-20', storage: 'Godown B', warehouse: 'Divisional Store, Jabalpur',
       rack: 'R-05', quality: 'Tested', certStatus: 'Under Process', germination: 88, purity: 97, moisture: 12,
       lab: 'Regional Seed Lab, Jabalpur', reportNo: 'TR-2025-045', reportDate: '2025-11-15',
@@ -42,7 +42,7 @@ if (!App.state.stockEntries) {
     },
     {
       id: 'SE-2026-003', seedType: 'Certified Seed', season: 'Kharif', crop: 'Soybean', variety: 'JS-335',
-      seedClass: 'Certified', sourceType: 'Production', availableQty: 500, addQty: 250, unit: 'Quintal', minDemandQty: 30, minDemandUnit: 'Quintal', maxDemandQty: 180, maxDemandUnit: 'Quintal',
+      seedClass: 'Certified', sourceType: 'Production', availableQty: 500, addQty: 250, unit: 'Quintal',
       finYear: '2026-2027', prodYear: '2026', prodDate: '2026-05-20', receiptDate: '2026-05-28', storage: 'Godown C', warehouse: 'Regional Depot, Indore',
       rack: 'R-08', quality: 'Pending Testing', certStatus: 'Not Certified', germination: 0, purity: 0, moisture: 0,
       lab: '', reportNo: '', reportDate: '',
@@ -102,7 +102,6 @@ App._seTotalLabel = function (f) {
 App._seBlankForm = function () {
   return {
     seedType: '', season: '', crop: '', variety: '', varieties: [], seedClass: '', sourceType: '', addQty: '', unit: 'Quintal', finYear: '', prodDate: '',
-    minDemandQty: '', minDemandUnit: 'Quintal', maxDemandQty: '', maxDemandUnit: 'Quintal',
     prodYear: '', receiptDate: '', warehouse: '', storage: '', rack: '',
     quality: '', certStatus: '', germination: '', purity: '', moisture: '', lab: '', reportNo: '', reportDate: '',
     specific: {}, documents: [], remarks: ''
@@ -146,7 +145,7 @@ App._seFinYears = function () { return (App.state.sm ? (App.state.sm.financialYe
       var c = 'nav-item nav-sub-item' + (p === page ? ' active' : '');
       return '<div class="' + c + '" onclick="App.navigate(\'' + page + '\')"><span class="material-icons">' + icon + '</span><span>' + label + '</span></div>';
     };
-    var items = ni('list', 'Stock Entry List', 'se-list');
+    var items = ni('list', 'Stock Entry List', 'se-list') + ni('rule', 'Min / Max Demand Qty', 'dq-form');
     // Insert right after the "Stock Dashboard" item within Stock Management
     if (/App\.navigate\('sm-dashboard'\)/.test(html)) {
       return html.replace(/(<div class="nav-item[^"]*"[^>]*onclick="App\.navigate\('sm-dashboard'\)">.*?<\/div>)/,
@@ -170,6 +169,7 @@ App._seFinYears = function () { return (App.state.sm ? (App.state.sm.financialYe
       case 'se-form': return App.seRenderForm();
       case 'se-list': return App.seRenderList();
       case 'se-view': return App.seRenderView();
+      case 'dq-form': return App.dqRender();
       default: return _prev();
     }
   };
@@ -180,7 +180,7 @@ App._seFinYears = function () { return (App.state.sm ? (App.state.sm.financialYe
 // ═══════════════════════════════════════════════════════════
 (function () {
   var _prev = App.renderHeader.bind(App);
-  var T = { 'se-form': 'Stock Entry', 'se-list': 'Stock Entry List', 'se-view': 'Stock Entry Details' };
+  var T = { 'se-form': 'Stock Entry', 'se-list': 'Stock Entry List', 'se-view': 'Stock Entry Details', 'dq-form': 'Min / Max Demand Quantity' };
   App.renderHeader = function () {
     var html = _prev();
     var t = T[this.state.currentPage];
@@ -337,11 +337,6 @@ App.seRenderForm = function () {
     + '<div class="form-group"><label>Unit <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'unit\',this.value)">' + seOpt(App._seUnits, f.unit, 'Select Unit') + '</select><div class="se-err" id="err-unit"></div></div>'
     + '<div class="form-group"><label>Procurement Year <span style="color:#F44336">*</span></label><select class="form-control" onchange="App.seLive(\'finYear\',this.value)">' + seOpt(App._seFinYears(), f.finYear, 'Select Procurement Year') + '</select><div class="se-err" id="err-finYear"></div></div>'
     + '<div class="form-group"><label>Production Date</label><input type="date" class="form-control" value="' + (f.prodDate || '') + '" oninput="App.seLive(\'prodDate\',this.value)"><div class="se-err" id="err-prodDate"></div></div>'
-    // Min / Max demand quantity (per crop & variety) at the end of Stock Details
-    + '<div class="form-group"><label>Min Demand Quantity (per crop &amp; variety)</label><input type="number" class="form-control" min="0" value="' + (f.minDemandQty || '') + '" placeholder="e.g. 50" oninput="App.seLive(\'minDemandQty\',this.value)"><div class="se-err" id="err-minDemandQty"></div></div>'
-    + '<div class="form-group"><label>Min Demand Quantity Unit</label><select class="form-control" onchange="App.seLive(\'minDemandUnit\',this.value)">' + seOpt(App._seUnits, f.minDemandUnit, 'Select Unit') + '</select></div>'
-    + '<div class="form-group"><label>Max Demand Quantity (per crop &amp; variety)</label><input type="number" class="form-control" min="0" value="' + (f.maxDemandQty || '') + '" placeholder="e.g. 500" oninput="App.seLive(\'maxDemandQty\',this.value)"><div class="se-err" id="err-maxDemandQty"></div></div>'
-    + '<div class="form-group"><label>Max Demand Quantity Unit</label><select class="form-control" onchange="App.seLive(\'maxDemandUnit\',this.value)">' + seOpt(App._seUnits, f.maxDemandUnit, 'Select Unit') + '</select></div>'
     + '</div></div></div>'
 
     // Section 3: Remarks
@@ -488,8 +483,6 @@ App._sePersist = function (status) {
       Object.assign(r, {
         seedType: f.seedType, season: f.season, crop: f.crop, variety: f.variety, subVariety: f.subVariety,
         seedClass: f.seedClass, sourceType: f.sourceType, addQty: Number(f.addQty) || 0, unit: f.unit, lot: f.lot,
-        minDemandQty: Number(f.minDemandQty) || 0, minDemandUnit: f.minDemandUnit,
-        maxDemandQty: Number(f.maxDemandQty) || 0, maxDemandUnit: f.maxDemandUnit,
         finYear: f.finYear, prodYear: f.prodYear, prodDate: f.prodDate, receiptDate: f.receiptDate, warehouse: f.warehouse, storage: f.storage,
         rack: f.rack, quality: f.quality, certStatus: f.certStatus, germination: f.germination, purity: f.purity,
         moisture: f.moisture, lab: f.lab, reportNo: f.reportNo, reportDate: f.reportDate,
@@ -505,8 +498,6 @@ App._sePersist = function (status) {
     var rec = {
       id: App._seNextId(), seedType: f.seedType, season: f.season, crop: f.crop, variety: variety, subVariety: vs.length === 1 ? f.subVariety : '',
       seedClass: f.seedClass, sourceType: f.sourceType, availableQty: App._seExistingStock(f, variety), addQty: Number(f.addQty) || 0,
-      minDemandQty: Number(f.minDemandQty) || 0, minDemandUnit: f.minDemandUnit,
-      maxDemandQty: Number(f.maxDemandQty) || 0, maxDemandUnit: f.maxDemandUnit,
       unit: f.unit, lot: f.lot, finYear: f.finYear, prodYear: f.prodYear, prodDate: f.prodDate, receiptDate: f.receiptDate,
       warehouse: f.warehouse, storage: f.storage, rack: f.rack, quality: f.quality, certStatus: f.certStatus,
       germination: f.germination, purity: f.purity, moisture: f.moisture, lab: f.lab, reportNo: f.reportNo, reportDate: f.reportDate,
@@ -576,8 +567,7 @@ App.seRenderView = function () {
     + '<div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>2. Stock Details</h3></div><div class="card-body">'
     + row('Lot Number', rec.lot) + row('Available / Existing Stock', num(rec.availableQty)) + row('Quantity to be Added', num(rec.addQty))
     + row('Total Stock', String(avail + add)) + row('Unit', rec.unit) + row('Procurement Year', rec.finYear) + row('Production Date', rec.prodDate)
-    + row('Min Demand Quantity (per crop & variety)', num(rec.minDemandQty)) + row('Min Demand Quantity Unit', rec.minDemandUnit)
-    + row('Max Demand Quantity (per crop & variety)', num(rec.maxDemandQty)) + row('Max Demand Quantity Unit', rec.maxDemandUnit) + '</div></div>'
+    + '</div></div>'
     + '<div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>3. Remarks</h3></div><div class="card-body">'
     + row('Remarks', rec.remarks) + '</div></div>'
     + '<div class="form-actions" style="justify-content:flex-end;gap:10px;margin-top:16px;">'
@@ -638,7 +628,7 @@ App.seRenderList = function () {
           + '<td><div class="action-btns">'
           + '<button class="btn btn-outline btn-sm" title="View" onclick="App.seViewEntry(\'' + e.id + '\')"><span class="material-icons" style="font-size:14px;">visibility</span></button>'
           + '<button class="btn btn-warning btn-sm" title="Edit" onclick="App.seEditEntry(\'' + e.id + '\')"><span class="material-icons" style="font-size:14px;">edit</span></button>'
-            + '</div></td></tr>';
+          + '</div></td></tr>';
       }).join(''))
     + '</tbody></table></div></div></div>';
 };
@@ -657,8 +647,6 @@ App.seEditEntry = function (id) {
   SE().form = {
     seedType: e.seedType, season: e.season, crop: e.crop, variety: e.variety, subVariety: e.subVariety,
     seedClass: e.seedClass, sourceType: e.sourceType, lot: e.lot, addQty: e.addQty, unit: e.unit,
-    minDemandQty: e.minDemandQty, minDemandUnit: e.minDemandUnit,
-    maxDemandQty: e.maxDemandQty, maxDemandUnit: e.maxDemandUnit,
     finYear: e.finYear, prodYear: e.prodYear, prodDate: e.prodDate, receiptDate: e.receiptDate, warehouse: e.warehouse, storage: e.storage,
     rack: e.rack, quality: e.quality, certStatus: e.certStatus, germination: e.germination, purity: e.purity,
     moisture: e.moisture, lab: e.lab, reportNo: e.reportNo, reportDate: e.reportDate,
@@ -681,6 +669,137 @@ App.seDeleteEntry = function (id) {
   if (idx >= 0) SEList().splice(idx, 1);
   App.showToast('Stock entry deleted.');
   App.render();
+};
+
+// ═══════════════════════════════════════════════════════════
+// MIN / MAX DEMAND QUANTITY (separate admin tab under Stock Entry List)
+// One limit per Procurement Year + Season + Crop. List first; the form opens from the Add button.
+// ═══════════════════════════════════════════════════════════
+if (!App.state.demandLimits) {
+  App.state.demandLimits = [
+    { id: 'DL-001', finYear: '2026-2027', season: 'Kharif', crop: 'Paddy', minQty: 50, minUnit: 'Quintal', maxQty: 300, maxUnit: 'Quintal', remarks: '' },
+    { id: 'DL-002', finYear: '2025-2026', season: 'Rabi', crop: 'Wheat', minQty: 40, minUnit: 'Quintal', maxQty: 250, maxUnit: 'Quintal', remarks: '' },
+    { id: 'DL-003', finYear: '2026-2027', season: 'Kharif', crop: 'Soybean', minQty: 30, minUnit: 'Quintal', maxQty: 180, maxUnit: 'Quintal', remarks: '' }
+  ];
+}
+App.state.demandLimitForm = null;      // null => list view; object => form view
+App.state.demandLimitEditId = null;
+
+App._dqBlank = function () {
+  return { finYear: '', season: '', crop: '', minQty: '', minUnit: 'Quintal', maxQty: '', maxUnit: 'Quintal', remarks: '' };
+};
+App._dqToKg = function (q, unit) { return (Number(q) || 0) * (unit === 'Quintal' ? 100 : 1); };
+
+// Opening the tab from the sidebar always shows the list first.
+(function () {
+  var _nav = App.navigate.bind(App);
+  App.navigate = function (page) {
+    if (page === 'dq-form') { App.state.demandLimitForm = null; App.state.demandLimitEditId = null; }
+    return _nav.apply(App, arguments);
+  };
+})();
+App.dqOpenForm = function () { App.state.demandLimitEditId = null; App.state.demandLimitForm = App._dqBlank(); App.render(); };
+App.dqCloseForm = function () { App.state.demandLimitEditId = null; App.state.demandLimitForm = null; App.render(); };
+// Select changes re-render (Crop depends on Season); typed inputs only update the buffer.
+App.dqSet = function (key, val) {
+  var f = App.state.demandLimitForm; if (!f) return;
+  f[key] = val;
+  if (key === 'season') f.crop = '';
+  App.render();
+};
+App.dqLive = function (key, val) { var f = App.state.demandLimitForm; if (f) f[key] = val; };
+App.dqErr = function (id, msg) {
+  var e = document.getElementById('err-dq-' + id);
+  if (e) { e.textContent = msg; e.style.display = 'block'; }
+};
+
+App.dqSave = function () {
+  var f = App.state.demandLimitForm; if (!f) return;
+  var editId = App.state.demandLimitEditId;
+  document.querySelectorAll('.se-err').forEach(function (e) { e.textContent = ''; e.style.display = 'none'; });
+  var errs = {};
+  if (!f.finYear) errs.finYear = 'Procurement Year is required.';
+  if (!f.season) errs.season = 'Season is required.';
+  if (!f.crop) errs.crop = 'Crop is required.';
+  var minN = Number(f.minQty), maxN = Number(f.maxQty);
+  if (f.minQty === '' || isNaN(minN) || minN <= 0) errs.minQty = 'Min Demand Quantity must be greater than 0.';
+  if (f.maxQty === '' || isNaN(maxN) || maxN <= 0) errs.maxQty = 'Max Demand Quantity must be greater than 0.';
+  if (!errs.minQty && !errs.maxQty && App._dqToKg(minN, f.minUnit) > App._dqToKg(maxN, f.maxUnit)) errs.maxQty = 'Max Demand Quantity cannot be less than Min Demand Quantity.';
+  if (!errs.crop && App.state.demandLimits.some(function (r) { return r.id !== editId && r.finYear === f.finYear && r.season === f.season && r.crop === f.crop; })) {
+    errs.crop = 'A limit already exists for this Procurement Year, Season and Crop. Edit it from the list.';
+  }
+  if (Object.keys(errs).length) {
+    Object.keys(errs).forEach(function (k) { App.dqErr(k, errs[k]); });
+    App.showToast('Please fix the highlighted fields.');
+    return;
+  }
+  var list = App.state.demandLimits;
+  var rec = { finYear: f.finYear, season: f.season, crop: f.crop, minQty: minN, minUnit: f.minUnit, maxQty: maxN, maxUnit: f.maxUnit, remarks: f.remarks };
+  if (editId) {
+    var r = list.find(function (x) { return x.id === editId; });
+    if (r) Object.assign(r, rec);
+    App.showToast('Min / Max demand quantity updated.');
+  } else {
+    var n = list.reduce(function (m, x) { return Math.max(m, parseInt(String(x.id).replace(/\D/g, ''), 10) || 0); }, 0) + 1;
+    rec.id = 'DL-' + String(n).padStart(3, '0');
+    list.unshift(rec);
+    App.showToast('Min / Max demand quantity saved.');
+  }
+  App.state.demandLimitForm = null;
+  App.state.demandLimitEditId = null;
+  App.render();
+};
+App.dqEdit = function (id) {
+  var r = App.state.demandLimits.find(function (x) { return x.id === id; });
+  if (!r) return;
+  App.state.demandLimitEditId = id;
+  App.state.demandLimitForm = { finYear: r.finYear, season: r.season, crop: r.crop, minQty: r.minQty, minUnit: r.minUnit, maxQty: r.maxQty, maxUnit: r.maxUnit, remarks: r.remarks || '' };
+  App.render();
+};
+
+App.dqRender = function () {
+  var crumb = '<div style="font-size:0.8rem;color:#757575;margin-bottom:6px;">Stock Management &rsaquo; Min / Max Demand Quantity</div>';
+  var f = App.state.demandLimitForm;
+
+  // ── List view (default) ──
+  if (!f) {
+    var rows = App.state.demandLimits;
+    return crumb
+      + '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div><h1>Min / Max Demand Quantity</h1><p>Minimum and maximum quantity a society can demand, crop wise</p></div>'
+      + '<button class="btn btn-primary" onclick="App.dqOpenForm()"><span class="material-icons">add</span> Add Min / Max Demand Quantity</button></div>'
+      + '<div class="card"><div class="card-header"><h3>Demand Quantity Limits <span style="color:#757575;font-weight:400;font-size:0.85rem;">(' + rows.length + ' records)</span></h3></div>'
+      + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table><thead><tr><th>Procurement Year</th><th>Season</th><th>Crop</th><th>Min Demand Qty</th><th>Max Demand Qty</th><th>Actions</th></tr></thead><tbody>'
+      + (rows.length ? rows.map(function (r) {
+        return '<tr><td>' + r.finYear + '</td><td>' + r.season + '</td><td>' + r.crop + '</td>'
+          + '<td style="font-weight:600;">' + r.minQty + ' ' + r.minUnit + '</td><td style="font-weight:600;">' + r.maxQty + ' ' + r.maxUnit + '</td>'
+          + '<td><div class="action-btns"><button class="btn btn-warning btn-sm" title="Edit" onclick="App.dqEdit(\'' + r.id + '\')"><span class="material-icons" style="font-size:14px;">edit</span></button></div></td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:#9E9E9E;">No limits added yet.</td></tr>')
+      + '</tbody></table></div></div></div>';
+  }
+
+  // ── Form view ──
+  var isEdit = !!App.state.demandLimitEditId;
+  var req = ' <span style="color:#F44336">*</span>';
+  var err = function (k) { return '<div class="se-err" id="err-dq-' + k + '"></div>'; };
+  return crumb
+    + '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">'
+    + '<div><h1>' + (isEdit ? 'Edit' : 'Add') + ' Min / Max Demand Quantity</h1><p>Set the limit for one crop</p></div>'
+    + '<button class="btn btn-gray btn-sm" onclick="App.dqCloseForm()"><span class="material-icons">arrow_back</span> Back to List</button></div>'
+    + '<div class="card" style="margin-bottom:16px;"><div class="card-body"><div class="form-grid">'
+    + '<div class="form-group"><label>Procurement Year' + req + '</label><select class="form-control" onchange="App.dqSet(\'finYear\',this.value)">' + seOpt(App._seFinYears(), f.finYear, 'Select Procurement Year') + '</select>' + err('finYear') + '</div>'
+    + '<div class="form-group"><label>Season' + req + '</label><select class="form-control" onchange="App.dqSet(\'season\',this.value)">' + seOpt(App._seSeasons(), f.season, 'Select Season') + '</select>' + err('season') + '</div>'
+    + '<div class="form-group"><label>Crop' + req + '</label><select class="form-control" onchange="App.dqSet(\'crop\',this.value)"' + (f.season ? '' : ' disabled') + '>' + seOpt(App._seCrops(f.season), f.crop, f.season ? 'Select Crop' : 'Select Season first') + '</select>' + err('crop') + '</div>'
+    + '<div class="form-group"><label>Min Demand Quantity' + req + '</label><input type="number" min="0" class="form-control" value="' + (f.minQty === '' ? '' : f.minQty) + '" placeholder="e.g. 50" oninput="App.dqLive(\'minQty\',this.value)">' + err('minQty') + '</div>'
+    + '<div class="form-group"><label>Min Demand Quantity Unit' + req + '</label><select class="form-control" onchange="App.dqLive(\'minUnit\',this.value)">' + seOpt(App._seUnits, f.minUnit, 'Select Unit') + '</select></div>'
+    + '<div class="form-group"><label>Max Demand Quantity' + req + '</label><input type="number" min="0" class="form-control" value="' + (f.maxQty === '' ? '' : f.maxQty) + '" placeholder="e.g. 500" oninput="App.dqLive(\'maxQty\',this.value)">' + err('maxQty') + '</div>'
+    + '<div class="form-group"><label>Max Demand Quantity Unit' + req + '</label><select class="form-control" onchange="App.dqLive(\'maxUnit\',this.value)">' + seOpt(App._seUnits, f.maxUnit, 'Select Unit') + '</select></div>'
+    + '<div class="form-group" style="grid-column:1/-1;"><label>Remarks</label><textarea class="form-control" rows="2" placeholder="Optional remarks" oninput="App.dqLive(\'remarks\',this.value)">' + (f.remarks || '') + '</textarea></div>'
+    + '</div>'
+    + '<div class="form-actions" style="justify-content:flex-end;gap:10px;margin-top:12px;">'
+    + '<button class="btn btn-gray" onclick="App.dqCloseForm()"><span class="material-icons">close</span> Cancel</button>'
+    + '<button class="btn btn-primary" onclick="App.dqSave()"><span class="material-icons">check_circle</span> ' + (isEdit ? 'Update' : 'Save') + '</button>'
+    + '</div></div></div>';
 };
 
 console.log('[Stock Entry] module loaded');

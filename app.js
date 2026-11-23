@@ -4254,11 +4254,7 @@ const App = {
     ${totalBal > 0 ? `
     <div class="alert alert-success">
       <span class="material-icons">check_circle</span>
-      <div>You have <b>${totalBal} Quintal</b> of seed available for distribution to members.
-        <a href="#" onclick="App.navigate('soc-member-distribution');return false;" style="color:#1B5E20;font-weight:600;margin-left:8px;">
-          → Distribute Now
-        </a>
-      </div>
+      <div>You have <b>${totalBal} Quintal</b> of seed available for distribution to members.</div>
     </div>` : `
     <div class="alert alert-warning">
       <span class="material-icons">warning</span>
@@ -4410,12 +4406,6 @@ const App = {
             </select>
           </div>
           <div class="form-group">
-            <label>Seed Type *</label>
-            <select class="form-control" id="nd-seedtype">
-              <option>Breeder</option>
-            </select>
-          </div>
-          <div class="form-group">
             <label>Crop *</label>
             <select class="form-control" id="nd-crop" onchange="App.onDistCropChange()">
               ${this._distCropOpts(crop)}
@@ -4457,7 +4447,7 @@ const App = {
     const m = this.state.members.find(x => x.id === memId);
     if (!m) { this.showToast('Please select a member'); return; }
     const season = document.getElementById('nd-season')?.value || 'Kharif';
-    const seedType = document.getElementById('nd-seedtype')?.value || 'Breeder';
+    const seedType = 'Breeder'; // Distribution is Breeder seed only; no selection needed.
     const crop = document.getElementById('nd-crop')?.value || 'Soybean';
     const varieties = this.msValues('nd-variety');
     const qty = parseFloat(document.getElementById('nd-qty')?.value);

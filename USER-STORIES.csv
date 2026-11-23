@@ -1,12 +1,12 @@
-﻿"Module","Story ID","Story Name","User Story","Acceptance Criteria"
-"Authentication & Profile","AUTH-01","Login with NCD ID & Password","As a Society Head or Beej Sangh Admin, I want to log in with my NCD ID / username and password, so that I can reach my own dashboard.","AC1. The Login page shows two role tabs: ""Society Head"" and ""Beej Sangh Admin"".
+﻿Module,Story ID,Story Name,User Story,Acceptance Criteria
+Authentication & Profile,AUTH-01,Login with NCD ID & Password,"As a Society Head or Beej Sangh Admin, I want to log in with my NCD ID / username and password, so that I can reach my own dashboard.","AC1. The Login page shows two role tabs: ""Society Head"" and ""Beej Sangh Admin"".
 AC2. Three login methods are offered: ""NCD ID & Password"", ""Mobile OTP"" and ""Email OTP"".
 AC3. The NCD ID field is shown only for the Society Head role. Username and Password are shown for both roles.
 AC4. A ""Security Verification"" (CAPTCHA) block is shown above the ""Login to Portal"" button.
 AC5. On login, a Society Head lands on the Society Dashboard and an Admin lands on the Admin Dashboard.
 AC6. Changing the login method resets any OTP step that was in progress.
 AC7. The page has a ""Forgot Password"" link and a ""New Society Registration"" button."
-"Authentication & Profile","AUTH-02","Login with Mobile OTP","As a portal user, I want to log in with an OTP sent to my mobile, so that I can log in without a password.","AC1. The mobile field accepts digits only, maximum 10 digits.
+Authentication & Profile,AUTH-02,Login with Mobile OTP,"As a portal user, I want to log in with an OTP sent to my mobile, so that I can log in without a password.","AC1. The mobile field accepts digits only, maximum 10 digits.
 AC2. The mobile must be 10 digits starting with 6-9, else: ""Enter a valid 10-digit Indian mobile number (starts with 6-9).""
 AC3. On ""Send OTP"", a 6-digit OTP is generated and ""OTP sent successfully to +91 XXXXXX1234"" is shown (only the last 4 digits are visible).
 AC4. The OTP is valid for 30 seconds. ""Resend OTP"" is disabled with a countdown ("" in Ns"") and becomes active after 30 seconds, showing ""(OTP expired)"".
@@ -16,11 +16,11 @@ AC7. Wrong OTP: ""Invalid OTP. Please enter the correct OTP. (N attempts left)""
 AC8. Resend creates a new OTP, the old OTP stops working, and the toast ""A new OTP has been sent."" is shown.
 AC9. Correct OTP: toast ""Mobile number verified. Logged in successfully."" and the user lands on the dashboard of the selected role.
 AC10. ""Change Mobile Number"" returns to the mobile entry step."
-"Authentication & Profile","AUTH-03","Login with Email OTP","As a portal user, I want to log in with an OTP sent to my email, so that I have another way to log in.","AC1. The email must be in a valid format, else: ""Please enter a valid email address.""
+Authentication & Profile,AUTH-03,Login with Email OTP,"As a portal user, I want to log in with an OTP sent to my email, so that I have another way to log in.","AC1. The email must be in a valid format, else: ""Please enter a valid email address.""
 AC2. The confirmation shows a masked email (first 2 characters, then X, then the domain).
 AC3. OTP length, 30-second validity, resend, 5-attempt limit and error messages are the same as AUTH-02.
 AC4. Correct OTP: toast ""Email verified. Logged in successfully."" and the user lands on the role dashboard."
-"Authentication & Profile","AUTH-04","Forgot Password","As a user who forgot the password, I want to reset it using my mobile number and an OTP, so that I can log in again.","AC1. The page shows 3 steps: Mobile Number, Verify OTP, New Password.
+Authentication & Profile,AUTH-04,Forgot Password,"As a user who forgot the password, I want to reset it using my mobile number and an OTP, so that I can log in again.","AC1. The page shows 3 steps: Mobile Number, Verify OTP, New Password.
 AC2. The mobile must be exactly 10 digits, else: ""Please enter a valid 10-digit mobile number"".
 AC3. After sending, the page shows ""OTP Sent Successfully!"" with the mobile number. ""Resend"" sends a new OTP.
 AC4. OTP not 6 digits: ""Please enter a valid 6-digit OTP"". Wrong OTP: ""❌ Invalid OTP! Please try again.""
@@ -28,33 +28,33 @@ AC5. New password must be at least 8 characters: ""Password must be at least 8 c
 AC6. Confirm password must match: ""Passwords do not match!""
 AC7. Success: ""✅ Password reset successfully! You can now login with your new password."" and the user returns to Login.
 AC8. ""Back to Login"" returns to Login and resets the steps."
-"Authentication & Profile","AUTH-05","Reset Password (logged in)","As a logged-in user, I want to reset my password with OTP verification, so that my account stays secure.","AC1. The page opens from the user menu option ""Reset Password"".
+Authentication & Profile,AUTH-05,Reset Password (logged in),"As a logged-in user, I want to reset my password with OTP verification, so that my account stays secure.","AC1. The page opens from the user menu option ""Reset Password"".
 AC2. Current password is required: ""Please enter your current password"".
 AC3. The OTP is sent to the registered mobile number, which is shown read-only.
 AC4. OTP and new-password rules and messages are the same as AUTH-04.
 AC5. Success: ""✅ Password reset successfully! Your password has been updated."" and the user returns to the dashboard. Cancel also returns to the dashboard."
-"Authentication & Profile","AUTH-06","Change Password","As a logged-in user, I want to change my password from My Profile, so that I can update it at any time.","AC1. ""Change Password"" on My Profile opens a popup with Current Password, New Password (minimum 8 characters) and Confirm New Password.
+Authentication & Profile,AUTH-06,Change Password,"As a logged-in user, I want to change my password from My Profile, so that I can update it at any time.","AC1. ""Change Password"" on My Profile opens a popup with Current Password, New Password (minimum 8 characters) and Confirm New Password.
 AC2. Any field empty: ""Please fill all fields"".
 AC3. New password under 8 characters: ""New password must be at least 8 characters long"".
 AC4. Passwords do not match: ""New passwords do not match!""
 AC5. Success: ""✅ Password changed successfully! Your password has been updated."" and the popup closes.
 AC6. Cancel, ✕ or a click outside the popup closes it without changes."
-"Authentication & Profile","AUTH-07","Update Profile with OTP","As a logged-in user, I want to update my profile after OTP verification, so that only I can change my details.","AC1. My Profile shows Full Name*, Username (read-only), Mobile Number*, Email, Role and Status (read-only). A Society Head also sees Society Code and Society Name (read-only).
+Authentication & Profile,AUTH-07,Update Profile with OTP,"As a logged-in user, I want to update my profile after OTP verification, so that only I can change my details.","AC1. My Profile shows Full Name*, Username (read-only), Mobile Number*, Email, Role and Status (read-only). A Society Head also sees Society Code and Society Name (read-only).
 AC2. ""Update Profile"" switches to update mode with a ""Send OTP"" button.
 AC3. Mobile must be 10 digits before sending the OTP: ""Please enter a valid 10-digit mobile number"".
 AC4. OTP not 6 digits: ""Please enter a valid 6-digit OTP"". Wrong OTP: ""❌ Invalid OTP! Please try again.""
 AC5. Name, Mobile and Email are required: ""Please fill all required fields"".
 AC6. Success: ""✅ Profile updated successfully! Your changes have been saved."" and the new name shows in the header.
 AC7. Cancel leaves update mode without saving."
-"Authentication & Profile","AUTH-08","Logout and Session","As a logged-in user, I want to log out, so that nobody else can use my session.","AC1. Logout is available in the sidebar footer and in the user menu.
+Authentication & Profile,AUTH-08,Logout and Session,"As a logged-in user, I want to log out, so that nobody else can use my session.","AC1. Logout is available in the sidebar footer and in the user menu.
 AC2. Logout clears the session and shows the Login page.
 AC3. Refreshing the browser while logged in keeps the user on the same page. The Login page itself is not remembered."
-"Society Registration","REG-01","NCD ID Verification","As a new society, I want to start registration with my NCD ID, so that my society details can be fetched.","AC1. Registration starts from ""New Society Registration"" on the Login page.
+Society Registration,REG-01,NCD ID Verification,"As a new society, I want to start registration with my NCD ID, so that my society details can be fetched.","AC1. Registration starts from ""New Society Registration"" on the Login page.
 AC2. NCD ID is required: ""Please enter your NCD ID."" The value is converted to upper case.
 AC3. A CAPTCHA block and an instructions panel are shown, with a progress indicator at the top.
 AC4. ""Send OTP"" sends an OTP to the mobile registered against the NCD ID and opens the OTP page.
 AC5. ""Back to Login"" returns to Login."
-"Society Registration","REG-02","Registration OTP Verification","As a new society, I want to verify the OTP on my registered mobile, so that only the real society can register.","AC1. The page shows the masked mobile (only the last 4 digits visible).
+Society Registration,REG-02,Registration OTP Verification,"As a new society, I want to verify the OTP on my registered mobile, so that only the real society can register.","AC1. The page shows the masked mobile (only the last 4 digits visible).
 AC2. OTP must be 6 digits: ""Please enter the 6-digit OTP.""
 AC3. The OTP is valid for 30 seconds: ""OTP has expired. Please resend OTP.""
 AC4. Wrong OTP shows attempts left. After 5 wrong attempts: ""Maximum attempts reached. Please request a new OTP.""
@@ -62,12 +62,12 @@ AC5. Resend works after the 30-second countdown and shows ""A new OTP has been s
 AC6. On success, a success message is shown and the society details are fetched.
 AC7. If no society is found: ""No society details found for NCD ID ""<id>"". Please check the NCD ID and try again.""
 AC8. The registration form cannot be opened without OTP verification."
-"Society Registration","REG-03","Society Registration Details Form","As a new society, I want to check and complete my fetched society details, so that my application is correct.","AC1. Fields are pre-filled from the NCD record and can be edited.
+Society Registration,REG-03,Society Registration Details Form,"As a new society, I want to check and complete my fetched society details, so that my application is correct.","AC1. Fields are pre-filled from the NCD record and can be edited.
 AC2. NCD ID, Mobile and Approval Status (""Pending"") are read-only.
 AC3. Location Type ""Rural"" shows Gram Panchayat and Village. ""Urban"" shows Category of Urban Local Body, Urban Local Body and Locality or Ward.
 AC4. ""Upload RCS Membership Document"" accepts PDF, JPG, JPEG and PNG. The selected file name is shown as ""✓ <file name>"".
 AC5. ""Submit Application"" moves to the Create Username & Password step and keeps the entered values and document."
-"Society Registration","REG-04","Create Username & Password","As a new society, I want to create my login and contact person details, so that I can log in after approval.","AC1. Personal details can be filled manually or ""Through Samagra ID"".
+Society Registration,REG-04,Create Username & Password,"As a new society, I want to create my login and contact person details, so that I can log in after approval.","AC1. Personal details can be filled manually or ""Through Samagra ID"".
 AC2. Samagra ID is required and must be 9 to 12 digits: ""Please enter Samagra ID."" / ""Please enter a valid Samagra ID (9 to 12 digits).""
 AC3. An inactive eKYC is blocked: ""Your Samagra eKYC is inactive. Please update your Samagra eKYC and try again.""
 AC4. A mobile not linked with Samagra is blocked: ""Your registered mobile number is inactive or not linked with Samagra. Please update your mobile number in Samagra and try again.""
@@ -79,56 +79,50 @@ AC9. Username must be unique: ""This username already exists. Please choose anot
 AC10. Password needs at least 8 characters, 1 uppercase, 1 lowercase, 1 number and 1 special character. The message lists only what is missing, e.g. ""Password must contain 1 number, 1 special character.""
 AC11. Confirm password must match: ""Passwords do not match.""
 AC12. On success, the application is saved with status ""Pending Approval"", the login is created, and this message is shown: ""Username and password created successfully. Society Registration submitted successfully for approval."" The user returns to Login."
-"Society Registration","REG-05","Admin – Approve / Reject Registration","As an Admin, I want to approve or reject pending society registrations with a remark, so that only valid societies are registered.","AC1. ""Registrations Pending Approval"" lists Society Code, Cooperative Society Name, District, Submission Date and Actions, with a count badge. New submissions are shown first.
+Society Registration,REG-05,Admin – Approve / Reject Registration,"As an Admin, I want to approve or reject pending society registrations with a remark, so that only valid societies are registered.","AC1. ""Registrations Pending Approval"" lists Society Code, Cooperative Society Name, District, Submission Date and Actions, with a count badge. New submissions are shown first.
 AC2. Actions: View, Approve, Reject.
 AC3. Approve and Reject open a popup with a mandatory Remark. Empty remark: ""Remark is required to approve the registration."" / ""Remark is required to reject the registration.""
 AC4. On confirm, the status becomes Approved or Rejected, the remark is saved, the toast ""Registration Approved. Remark saved."" (or Rejected) is shown, and the user goes to the registration list."
-"Society Registration","REG-06","Admin – All Society Registrations","As an Admin, I want to search all registrations and mark approved societies as members, so that I can manage societies.","AC1. Filters: Society Code, Society Name, District, Status (Pending / Approved), From Date, To Date and Reset. The list updates as you type.
+Society Registration,REG-06,Admin – All Society Registrations,"As an Admin, I want to search all registrations and mark approved societies as members, so that I can manage societies.","AC1. Filters: Society Code, Society Name, District, Status (Pending / Approved), From Date, To Date and Reset. The list updates as you type.
 AC2. Columns: Society Code, Society Name, District, Block, Registration Date, Submitted Date, Status, Member Status, Actions.
 AC3. Only approved societies can be made members: ""Only approved societies can become members.""
 AC4. Toasts: ""<name> is now a Member."" and ""<name> set to Non-Member."""
-"Society Registration","REG-07","Admin – Registration Details","As an Admin, I want to see the full submitted registration with documents, so that I can decide correctly.","AC1. The page shows the submitted registration fields and the uploaded documents with preview and download.
-AC2. Approve and Reject buttons are shown only when the status is Pending and the page was opened from the Pending list.
-AC3. The status pill shows Pending Approval, Approved or Rejected.
-AC4. A demo document shows ""Preview not available for this demo document."" / ""Download not available for this demo document."""
-"Member Management","MEM-01","Member Onboarding – Samagra & OTP","As a Society Head, I want to verify a farmer by Samagra ID and OTP, so that only genuine farmers are onboarded.","AC1. Samagra ID accepts digits only, maximum 12. It is required: ""Please enter Samagra ID."" It must be 9 to 12 digits: ""Please enter a valid Samagra ID (9 to 12 digits).""
+Member Management,MEM-01,Member Onboarding – Samagra & OTP,"As a Society Head, I want to verify a farmer by Samagra ID and OTP, so that only genuine farmers are onboarded.","AC1. Samagra ID accepts digits only, maximum 12. It is required: ""Please enter Samagra ID."" It must be 9 to 12 digits: ""Please enter a valid Samagra ID (9 to 12 digits).""
 AC2. eKYC Status shows Active once at least 9 digits are entered, otherwise Inactive. The CAPTCHA block appears at 9 digits.
 AC3. ""Fetch Details"" sends an OTP to the Samagra-registered mobile (masked, last 4 digits visible) with the toast ""OTP sent to your registered mobile number.""
 AC4. ""Verify OTP"" is enabled only when 6 digits are entered. Short OTP: ""Please enter the 6-digit OTP."" Wrong OTP: ""Invalid OTP. Please enter the correct OTP.""
 AC5. ""Resend OTP"" works after a 30-second countdown and shows ""A new OTP has been sent.""
 AC6. ""Change Samagra ID"" cancels the OTP step.
 AC7. Correct OTP: ""Mobile number verified successfully."" and the member details are shown."
-"Member Management","MEM-02","Member Onboarding – Details & Submit","As a Society Head, I want the member details auto-filled from Samagra, so that I can onboard a member quickly without typing.","AC1. Read-only auto-filled fields: Samagra ID, Family ID, Title, First, Middle and Last Name, Father's and Mother's Name, Date of Birth, Gender, Marital Status, Nationality, Profession, Email, Category, Mobile Number, Address, District, Block, Local Body, Village / Ward, Pincode, Aadhaar Name, Aadhaar (last 4), eKYC Date, eKYC Status.
+Member Management,MEM-02,Member Onboarding – Details & Submit,"As a Society Head, I want the member details auto-filled from Samagra, so that I can onboard a member quickly without typing.","AC1. Read-only auto-filled fields: Samagra ID, Family ID, Title, First, Middle and Last Name, Father's and Mother's Name, Date of Birth, Gender, Marital Status, Nationality, Profession, Email, Category, Mobile Number, Address, District, Block, Local Body, Village / Ward, Pincode, Aadhaar Name, Aadhaar (last 4), eKYC Date, eKYC Status.
 AC2. Editable fields: Member Status (Active / Inactive) and Joining Date (default today).
 AC3. ""Continue / Submit"" saves the member with a new ID (MBR-NNN), shows ""Member onboarding submitted successfully!"" and opens the Member List."
-"Member Management","MEM-03","Society Member List","As a Society Head, I want to see all members of my society, so that I can manage them.","AC1. Columns: Member Name, Gender, Category, Mobile, Email, District, Block, Village, Pincode, Status, Joining Date, Actions.
+Member Management,MEM-03,Society Member List,"As a Society Head, I want to see all members of my society, so that I can manage them.","AC1. Columns: Member Name, Gender, Category, Mobile, Email, District, Block, Village, Pincode, Status, Joining Date, Actions.
 AC2. Actions: View, Edit and Activate / Deactivate. The toast is ""Member marked Active."" / ""Member marked Inactive.""
 AC3. The ""Society Member Onboarding"" button opens the onboarding form."
-"Member Management","MEM-04","View Member","As a Society Head, I want to view a member, so that I can check the details entered at onboarding.","AC1. The view shows exactly the onboarding form fields, in the same order. Empty values show ""—"".
-AC2. Buttons: ""Back to Member List"" and ""Edit""."
-"Member Management","MEM-05","Edit Member","As a Society Head, I want to edit a member's basic and address details, so that the record stays up to date.","AC1. Fields: Member Name*, Gender, Category, Mobile*, Email, Status, Address, District, Block, Village, Pincode.
+Member Management,MEM-05,Edit Member,"As a Society Head, I want to edit a member's basic and address details, so that the record stays up to date.","AC1. Fields: Member Name*, Gender, Category, Mobile*, Email, Status, Address, District, Block, Village, Pincode.
 AC2. Member Name is required: ""Member Name is required.""
 AC3. Mobile is required: ""Mobile Number is required.""
 AC4. Success: ""Member ""<name>"" updated successfully."" and the Member List opens."
-"Member Management","MEM-06","Admin – Society Members","As an Admin, I want to see members society-wise, so that I can review membership.","AC1. The society list shows Society Code, Society Name, District, Members (count) and a View button.
+Member Management,MEM-06,Admin – Society Members,"As an Admin, I want to see members society-wise, so that I can review membership.","AC1. The society list shows Society Code, Society Name, District, Members (count) and a View button.
 AC2. View shows that society's members: Member ID, Name, Gender, Category, Mobile, Village, Status and a View button.
 AC3. Member details open in a read-only popup with the same fields as the onboarding form."
-"Breeder Seed Demand (Society)","DEM-01","Breeder Seed Demand List","As a Society Head, I want to see all my demands with their payment and approval status, so that I know what to do next.","AC1. Columns: Crop, Date, Season, Variety (with 2nd / 3rd choice), Requested, Approved, Pending, Payment, Status, Actions, Invoices.
+Breeder Seed Demand (Society),DEM-01,Breeder Seed Demand List,"As a Society Head, I want to see all my demands with their payment and approval status, so that I know what to do next.","AC1. Columns: Crop, Date, Season, Variety (with 2nd / 3rd choice), Requested, Approved, Pending, Payment, Status, Actions, Invoices.
 AC2. Status: Under Review, Pending, Approved, Partially Approved, Hold or Rejected from the admin decision. It becomes Dispatched or Received from the dispatch order.
 AC3. Payment: Pending, Advance Paid (25%), Fully Paid or Received. A rejected demand shows Pending.
 AC4. ""Pay Full"" is shown only when the advance is paid, the demand is not fully paid, and the admin has decided.
 AC5. Invoice buttons: ""25%"" after the advance payment and ""Full"" after the full payment.
 AC6. ""New Demand"" opens the Raise Demand form."
-"Breeder Seed Demand (Society)","DEM-02","Raise Demand – Society & Demand Details","As a Society Head, I want my society details pre-filled on the demand form, so that I only enter demand details.","AC1. Society Name, Society Code, District and Block are read-only.
+Breeder Seed Demand (Society),DEM-02,Raise Demand – Society & Demand Details,"As a Society Head, I want my society details pre-filled on the demand form, so that I only enter demand details.","AC1. Society Name, Society Code, District and Block are read-only.
 AC2. Procurement Year, Demand Date (default today) and Season (Kharif, Rabi, Summer) are entered.
 AC3. There is no Save Draft button. Buttons are Cancel (back to the list) and Preview."
-"Breeder Seed Demand (Society)","DEM-03","Raise Demand – Three Variety Choices","As a Society Head, I want to give First, Second and Third choice varieties, so that the admin can approve an alternate if my first choice is not available.","AC1. Crop is required: ""Please select a crop.""
+Breeder Seed Demand (Society),DEM-03,Raise Demand – Three Variety Choices,"As a Society Head, I want to give First, Second and Third choice varieties, so that the admin can approve an alternate if my first choice is not available.","AC1. Crop is required: ""Please select a crop.""
 AC2. First, Second and Third Choice Variety are multi-selects. They are disabled (""Select Crop first"") until a crop is chosen.
 AC3. First Choice is required: ""Please select at least one First Choice variety."" Second and Third are optional.
 AC4. A variety chosen in one choice is not offered in the other two.
 AC5. Changing the crop clears all three choices.
 AC6. Second and Third choices are alternates and do not change the quantity or amount."
-"Breeder Seed Demand (Society)","DEM-04","Raise Demand – Quantity, Packets & Price","As a Society Head, I want to enter quantity in Kg as packet multiples and see the price per Quintal and the total amount, so that I know what I will pay.","AC1. ""Quantity Demanded (Kg)"" is entered by the user.
+Breeder Seed Demand (Society),DEM-04,"Raise Demand – Quantity, Packets & Price","As a Society Head, I want to enter quantity in Kg as packet multiples and see the price per Quintal and the total amount, so that I know what I will pay.","AC1. ""Quantity Demanded (Kg)"" is entered by the user.
 AC2. A note under the quantity shows the crop's packet sizes, e.g. ""Note: Packets of this crop are of 8 Kg, 10 Kg, 20 Kg. Enter the quantity in multiples of these packet sizes only.""
 AC3. Packet sizes come from Seed Packaging Management for that crop. If none are set, 8, 10 and 20 Kg are used.
 AC4. The quantity must be a whole multiple of one packet size. Otherwise an inline red message shows, e.g. ""Quantity must be a multiple of 8 Kg / 10 Kg / 20 Kg."", Total Amount is cleared, and Preview is blocked with an alert.
@@ -136,180 +130,180 @@ AC5. Empty quantity on Preview: ""Please enter the quantity demanded.""
 AC6. ""Price per Quintal (₹)"" is auto-filled from the crop's Breeder Seed rate in Seeds Rate Management (per Kg × 100). The same season and Active rate are preferred. The default is ₹24 per Kg.
 AC7. ""Total Amount (₹)"" = Quantity (Kg) × rate per Kg. It is not multiplied by the number of varieties.
 AC8. Expected Date of Delivery defaults to today."
-"Breeder Seed Demand (Society)","DEM-05","Demand Preview","As a Society Head, I want to preview my demand before paying, so that I can check it.","AC1. The preview shows Season, Crop, the variety choices, Requested Quantity (e.g. ""800 Kg (8 Quintal)""), Rate per Quintal, Total Amount and Advance Payment Required (25%).
+Breeder Seed Demand (Society),DEM-05,Demand Preview,"As a Society Head, I want to preview my demand before paying, so that I can check it.","AC1. The preview shows Season, Crop, the variety choices, Requested Quantity (e.g. ""800 Kg (8 Quintal)""), Rate per Quintal, Total Amount and Advance Payment Required (25%).
 AC2. Buttons: Back and ""Payment Now""."
-"Breeder Seed Demand (Society)","DEM-06","Advance (25%) Payment","As a Society Head, I want to pay a 25% advance, so that my demand is submitted to the admin.","AC1. The Payment Summary shows Society, Crop / Variety, Second and Third Choice, Quantity, Rate, Total Amount, ""Balance (75% on delivery)"" and ""Advance Payment (25%) Due Now"". It says ""Invoice will be generated after payment"".
+Breeder Seed Demand (Society),DEM-06,Advance (25%) Payment,"As a Society Head, I want to pay a 25% advance, so that my demand is submitted to the admin.","AC1. The Payment Summary shows Society, Crop / Variety, Second and Third Choice, Quantity, Rate, Total Amount, ""Balance (75% on delivery)"" and ""Advance Payment (25%) Due Now"". It says ""Invoice will be generated after payment"".
 AC2. Payment modes: UPI Payment (with UPI ID), Net Banking (with bank list), Debit Card and Bank Challan.
 AC3. No mode selected: ""Please select a payment mode"".
 AC4. On payment, one demand is created (DEM-2024-NNN) with status ""Under Review"" and payment ""Advance Paid (25%)"". Procurement Year, Demand Date, Expected Delivery and all choices are saved.
 AC5. The success screen shows Transaction ID, Payment Mode, Amount Paid, ""✓ Advance Paid"" and an invoice download.
 AC6. The payment is recorded in Payment History as ""Advance (25%)""."
-"Breeder Seed Demand (Society)","DEM-07","Full (Balance 75%) Payment","As a Society Head, I want to pay the remaining 75% after approval, so that my demand is fully paid.","AC1. Before approval: ""Full payment is available once the demand is approved.""
+Breeder Seed Demand (Society),DEM-07,Full (Balance 75%) Payment,"As a Society Head, I want to pay the remaining 75% after approval, so that my demand is fully paid.","AC1. Before approval: ""Full payment is available once the demand is approved.""
 AC2. Already paid: ""This demand is already fully paid.""
 AC3. The preview shows Advance Already Paid (25%), Balance Payment Due (75%) and the note ""After payment, the full invoice (100%) will be generated.""
 AC4. After payment, the demand becomes ""Fully Paid"", the success screen shows ""✓ Fully Paid"", the Full invoice is generated, and Payment History records ""Balance (75%)""."
-"Breeder Seed Demand (Society)","DEM-08","Demand Details & Invoices","As a Society Head, I want to view a demand and download its invoices, so that I have a record.","AC1. The View popup shows exactly the Raise Demand form fields: Society Name, Society Code, District, Block, Procurement Year, Demand Date, Season, Crop, First / Second / Third Choice Variety, Quantity Demanded (Kg), Price per Quintal, Total Amount, Expected Date of Delivery.
+Breeder Seed Demand (Society),DEM-08,Demand Details & Invoices,"As a Society Head, I want to view a demand and download its invoices, so that I have a record.","AC1. The View popup shows exactly the Raise Demand form fields: Society Name, Society Code, District, Block, Procurement Year, Demand Date, Season, Crop, First / Second / Third Choice Variety, Quantity Demanded (Kg), Price per Quintal, Total Amount, Expected Date of Delivery.
 AC2. ""25% Invoice"" is shown after the advance payment and ""Full Invoice"" after the full payment.
 AC3. Advance invoice not available: ""Advance not paid yet."" Full invoice not available: ""Full payment not completed yet.""
 AC4. Invoices download as Invoice-Advance-25pct-<id>.html / Invoice-Full-<id>.html."
-"Demand Management (Admin)","ADM-01","Demand Management List","As an Admin, I want to see all society demands with the right action for each status, so that I can process them.","AC1. Columns: Society, Crop / Variety, Requested, Approved, Pending, Payment, Approval, Actions.
+Demand Management (Admin),ADM-01,Demand Management List,"As an Admin, I want to see all society demands with the right action for each status, so that I can process them.","AC1. Columns: Society, Crop / Variety, Requested, Approved, Pending, Payment, Approval, Actions.
 AC2. Status filter: All Status, Pending, Approved, Partially Approved, Rejected, Hold.
 AC3. Payment shows Refunded, Refund Due, Full Paid (100%), Advance Paid (25%) or Pending.
 AC4. Pending / Hold: View, Approve, Partial Approve, Hold, Reject.
 AC5. Approved / Partially Approved without a dispatch order: Dispatch. Dispatched: Mark Received. Received: ""✓ Received"".
 AC6. Rejected: ""Refund Payment"", or ""✓ Refunded"" after the refund.
 AC7. If the approved variety differs from the first choice, ""Approved: <variety>"" is shown."
-"Demand Management (Admin)","ADM-02","Full Approve with Choice Selection","As an Admin, I want to choose which of the society's 3 choices to approve, so that I can approve an available variety.","AC1. The Approve popup lists the society's First, Second and Third Choice varieties with the available stock of each. First Choice is selected by default.
+Demand Management (Admin),ADM-02,Full Approve with Choice Selection,"As an Admin, I want to choose which of the society's 3 choices to approve, so that I can approve an available variety.","AC1. The Approve popup lists the society's First, Second and Third Choice varieties with the available stock of each. First Choice is selected by default.
 AC2. A message shows whether the selected variety has enough stock for the requested quantity.
 AC3. Not enough stock: ""Only N Qt of <variety> available — choose another variety or use Partial Approve"".
 AC4. On confirm: status Approved, approved quantity = requested, pending 0, and the approved variety and choice are saved. The toast shows the variety and choice.
 AC5. From the Demand Review page, the user returns to the Demand list after confirming."
-"Demand Management (Admin)","ADM-03","Partial Approve with Choice Selection","As an Admin, I want to partially approve a demand for one of the society's choices, so that I can give what stock allows.","AC1. The popup has the same 3-choice picker. ""Available Stock"" shows the stock of the selected variety.
+Demand Management (Admin),ADM-03,Partial Approve with Choice Selection,"As an Admin, I want to partially approve a demand for one of the society's choices, so that I can give what stock allows.","AC1. The popup has the same 3-choice picker. ""Available Stock"" shows the stock of the selected variety.
 AC2. Approved Quantity (Quintal)* and Remarks* are entered. A live message shows pending quantity or an error.
 AC3. Checks in order: ""Enter approved quantity"", ""Cannot exceed requested quantity"", ""Only N Qt of <variety> available"", ""Remarks are required"".
 AC4. If approved = requested the status is Approved, otherwise Partially Approved. Pending = Requested − Approved.
 AC5. The approved variety and choice are saved and shown in the toast."
-"Demand Management (Admin)","ADM-04","Put Demand on Hold","As an Admin, I want to put a demand on hold with a reason, so that I can review it later.","AC1. Hold Reason* options: Awaiting field verification, Stock under inspection, Payment verification pending, Additional documents required, Other.
+Demand Management (Admin),ADM-04,Put Demand on Hold,"As an Admin, I want to put a demand on hold with a reason, so that I can review it later.","AC1. Hold Reason* options: Awaiting field verification, Stock under inspection, Payment verification pending, Additional documents required, Other.
 AC2. Messages: ""Select hold reason"", ""Remarks are required"".
 AC3. On confirm the status is Hold with the toast ""Demand <id> put on hold"". No variety choice is asked."
-"Demand Management (Admin)","ADM-05","Reject Demand","As an Admin, I want to reject a demand with a reason, so that the society knows why.","AC1. Rejection Reason* is chosen from a list, and Remarks* are entered.
+Demand Management (Admin),ADM-05,Reject Demand,"As an Admin, I want to reject a demand with a reason, so that the society knows why.","AC1. Rejection Reason* is chosen from a list, and Remarks* are entered.
 AC2. Messages: ""Select rejection reason"", ""Remarks are required"".
 AC3. On confirm the status is Rejected and approved quantity is 0. The toast is ""Demand <id> rejected"". No variety choice is asked."
-"Demand Management (Admin)","ADM-06","Refund Advance for Rejected Demand","As an Admin, I want to refund the 25% advance of a rejected demand, so that the society gets its money back.","AC1. Step 1 shows the Refund Invoice: Society, Crop / Variety, Requested Qty, Reason, Advance Paid (25%), Refund Amount.
+Demand Management (Admin),ADM-06,Refund Advance for Rejected Demand,"As an Admin, I want to refund the 25% advance of a rejected demand, so that the society gets its money back.","AC1. Step 1 shows the Refund Invoice: Society, Crop / Variety, Requested Qty, Reason, Advance Paid (25%), Refund Amount.
 AC2. Step 2 offers the refund mode: UPI Transfer, Bank Transfer (NEFT), Cheque (with cheque number) or Cash.
 AC3. No mode selected: ""Please select a refund mode"". Already refunded: ""This demand is already refunded.""
 AC4. Step 3 shows the Refund Receipt with a Transaction ID (RFD-…). The demand shows ""✓ Refunded"".
 AC5. The refund is recorded in Payment Transactions as ""Refund""."
-"Demand Management (Admin)","ADM-07","Generate Dispatch Order","As an Admin, I want to create a dispatch order for an approved demand, so that the seed is sent to the society.","AC1. Society, Crop / Variety (the approved variety) and Quantity (approved quantity) are read-only.
+Demand Management (Admin),ADM-07,Generate Dispatch Order,"As an Admin, I want to create a dispatch order for an approved demand, so that the seed is sent to the society.","AC1. Society, Crop / Variety (the approved variety) and Quantity (approved quantity) are read-only.
 AC2. Dispatch Date and Vehicle Number are required: ""Dispatch Date and Vehicle Number are required."" Driver Name and Remarks are optional.
 AC3. Only one dispatch order is created per demand. The toast is ""Dispatch order created for <society>. You can mark it Received once delivered."""
-"Demand Management (Admin)","ADM-08","Mark Demand Received","As an Admin, I want to mark a dispatched demand as received, so that the society's stock is updated.","AC1. If no dispatch order exists: ""No dispatch order found for this demand.""
+Demand Management (Admin),ADM-08,Mark Demand Received,"As an Admin, I want to mark a dispatched demand as received, so that the society's stock is updated.","AC1. If no dispatch order exists: ""No dispatch order found for this demand.""
 AC2. The order status becomes Received and the quantity is added to the society's Available Stock.
 AC3. The society's demand list shows status ""Received"" and payment ""Received""."
-"Demand Management (Admin)","ADM-09","Demand Review Page","As an Admin, I want a detailed review page for a demand, so that I can decide with full information.","AC1. A banner shows Requested, Approved, Pending, Available Stock and Current Status.
+Demand Management (Admin),ADM-09,Demand Review Page,"As an Admin, I want a detailed review page for a demand, so that I can decide with full information.","AC1. A banner shows Requested, Approved, Pending, Available Stock and Current Status.
 AC2. Society Details card: Society Name, Code, District, Total Members, Season, Date.
 AC3. Demand Details card: Demand ID, Crop, First / Second / Third Choice Variety, Approved Variety (after approval), Requested / Approved / Pending Qty, Payment, Remarks.
 AC4. System Validation Checks: Available Stock Rule, Advance Payment and Duplicate Demand. The Minimum Members rule is not shown.
 AC5. Admin Decision buttons (Full Approve, Partial Approve, Put On Hold, Reject) are shown only when the status is Pending or Hold. Approve and Partial use the 3-choice popup."
-"Payments","PAY-01","Society Payment History","As a Society Head, I want to see all my society's payments, so that I can track what I have paid.","AC1. Only the logged-in society's transactions are shown.
+Payments,PAY-01,Society Payment History,"As a Society Head, I want to see all my society's payments, so that I can track what I have paid.","AC1. Only the logged-in society's transactions are shown.
 AC2. Summary boxes: Total Paid, Advance (25%), Balance (75%), Refunded.
 AC3. Filters: Search (Txn ID, Demand ID, Crop), Payment Type, Payment Mode, Reset.
 AC4. Columns: Txn ID, Date, Demand ID, Crop / Variety, Type, Mode, Amount, Status, Receipt. Refunds show in red with a minus sign.
 AC5. The Receipt popup shows the transaction details with a Print button."
-"Payments","PAY-02","Admin Payment Transactions","As an Admin, I want to see payments of all societies, so that I can monitor collections and refunds.","AC1. All societies' transactions are shown, with a Society column and a Society filter.
+Payments,PAY-02,Admin Payment Transactions,"As an Admin, I want to see payments of all societies, so that I can monitor collections and refunds.","AC1. All societies' transactions are shown, with a Society column and a Society filter.
 AC2. Summary boxes, the other filters, columns and the receipt are the same as PAY-01."
-"Payments","PAY-03","Automatic Recording of Transactions","As a user, I want every payment and refund recorded automatically, so that the history is always complete.","AC1. Advance payment records ""Advance (25%)"". Full payment records ""Balance (75%)"". An admin refund records ""Refund"".
+Payments,PAY-03,Automatic Recording of Transactions,"As a user, I want every payment and refund recorded automatically, so that the history is always complete.","AC1. Advance payment records ""Advance (25%)"". Full payment records ""Balance (75%)"". An admin refund records ""Refund"".
 AC2. Nothing is recorded if the payment mode was not selected.
 AC3. A refund is recorded only once."
-"Seed Distribution (Society)","DIST-01","Available Stock","As a Society Head, I want to see the seed stock received from Beej Sangh, so that I know what I can distribute.","AC1. Boxes: Total Stock, Breeder Stock, Foundation Seed Stock, Certified Seed Stock. Available = Allocated − Distributed.
+Seed Distribution (Society),DIST-01,Available Stock,"As a Society Head, I want to see the seed stock received from Beej Sangh, so that I know what I can distribute.","AC1. Boxes: Total Stock, Breeder Stock, Foundation Seed Stock, Certified Seed Stock. Available = Allocated − Distributed.
 AC2. With stock: ""You have N Quintal of seed available for distribution to members."" with a ""Distribute Now"" link. Without stock: ""No stock available. Please wait for Beej Sangh to dispatch allocated seed.""
 AC3. Table: Crop, Variety, Seed Type, Season, Allocated, Distributed, Available, Received On."
-"Seed Distribution (Society)","DIST-02","Breeder Seeds Distribution List","As a Society Head, I want to see all breeder seed distributions to members, so that I have a register.","AC1. Only Breeder seed distributions are listed, newest first.
+Seed Distribution (Society),DIST-02,Breeder Seeds Distribution List,"As a Society Head, I want to see all breeder seed distributions to members, so that I have a register.","AC1. Only Breeder seed distributions are listed, newest first.
 AC2. Columns: Member Name, Contact, Proc. Year, Season, Seed Type, Crop, Variety, Quantity, Date, Status, Actions.
 AC3. Actions: View (receipt) and Download (receipt file).
 AC4. Header buttons: ""+ New Distribution"", Excel and PDF.
 AC5. Empty state: ""No distributions yet."" with a ""Start Distributing"" button."
-"Seed Distribution (Society)","DIST-03","New Distribution","As a Society Head, I want to record breeder seed given to a member, so that each distribution has a receipt.","AC1. Fields: Society Member* (active members only), Contact Number and Village (auto-filled), Procurement Year (auto, read-only), Season*, Seed Type* (Breeder only), Crop*, Variety* (multi-select), Quantity*, Unit* (Quintal / Kg), Distribution Date (today, read-only).
+Seed Distribution (Society),DIST-03,New Distribution,"As a Society Head, I want to record breeder seed given to a member, so that each distribution has a receipt.","AC1. Fields: Society Member* (active members only), Contact Number and Village (auto-filled), Procurement Year (auto, read-only), Season*, Seed Type* (Breeder only), Crop*, Variety* (multi-select), Quantity*, Unit* (Quintal / Kg), Distribution Date (today, read-only).
 AC2. Changing the crop refreshes the variety list.
 AC3. Messages: ""Please select a member"", ""Please select at least one variety"", ""Please enter a valid quantity"".
 AC4. One record is saved per selected variety with the same quantity.
 AC5. One variety: the receipt popup opens. Several varieties: ""N distributions recorded (<varieties>)."""
-"Seed Distribution (Society)","DIST-04","Distribution Receipt","As a Society Head, I want to view and download a distribution receipt, so that I can give it to the member.","AC1. The receipt shows exactly the New Distribution form fields: Society Member, Contact Number, Village, Procurement Year, Season, Seed Type, Crop, Variety, Quantity, Unit, Distribution Date.
+Seed Distribution (Society),DIST-04,Distribution Receipt,"As a Society Head, I want to view and download a distribution receipt, so that I can give it to the member.","AC1. The receipt shows exactly the New Distribution form fields: Society Member, Contact Number, Village, Procurement Year, Season, Seed Type, Crop, Variety, Quantity, Unit, Distribution Date.
 AC2. No receipt number is shown.
 AC3. ""Download Receipt"" downloads Distribution-Receipt-<member>-<date>.html with the toast ""Receipt downloaded."""
-"Seed Distribution (Society)","DIST-05","Export Distributions","As a Society Head, I want to export the distribution list, so that I can share or print it.","AC1. Excel downloads Breeder-Seed-Distribution.csv with Member Name, Member ID, Village, Contact, Proc. Year, Season, Seed Type, Crop, Variety, Quantity, Date, Status. The toast is ""Excel file downloaded.""
+Seed Distribution (Society),DIST-05,Export Distributions,"As a Society Head, I want to export the distribution list, so that I can share or print it.","AC1. Excel downloads Breeder-Seed-Distribution.csv with Member Name, Member ID, Village, Contact, Proc. Year, Season, Seed Type, Crop, Variety, Quantity, Date, Status. The toast is ""Excel file downloaded.""
 AC2. PDF opens a print-ready page and shows 'Choose ""Save as PDF"" in the print window.'
 AC3. No records: ""No records to export."" Popup blocked: ""Please allow popups to export PDF."""
-"Foundation & Certified Seed (Society)","FC-01","Foundation & Certified Seed List","As a Society Head, I want one page for foundation and certified seed entries, so that I can manage them in one place.","AC1. The page ""Foundation & Certified Seed Management"" has the button ""New Foundation and Certified Seed Entry"".
+Foundation & Certified Seed (Society),FC-01,Foundation & Certified Seed List,"As a Society Head, I want one page for foundation and certified seed entries, so that I can manage them in one place.","AC1. The page ""Foundation & Certified Seed Management"" has the button ""New Foundation and Certified Seed Entry"".
 AC2. The list can be filtered by Season, Seed Type and Search.
 AC3. Each entry can be viewed and edited."
-"Foundation & Certified Seed (Society)","FC-02","New Foundation and Certified Seed Entry","As a Society Head, I want to record seed given to a member and the produce procured back, so that the seed cycle is tracked.","AC1. Fields: Member Name*, Seed Type* (Foundation / Certified), Procurement Year (auto, read-only), Season*, Crop*, Variety* (multi-select), Allocated Date* (default today), Procurement Date, Unit* (one unit for both quantities), Allocated Quantity*, Produce Quantity.
+Foundation & Certified Seed (Society),FC-02,New Foundation and Certified Seed Entry,"As a Society Head, I want to record seed given to a member and the produce procured back, so that the seed cycle is tracked.","AC1. Fields: Member Name*, Seed Type* (Foundation / Certified), Procurement Year (auto, read-only), Season*, Crop*, Variety* (multi-select), Allocated Date* (default today), Procurement Date, Unit* (one unit for both quantities), Allocated Quantity*, Produce Quantity.
 AC2. Procurement Date and Produce Quantity are optional until the produce is procured.
 AC3. Messages: ""Member is required."", ""Seed type is required."", ""Season is required."", ""Crop is required."", ""Variety is required."", ""Allocated date is required."", ""Unit is required."", ""Allocated quantity must be greater than 0."", ""Produce quantity must be 0 or more."", ""Procurement date cannot be before the allocated date.""
 AC4. Produce Quantity may be more than Allocated Quantity.
 AC5. One entry is saved per selected variety. Toast: ""Entry created successfully!"" or ""N entries created successfully!"""
-"Foundation & Certified Seed (Society)","FC-03","Seed Given Earlier to the Member","As a Society Head, I want to see what seed a member received earlier as soon as I select the member, so that I can decide the new allocation.","AC1. Selecting a member shows ""Seed given earlier to <member>"" with Proc. Year, Season, Seed Type, Crop, Variety and Quantity (as given, with unit).
+Foundation & Certified Seed (Society),FC-03,Seed Given Earlier to the Member,"As a Society Head, I want to see what seed a member received earlier as soon as I select the member, so that I can decide the new allocation.","AC1. Selecting a member shows ""Seed given earlier to <member>"" with Proc. Year, Season, Seed Type, Crop, Variety and Quantity (as given, with unit).
 AC2. It includes Breeder seed distributions and earlier Foundation & Certified entries, newest first.
 AC3. A member with no history shows ""No seed has been given to this member earlier.""
 AC4. When editing, the entry being edited is not listed."
-"Foundation & Certified Seed (Society)","FC-04","View & Edit Entry","As a Society Head, I want to view and update an entry, so that I can add procurement details later.","AC1. The view shows only the form fields.
+Foundation & Certified Seed (Society),FC-04,View & Edit Entry,"As a Society Head, I want to view and update an entry, so that I can add procurement details later.","AC1. The view shows only the form fields.
 AC2. The edit form is titled ""Edit Foundation and Certified Seed Entry"", uses a single variety dropdown, and saves with ""Update Entry"". The toast is ""Entry updated successfully!"""
-"Hybrid Seed (Admin)","HYB-01","Hybrid Seed Allocation","As an Admin, I want to allocate hybrid seed to a society, so that hybrid seed distribution is recorded.","AC1. Fields: Procurement Year (auto, read-only), Season* (Kharif / Rabi / Summer), Hybrid Seed Variety*, Parent Seed Variety, Society Name*, Allocated Quantity (Qt)*, Expected Production Qty (Qt)*, Allocation Date*, Status* (Draft / Allocated), Remarks.
+Hybrid Seed (Admin),HYB-01,Hybrid Seed Allocation,"As an Admin, I want to allocate hybrid seed to a society, so that hybrid seed distribution is recorded.","AC1. Fields: Procurement Year (auto, read-only), Season* (Kharif / Rabi / Summer), Hybrid Seed Variety*, Parent Seed Variety, Society Name*, Allocated Quantity (Qt)*, Expected Production Qty (Qt)*, Allocation Date*, Status* (Draft / Allocated), Remarks.
 AC2. Messages: ""Season is required."", ""Variety is required."", ""Society is required."", ""Allocated qty is required."", ""Expected production required."", ""Allocation date is required.""
 AC3. Toasts: ""Allocation created successfully!"" / ""Allocation updated successfully!"""
-"Hybrid Seed (Admin)","HYB-02","Hybrid Allocation View & Delete","As an Admin, I want to view and delete hybrid allocations, so that wrong entries can be removed.","AC1. The view shows only the form fields, with Back and Edit buttons.
+Hybrid Seed (Admin),HYB-02,Hybrid Allocation View & Delete,"As an Admin, I want to view and delete hybrid allocations, so that wrong entries can be removed.","AC1. The view shows only the form fields, with Back and Edit buttons.
 AC2. Delete asks ""Delete allocation <id>? This cannot be undone."" and shows ""Allocation deleted."""
-"Masters (Admin – Stock Management)","MST-01","Season Master","As an Admin, I want to maintain the seasons, so that every form uses the same seasons.","AC1. Only three seasons exist: Kharif (KH), Rabi (RB), Summer (SM). There is no Create Season button.
+Masters (Admin – Stock Management),MST-01,Season Master,"As an Admin, I want to maintain the seasons, so that every form uses the same seasons.","AC1. Only three seasons exist: Kharif (KH), Rabi (RB), Summer (SM). There is no Create Season button.
 AC2. Edit: Season Name is a dropdown (Kharif / Rabi / Summer). Season Code* (upper case), Description, Status.
 AC3. Required: ""Please fill Season Name and Code."" Unique: 'Season Code ""<code>"" already exists.' and 'Season ""<name>"" already exists.'
 AC4. Activate / Deactivate shows ""Season status updated."" Only active seasons appear in other forms."
-"Masters (Admin – Stock Management)","MST-02","Crop Master Mapping","As an Admin, I want to map crops to seasons, so that forms show only the crops of a season.","AC1. List columns: Sr., Crop Name, Code, Season, Description, Status, Created, Action.
+Masters (Admin – Stock Management),MST-02,Crop Master Mapping,"As an Admin, I want to map crops to seasons, so that forms show only the crops of a season.","AC1. List columns: Sr., Crop Name, Code, Season, Description, Status, Created, Action.
 AC2. Form: Crop Name* (dropdown), Crop Code* (upper case), Season (checkboxes of active seasons), Description, Status.
 AC3. Required: ""Please fill Crop Name and Code."" Unique: 'Crop Code ""<code>"" already exists.' and 'Crop ""<name>"" already exists.'
 AC4. Toasts: ""Crop created successfully."" / ""Crop updated successfully."" / ""Crop status updated."""
-"Masters (Admin – Stock Management)","MST-03","Procurement Year Master","As an Admin, I want to maintain procurement years, so that stock and demand use the right year.","AC1. Procurement Year* dropdown from 2021-2022 up to the current year (April–March), newest first. Code*, Start Date*, End Date*, Status.
+Masters (Admin – Stock Management),MST-03,Procurement Year Master,"As an Admin, I want to maintain procurement years, so that stock and demand use the right year.","AC1. Procurement Year* dropdown from 2021-2022 up to the current year (April–March), newest first. Code*, Start Date*, End Date*, Status.
 AC2. Required: ""Please fill all required fields."" End date after start: ""End Date must be after Start Date.""
 AC3. Unique code and year: 'Procurement Year Code ""<code>"" already exists.' / 'Procurement Year ""<name>"" already exists.'
 AC4. Only active years appear in the Stock Entry form."
-"Masters (Admin – Stock Management)","MST-04","Variety Master Mapping","As an Admin, I want to add several varieties of a crop at once, so that setup is faster.","AC1. Create: Season*, Crop*, Variety Name* (multi-select of that crop's varieties, ""Select Crop first"" until a crop is chosen), Description, Status.
+Masters (Admin – Stock Management),MST-04,Variety Master Mapping,"As an Admin, I want to add several varieties of a crop at once, so that setup is faster.","AC1. Create: Season*, Crop*, Variety Name* (multi-select of that crop's varieties, ""Select Crop first"" until a crop is chosen), Description, Status.
 AC2. Varieties already in the master for that crop are not offered.
 AC3. Variety Code is generated from each name (e.g. IR-64 → IR64). If the code is taken, ""-2"", ""-3"" is added.
 AC4. Required: ""Please fill all required fields. Select at least one Variety."" Already present: ""Already exists under <crop>: <names>"".
 AC5. One record is saved per selected variety. Toast: ""N varieties created successfully."" / ""Variety created successfully.""
 AC6. Edit uses a single variety and code. Messages: 'Variety Code must be unique. ""<code>"" already exists.' and 'Variety ""<name>"" already exists under <crop>.'"
-"Seeds Rate Management (Admin)","PRC-01","Add Seed Price","As an Admin, I want to publish crop- and variety-wise seed prices, so that the demand form calculates the amount.","AC1. Field order: Seed Category*, Season*, Crop*, Seed Variety* (multi-select with note ""Select one or more varieties. Same values apply to each selected variety.""), Procurement Year (auto, read-only), Effective From*, Effective To*, Unit (fixed Kg), Selling Price (₹)*, Remarks.
+Seeds Rate Management (Admin),PRC-01,Add Seed Price,"As an Admin, I want to publish crop- and variety-wise seed prices, so that the demand form calculates the amount.","AC1. Field order: Seed Category*, Season*, Crop*, Seed Variety* (multi-select with note ""Select one or more varieties. Same values apply to each selected variety.""), Procurement Year (auto, read-only), Effective From*, Effective To*, Unit (fixed Kg), Selling Price (₹)*, Remarks.
 AC2. Seed Category: Breeder, Foundation, Certified, Hybrid Seed.
 AC3. Required fields: ""Please fill all required fields."" No variety: ""Please fill all required fields. Select at least one Seed Variety.""
 AC4. There is no Status field and no Save Draft. ""Publish"" saves the price as Active.
 AC5. One price is saved per selected variety. Alert: ""Price published successfully!"" or ""Price for N varieties published successfully!"""
-"Seeds Rate Management (Admin)","PRC-02","Seed Price List","As an Admin, I want to search seed prices, so that I can review and correct them.","AC1. ""Seeds Rate Management"" is in the Stock Management sidebar, below Variety Master Mapping.
+Seeds Rate Management (Admin),PRC-02,Seed Price List,"As an Admin, I want to search seed prices, so that I can review and correct them.","AC1. ""Seeds Rate Management"" is in the Stock Management sidebar, below Variety Master Mapping.
 AC2. Filters: Search (Price ID, Crop, Variety), Season, Crop, Status, Reset.
 AC3. Columns: Category, Crop, Variety, Season, Unit, Selling Price, Effective From, Effective To, Status, Created Date, Actions.
 AC4. Actions: View and Edit only. There is no Deactivate and no Bulk Upload."
-"Seeds Rate Management (Admin)","PRC-03","View & Edit Seed Price","As an Admin, I want to view and edit a price, so that I can fix mistakes.","AC1. The view shows only the form fields, in form order.
+Seeds Rate Management (Admin),PRC-03,View & Edit Seed Price,"As an Admin, I want to view and edit a price, so that I can fix mistakes.","AC1. The view shows only the form fields, in form order.
 AC2. Edit uses a single variety dropdown and saves with Publish."
-"Seed Buying/Selling Line (Admin)","LINE-01","Create Trade Line","As an Admin, I want to open buying or selling lines, so that societies can trade seed in a set period.","AC1. Line Type ""Buying (Breeder Seed)"" allows only Seed Type Breeder.
+Seed Buying/Selling Line (Admin),LINE-01,Create Trade Line,"As an Admin, I want to open buying or selling lines, so that societies can trade seed in a set period.","AC1. Line Type ""Buying (Breeder Seed)"" allows only Seed Type Breeder.
 AC2. Line Type ""Buying/Selling (Foundation and Certified)"" allows Breeder, Foundation, Certified and Hybrid.
 AC3. Changing the Line Type refreshes the Seed Type options.
 AC4. Fields: Procurement Year (auto), Season, Crop (multi-select), Variety (multi-select of the selected crops), Line Start Date (default today), Line End Date.
 AC5. Unticking a crop removes its varieties from the selection.
 AC6. Messages: ""Buying line is only for Breeder Seed"" / ""Invalid Seed Type for this Line Type"", ""Please select at least one crop and one variety"", ""Please set line start and end dates"", ""End date cannot be before start date"".
 AC7. Toast: ""Seed <type> line LINE-NNN created."""
-"Seed Buying/Selling Line (Admin)","LINE-02","Trade Line List, View & Edit","As an Admin, I want to view and edit trade lines, so that I can manage open lines.","AC1. Columns: Type, Seed Type, Proc. Year, Season, Crop, Variety, Start Date, End Date, Status, Actions.
+Seed Buying/Selling Line (Admin),LINE-02,"Trade Line List, View & Edit","As an Admin, I want to view and edit trade lines, so that I can manage open lines.","AC1. Columns: Type, Seed Type, Proc. Year, Season, Crop, Variety, Start Date, End Date, Status, Actions.
 AC2. Status is worked out from the dates: Scheduled (before start), Open, Closed (after end).
 AC3. View opens a popup with only the form fields.
 AC4. Edit opens the form pre-filled. ""Update Line"" saves the same line without changing its ID. The toast is ""Line <id> updated."""
-"Seed Packaging (Admin)","PKG-01","Create Packaging","As an Admin, I want to set pack sizes per crop and variety, so that demand quantities follow packets.","AC1. Fields: Procurement Year (auto), Seed Type*, Season*, Crop* (multi-select), Variety* (multi-select of the selected crops), Unit* (Kg / Quintal), Quantity*.
+Seed Packaging (Admin),PKG-01,Create Packaging,"As an Admin, I want to set pack sizes per crop and variety, so that demand quantities follow packets.","AC1. Fields: Procurement Year (auto), Seed Type*, Season*, Crop* (multi-select), Variety* (multi-select of the selected crops), Unit* (Kg / Quintal), Quantity*.
 AC2. Messages: ""Please select seed type, season and crop"", ""Please select at least one variety"", ""Please select a unit"", ""Please enter a valid quantity"".
 AC3. One record is saved per crop–variety pair. A variety is paired only with its own crop.
 AC4. Duplicate check: ""Packaging of <qty> <unit> already exists for: <varieties>"".
 AC5. Toast: ""Packaging set added."" / ""Packaging set added for N crop-variety combinations."""
-"Seed Packaging (Admin)","PKG-02","Packaging List, View & Edit","As an Admin, I want to view and edit packaging records, so that pack sizes stay correct.","AC1. Columns: Proc. Year, Seed Type, Season, Crop, Variety, Quantity, Unit, Actions (View, Edit).
+Seed Packaging (Admin),PKG-02,"Packaging List, View & Edit","As an Admin, I want to view and edit packaging records, so that pack sizes stay correct.","AC1. Columns: Proc. Year, Seed Type, Season, Crop, Variety, Quantity, Unit, Actions (View, Edit).
 AC2. View opens a popup with only the form fields.
 AC3. Edit uses a single crop and variety. The duplicate check ignores the record itself. The toast is ""Packaging set updated.""
 AC4. Pack sizes saved here drive the packet note and quantity check on Raise Demand (DEM-04)."
-"Stock Entry (Admin)","STK-01","Stock Dashboard","As an Admin, I want a stock summary, so that I know the available stock.","AC1. Cards: Total Stock, Available Stock, Allocated Stock, Dispatched Stock (Quintal).
+Stock Entry (Admin),STK-01,Stock Dashboard,"As an Admin, I want a stock summary, so that I know the available stock.","AC1. Cards: Total Stock, Available Stock, Allocated Stock, Dispatched Stock (Quintal).
 AC2. Stock Summary columns: Procurement Year, Season, Crop, Variety, Available. There is no Opening column."
-"Stock Entry (Admin)","STK-02","Stock Entry Form","As an Admin, I want to add stock for one or more varieties, so that stock is recorded lot-wise.","AC1. Seed Information: Seed Type*, Season*, Crop* (crops of the selected season), Variety* (multi-select of the crop and season), Sub-Variety (only when one variety is selected).
+Stock Entry (Admin),STK-02,Stock Entry Form,"As an Admin, I want to add stock for one or more varieties, so that stock is recorded lot-wise.","AC1. Seed Information: Seed Type*, Season*, Crop* (crops of the selected season), Variety* (multi-select of the crop and season), Sub-Variety (only when one variety is selected).
 AC2. If a crop has no varieties: ""No variety configured for <crop>. Please add one in Variety Master Mapping.""
 AC3. Stock Details: Lot Number*, Available / Existing Stock (auto), Quantity to be Added*, Total Stock (auto), Unit* (Kg / Quintal), Procurement Year*, Production Date, Min and Max Demand Quantity with their units.
 AC4. Existing and Total Stock show ""Varies by variety"" when several varieties are selected.
 AC5. Remarks are optional.
 AC6. Buttons: Cancel, Reset, Submit Stock Entry. There is no Save as Draft."
-"Stock Entry (Admin)","STK-03","Stock Entry Validation & Submit","As an Admin, I want the stock entry checked before saving, so that stock data is correct.","AC1. Messages: ""Seed Type is required."", ""Season is required."", ""Crop is required."", ""Variety is required."", ""Lot Number is required."", ""Quantity must be a number greater than 0."", ""Unit is required."", ""Procurement Year is required."", ""Production Date cannot be in the future.""
+Stock Entry (Admin),STK-03,Stock Entry Validation & Submit,"As an Admin, I want the stock entry checked before saving, so that stock data is correct.","AC1. Messages: ""Seed Type is required."", ""Season is required."", ""Crop is required."", ""Variety is required."", ""Lot Number is required."", ""Quantity must be a number greater than 0."", ""Unit is required."", ""Procurement Year is required."", ""Production Date cannot be in the future.""
 AC2. Duplicate Seed Type + Season + Crop + Lot + Variety: ""A stock entry already exists for this Seed Type + Season + Crop + Lot + Variety.""
 AC3. With errors, the toast ""Please fix the highlighted fields before submitting."" is shown.
 AC4. A confirm popup ""Add Stock"" shows Seed Type, Crop, Variety, Lot Number and Quantity before saving.
 AC5. One entry is saved per variety. Toast: ""Stock entry successfully submitted."" or ""Stock entries successfully submitted for N varieties."""
-"Stock Entry (Admin)","STK-04","Stock Entry List, View & Edit","As an Admin, I want to search stock entries, so that I can review them.","AC1. Filters: Search (ID, Crop, Lot), Seed Type, Season, Crop, From, To, Reset.
+Stock Entry (Admin),STK-04,"Stock Entry List, View & Edit","As an Admin, I want to search stock entries, so that I can review them.","AC1. Filters: Search (ID, Crop, Lot), Seed Type, Season, Crop, From, To, Reset.
 AC2. Columns: Seed Type, Season, Crop, Variety, Qty, Unit, Entry Date, Status, Actions (View, Edit). There is no Deactivate.
 AC3. The view shows only the form fields in the same 3 sections. Total Stock = Existing + Added."
-"Common Rules","GEN-01","Date Format","As a user, I want all dates shown as dd/mm/yy, so that dates are easy to read.","AC1. Every date shown on screen, in popups, receipts, invoices and downloads is shown as dd/mm/yy (e.g. 25/08/26).
+Common Rules,GEN-01,Date Format,"As a user, I want all dates shown as dd/mm/yy, so that dates are easy to read.","AC1. Every date shown on screen, in popups, receipts, invoices and downloads is shown as dd/mm/yy (e.g. 25/08/26).
 AC2. Procurement years (e.g. 2024-25) and IDs (e.g. DEM-2024-001) are not changed.
 AC3. Date picker fields follow the browser's language setting."
-"Common Rules","GEN-02","Standard Values","As a user, I want the same units, seasons and labels everywhere, so that the portal is consistent.","AC1. Units are only Kg and Quintal.
+Common Rules,GEN-02,Standard Values,"As a user, I want the same units, seasons and labels everywhere, so that the portal is consistent.","AC1. Units are only Kg and Quintal.
 AC2. Seasons are only Kharif, Rabi and Summer, without a year.
 AC3. The label ""Procurement Year"" (short ""Proc. Year"") is used everywhere instead of Financial Year.
 AC4. Variety fields on add forms are crop-wise multi-selects. Edit forms use a single variety."
-"Common Rules","GEN-03","View Matches Form","As a user, I want each view screen to show the same fields as its form, so that there is no confusing extra data.","AC1. View screens show only the fields of the related form, in the same order and with the same labels.
+Common Rules,GEN-03,View Matches Form,"As a user, I want each view screen to show the same fields as its form, so that there is no confusing extra data.","AC1. View screens show only the fields of the related form, in the same order and with the same labels.
 AC2. Empty values show ""—""."

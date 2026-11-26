@@ -740,103 +740,131 @@ const App = {
   // ============================
   // SCREEN 2: SOCIETY DASHBOARD
   // ============================
+  // ── Dashboard charts (inline SVG, no library) ──
+  _chartCard(title, subtitle, body) {
+    return `<div class="card"><div class="card-header"><div><h3>${title}</h3><div style="font-size:0.75rem;color:#757575;font-weight:400;">${subtitle}</div></div></div><div class="card-body">${body}</div></div>`;
+  },
+  // Pie / donut chart. items: [{label, value, color}]
+  _pieChart(title, subtitle, items, donut) {
+    const total = items.reduce((s, i) => s + i.value, 0);
+    if (!total) return this._chartCard(title, subtitle, '<div style="color:#9E9E9E;font-size:0.85rem;">No data available.</div>');
+    const R = 80, C = 100, r = donut ? 48 : 0;
+    const pt = (ang, rad) => [C + rad * Math.cos(ang), C + rad * Math.sin(ang)];
+    let ang = -Math.PI / 2, paths = '';
+    items.filter(i => i.value > 0).forEach(i => {
+      const sweep = i.value / total * 2 * Math.PI;
+      if (items.filter(x => x.value > 0).length === 1) {
+        paths += donut
+          ? `<circle cx="${C}" cy="${C}" r="${(R + r) / 2}" fill="none" stroke="${i.color}" stroke-width="${R - r}"/>`
+          : `<circle cx="${C}" cy="${C}" r="${R}" fill="${i.color}"/>`;
+      } else {
+        const [x1, y1] = pt(ang, R), [x2, y2] = pt(ang + sweep, R), large = sweep > Math.PI ? 1 : 0;
+        if (donut) {
+          const [x3, y3] = pt(ang + sweep, r), [x4, y4] = pt(ang, r);
+          paths += `<path d="M${x1} ${y1} A${R} ${R} 0 ${large} 1 ${x2} ${y2} L${x3} ${y3} A${r} ${r} 0 ${large} 0 ${x4} ${y4} Z" fill="${i.color}" stroke="#fff" stroke-width="2"><title>${i.label}: ${i.value}</title></path>`;
+        } else {
+          paths += `<path d="M${C} ${C} L${x1} ${y1} A${R} ${R} 0 ${large} 1 ${x2} ${y2} Z" fill="${i.color}" stroke="#fff" stroke-width="2"><title>${i.label}: ${i.value}</title></path>`;
+        }
+      }
+      ang += sweep;
+    });
+    const centre = donut ? `<text x="${C}" y="${C - 2}" text-anchor="middle" font-size="26" font-weight="700" fill="#1B5E20">${total}</text><text x="${C}" y="${C + 16}" text-anchor="middle" font-size="11" fill="#757575">Total</text>` : '';
+    const legend = items.map(i => `<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;margin-bottom:6px;"><span style="width:12px;height:12px;border-radius:3px;background:${i.color};flex-shrink:0;"></span><span style="flex:1;color:#444;">${i.label}</span><b>${i.value}</b><span style="color:#9E9E9E;width:42px;text-align:right;">${Math.round(i.value / total * 100)}%</span></div>`).join('');
+    return this._chartCard(title, subtitle, `<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;"><svg viewBox="0 0 200 200" width="190" height="190" role="img" aria-label="${title}">${paths}${centre}</svg><div style="flex:1;min-width:150px;">${legend}</div></div>`);
+  },
+  // Column chart (vertical bars, one or more series). labels: [..]; series: [{name, color, values:[..]}]
+  _columnChart(title, subtitle, labels, series, unit) {
+    if (!labels.length) return this._chartCard(title, subtitle, '<div style="color:#9E9E9E;font-size:0.85rem;">No data available.</div>');
+    const W = 360, H = 220, L = 34, B = 34, T = 16, plotW = W - L - 8, plotH = H - B - T;
+    const max = Math.max(1, ...series.flatMap(s => s.values));
+    const step = Math.pow(10, Math.floor(Math.log10(max)));
+    const top = Math.ceil(max / step) * step;
+    const grp = plotW / labels.length, bw = Math.min(26, (grp * 0.7) / series.length);
+    let g = '';
+    const ticks = top < 4 ? top : 4;   // whole-number gridlines for small counts
+    for (let k = 0; k <= ticks; k++) {
+      const v = top / ticks * k, y = T + plotH - (v / top) * plotH;
+      g += `<line x1="${L}" y1="${y}" x2="${W - 8}" y2="${y}" stroke="#E0E0E0" stroke-width="1"/><text x="${L - 4}" y="${y + 3}" text-anchor="end" font-size="9" fill="#9E9E9E">${Math.round(v * 10) / 10}</text>`;
+    }
+    labels.forEach((lb, i) => {
+      const cx = L + grp * i + grp / 2, x0 = cx - (bw * series.length) / 2;
+      series.forEach((s, j) => {
+        const v = s.values[i], h = (v / top) * plotH, x = x0 + bw * j, y = T + plotH - h;
+        g += `<rect x="${x}" y="${y}" width="${bw - 2}" height="${Math.max(h, v > 0 ? 1 : 0)}" rx="2" fill="${s.color}"><title>${s.name} - ${lb}: ${v}${unit || ''}</title></rect>`;
+        g += `<text x="${x + (bw - 2) / 2}" y="${y - 3}" text-anchor="middle" font-size="9" font-weight="600" fill="#444">${v}</text>`;
+      });
+      g += `<text x="${cx}" y="${H - B + 14}" text-anchor="middle" font-size="9.5" fill="#444">${lb.length > 10 ? lb.slice(0, 9) + '…' : lb}</text>`;
+    });
+    const legend = series.length > 1 ? `<div style="display:flex;gap:16px;justify-content:center;font-size:0.8rem;margin-top:4px;">${series.map(s => `<span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:${s.color};"></span>${s.name}</span>`).join('')}</div>` : '';
+    return this._chartCard(title, subtitle, `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${title}">${g}</svg>${legend}`);
+  },
+
   renderDashboard() {
+    // Total counts every member; Active counts only members whose status is Active (so Active can never exceed Total).
     const members = this.state.members.length;
+    const activeMembers = this.state.members.filter(m => m.status === 'Active').length;
+    // Demand totals come from the society's own demand records (same approved-qty rule as the Breeder Seed Demand page).
+    const demands = this.state.demands;
+    const apprOf = d => {
+      const adm = this.state.adminDemands.find(x => x.id === d.id);
+      return adm ? (adm.approvedQty || 0) : (d.approvedQty != null ? d.approvedQty : (d.approvalStatus === 'Approved' ? d.qty : 0));
+    };
+    const totalDemanded = demands.reduce((s, d) => s + (d.qty || 0), 0);
+    const totalApproved = demands.reduce((s, d) => s + apprOf(d), 0);
+    // Chart data
+    const countBy = (list, keyFn) => { const m = {}; list.forEach(x => { const k = keyFn(x); m[k] = (m[k] || 0) + 1; }); return Object.keys(m).map(k => ({ label: k, value: m[k] })); };
+    const palette = ['#4CAF50', '#2196F3', '#FB8C00', '#9C27B0', '#F44336', '#00ACC1', '#8D6E63'];
+    const stColor = { 'Approved': '#4CAF50', 'Partially Approved': '#2196F3', 'Pending': '#FB8C00', 'Under Review': '#FFB300', 'Hold': '#9C27B0', 'Rejected': '#F44336', 'Dispatched': '#00ACC1', 'Received': '#2E7D32' };
+    const statusItems = countBy(demands, d => this._demandStatus(d)).map((i, k) => ({ ...i, color: stColor[i.label] || palette[k % palette.length] }));
+    const cropNames = [...new Set(demands.map(d => d.crop))];
+    const cropDemanded = cropNames.map(c => demands.filter(d => d.crop === c).reduce((s, d) => s + (d.qty || 0), 0));
+    const cropApproved = cropNames.map(c => demands.filter(d => d.crop === c).reduce((s, d) => s + apprOf(d), 0));
+    const catItems = countBy(this.state.members, m => m.category || 'Other').map((i, k) => ({ ...i, color: palette[k % palette.length] }));
     return `
     <div class="page-header">
       <h1>Welcome back, Ramesh Verma 👋</h1>
       <p>Rampur Krishi Samiti (SOC-001) | Kharif Season</p>
     </div>
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card" style="cursor:pointer;" title="Click to view list" onclick="App.navigate('dl-total-members')">
         <div class="stat-icon"><span class="material-icons">group</span></div>
-        <div class="stat-info"><div class="value">${members}</div><div class="label">Total Members</div><div class="change">↑ 3 this month</div></div>
+        <div class="stat-info"><div class="value">${members}</div><div class="label">Total Members</div></div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" style="cursor:pointer;" title="Click to view list" onclick="App.navigate('dl-active-members')">
         <div class="stat-icon"><span class="material-icons">how_to_reg</span></div>
-        <div class="stat-info"><div class="value">65</div><div class="label">Active Members</div></div>
+        <div class="stat-info"><div class="value">${activeMembers}</div><div class="label">Active Members</div></div>
       </div>
-      <div class="stat-card orange">
+      <div class="stat-card orange" style="cursor:pointer;" title="Click to view list" onclick="App.navigate('dl-total-demands')">
         <div class="stat-icon"><span class="material-icons">shopping_cart</span></div>
-        <div class="stat-info"><div class="value">3</div><div class="label">Demands Raised</div></div>
+        <div class="stat-info"><div class="value">${demands.length}</div><div class="label">Total Demand Raised</div></div>
       </div>
-      <div class="stat-card blue">
+      <div class="stat-card blue" style="cursor:pointer;" title="Click to view list" onclick="App.navigate('dl-approved')">
         <div class="stat-icon"><span class="material-icons">check_circle</span></div>
-        <div class="stat-info"><div class="value">200 Qt</div><div class="label">Approved Quantity</div></div>
+        <div class="stat-info"><div class="value">${totalApproved} Qt</div><div class="label">Total Approved Seed Quantity</div></div>
       </div>
       <div class="stat-card teal">
-        <div class="stat-icon"><span class="material-icons">agriculture</span></div>
-        <div class="stat-info"><div class="value">120 Qt</div><div class="label">Distributed Qty</div></div>
-      </div>
-      <div class="stat-card red">
-        <div class="stat-icon"><span class="material-icons">pending_actions</span></div>
-        <div class="stat-info"><div class="value">₹24,000</div><div class="label">Pending Payments</div></div>
+        <div class="stat-icon"><span class="material-icons">inventory</span></div>
+        <div class="stat-info"><div class="value">${totalDemanded} Qt</div><div class="label">Total Demanded Seed Quantity</div></div>
       </div>
     </div>
-    <!-- NEW: Stock cards for Society Dashboard -->
-    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-bottom:20px;">
-      <div class="stat-card blue">
-        <div class="stat-icon"><span class="material-icons">inventory_2</span></div>
-        <div class="stat-info"><div class="value">120 Qt</div><div class="label">Allocated Stock</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon"><span class="material-icons">storefront</span></div>
-        <div class="stat-info"><div class="value">117.5 Qt</div><div class="label">Available Stock</div></div>
-      </div>
-      <div class="stat-card teal">
-        <div class="stat-icon"><span class="material-icons">check_circle</span></div>
-        <div class="stat-info"><div class="value">2.5 Qt</div><div class="label">Distributed Stock</div></div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-icon"><span class="material-icons">account_balance_wallet</span></div>
-        <div class="stat-info"><div class="value">117.5 Qt</div><div class="label">Balance Stock</div></div>
-      </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;margin-bottom:20px;">
+      ${this._pieChart('Demands by Status', 'Share of demands raised, status wise', statusItems, true)}
+      ${this._columnChart('Demanded vs Approved Quantity', 'Crop wise, in Quintal', cropNames, [{ name: 'Demanded', color: '#FB8C00', values: cropDemanded }, { name: 'Approved', color: '#4CAF50', values: cropApproved }], ' Qt')}
+      ${this._pieChart('Total Members', 'Society members, category wise', catItems, true)}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div>
       <div class="card">
-        <div class="card-header"><h3>Recent Demands</h3><button class="btn btn-outline btn-sm" onclick="App.navigate('demand-history')">View All</button></div>
+        <div class="card-header"><h3>Recent Raised Demands</h3><button class="btn btn-outline btn-sm" onclick="App.navigate('demand-history')">View All</button></div>
         <div class="card-body" style="padding:0;">
           <table>
-            <thead><tr><th>Demand ID</th><th>Crop</th><th>Qty</th><th>Status</th></tr></thead>
+            <thead><tr><th>Demand ID</th><th>Demand Date</th><th>Season</th><th>Crop</th><th>Variety</th><th>Qty</th><th>Status</th></tr></thead>
             <tbody>
               ${this.state.demands.map(d => `<tr>
-                <td>${d.id}</td><td>${d.crop}</td><td>${d.qty} Qt</td>
+                <td>${d.id}</td><td>${d.date}</td><td>${d.season}</td><td>${d.crop}</td><td>${d.variety}</td><td>${d.qty} Qt</td>
                 <td><span class="badge ${d.approvalStatus === 'Approved' ? 'badge-success' : d.approvalStatus === 'Under Review' ? 'badge-warning' : 'badge-info'}">${d.approvalStatus}</span></td>
               </tr>`).join('')}
             </tbody>
           </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><h3>Quick Actions</h3></div>
-        <div class="card-body" style="display:grid;gap:12px;">
-          <button class="btn btn-primary" onclick="App.navigate('add-member')"><span class="material-icons">person_add</span> Soceity Member Onboarding</button>
-          <button class="btn btn-outline" onclick="App.navigate('raise-demand')"><span class="material-icons">add_shopping_cart</span> Raise Breeder Seed Demand</button>
-          <button class="btn btn-info" onclick="App.navigate('distribution-register')"><span class="material-icons">agriculture</span> Distribute Seeds</button>
-          <button class="btn btn-gray" onclick="App.navigate('society-reports')"><span class="material-icons">bar_chart</span> View Reports</button>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="margin-top:20px;">
-      <div class="card-header"><h3>Breeder Seeds Distribution Progress</h3></div>
-      <div class="card-body">
-        <div style="margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-size:0.85rem;color:#666;">Active Members (65 / min. 50)</span>
-            <span style="font-size:0.85rem;font-weight:600;color:#2E7D32;">✓ Eligible for Demand</span>
-          </div>
-          <div style="background:#E8F5E9;border-radius:4px;height:10px;overflow:hidden;">
-            <div style="width:100%;height:100%;background:#4CAF50;border-radius:4px;"></div>
-          </div>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-size:0.85rem;color:#666;">Distribution Complete (120 / 200 Qt)</span>
-            <span style="font-size:0.85rem;font-weight:600;">60%</span>
-          </div>
-          <div style="background:#E8F5E9;border-radius:4px;height:10px;overflow:hidden;">
-            <div style="width:60%;height:100%;background:#4CAF50;border-radius:4px;"></div>
-          </div>
         </div>
       </div>
     </div>`;
@@ -2626,7 +2654,7 @@ const App = {
     <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-bottom:20px;">
       <div class="stat-card blue">
         <div class="stat-icon"><span class="material-icons">inventory_2</span></div>
-        <div class="stat-info"><div class="value">2,150 Qt</div><div class="label">Total Stock</div></div>
+        <div class="stat-info"><div class="value">2,150 Qt</div><div class="label">Breeder Stock</div></div>
       </div>
       <div class="stat-card purple">
         <div class="stat-icon"><span class="material-icons">assignment_turned_in</span></div>
@@ -4207,14 +4235,16 @@ const App = {
   // AVAILABLE STOCK PAGE
   // ============================================================
   renderSocAvailableStock() {
-    const rs = this.state.receivedStock;
-    // Available balance per row and per seed type.
+    // Breeder stock comes from seed received against demands. Foundation / Certified are entered by the Society President,
+    // and Hybrid is allocated directly by Admin, so those boxes come from their own records (see dashboard-lists.js).
+    const rs = this.state.receivedStock.filter(r => r.seedType === 'Breeder');
     const balOf = r => r.allocatedQty - r.distributedQty;
-    const totalBal = rs.reduce((s, r) => s + balOf(r), 0);
-    const typeBal = t => rs.filter(r => r.seedType === t).reduce((s, r) => s + balOf(r), 0);
-    const breederBal = typeBal('Breeder');
-    const foundationBal = typeBal('Foundation');
-    const certifiedBal = typeBal('Certified');
+    const sbt = this.stockByType();
+    const breederBal = rs.reduce((s, r) => s + balOf(r), 0);
+    const foundationBal = sbt.Foundation;
+    const certifiedBal = sbt.Certified;
+    const hybridBal = sbt.Hybrid;
+    const totalBal = Math.round((breederBal + foundationBal + certifiedBal + hybridBal) * 100) / 100;
     const seedTypeBadge = t => t === 'Breeder' ? 'badge-success' : t === 'Foundation' ? 'badge-info' : 'badge-purple';
     return `
     <div class="page-header">
@@ -4222,47 +4252,45 @@ const App = {
       <p>Seed stock received from Beej Sangh — Rampur Krishi Samiti (SOC-001)</p>
     </div>
     <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-bottom:24px;">
-      <div class="stat-card blue">
+      <div class="stat-card blue" style="cursor:pointer;" title="Click to view report" onclick="App.navigate('as-total')">
         <div class="stat-icon"><span class="material-icons">inventory_2</span></div>
         <div class="stat-info">
           <div class="value">${totalBal} Qt</div>
           <div class="label">Total Stock</div>
         </div>
       </div>
-      <div class="stat-card teal">
+      <div class="stat-card teal" style="cursor:pointer;" title="Click to view report" onclick="App.navigate('as-breeder')">
         <div class="stat-icon"><span class="material-icons">eco</span></div>
         <div class="stat-info">
           <div class="value">${breederBal} Qt</div>
           <div class="label">Breeder Stock</div>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" style="cursor:pointer;" title="Click to view report" onclick="App.navigate('as-foundation')">
         <div class="stat-icon"><span class="material-icons">grass</span></div>
         <div class="stat-info">
           <div class="value">${foundationBal} Qt</div>
           <div class="label">Foundation Seed Stock</div>
         </div>
       </div>
-      <div class="stat-card orange">
+      <div class="stat-card orange" style="cursor:pointer;" title="Click to view report" onclick="App.navigate('as-certified')">
         <div class="stat-icon"><span class="material-icons">verified</span></div>
         <div class="stat-info">
           <div class="value">${certifiedBal} Qt</div>
           <div class="label">Certified Seed Stock</div>
         </div>
       </div>
+      <div class="stat-card purple" style="cursor:pointer;" title="Click to view report" onclick="App.navigate('as-hybrid')">
+        <div class="stat-icon"><span class="material-icons">science</span></div>
+        <div class="stat-info">
+          <div class="value">${hybridBal} Qt</div>
+          <div class="label">Hybrid Seed Stock</div>
+        </div>
+      </div>
     </div>
-    ${totalBal > 0 ? `
-    <div class="alert alert-success">
-      <span class="material-icons">check_circle</span>
-      <div>You have <b>${totalBal} Quintal</b> of seed available for distribution to members.</div>
-    </div>` : `
-    <div class="alert alert-warning">
-      <span class="material-icons">warning</span>
-      <div>No stock available. Please wait for Beej Sangh to dispatch allocated seed.</div>
-    </div>`}
     <div class="card">
       <div class="card-header">
-        <h3>Seed Availability — Crop / Variety / Seed Type Wise</h3>
+        <h3>Breeder Seed Availability — Crop / Variety / Seed Type Wise</h3>
         <button class="btn btn-primary btn-sm" onclick="App.navigate('soc-member-distribution')">
           <span class="material-icons">agriculture</span> Distribute to Members
         </button>
@@ -4272,7 +4300,7 @@ const App = {
           <table>
             <thead>
               <tr>
-                <th>Crop</th><th>Variety</th><th>Seed Type</th><th>Season</th>
+                <th>Crop</th><th>Variety</th><th>Season</th>
                 <th>Allocated (Qt)</th><th>Distributed (Qt)</th>
                 <th>Available (Qt)</th><th>Received On</th>
               </tr>
@@ -4283,7 +4311,6 @@ const App = {
       return `<tr>
                   <td><b>${r.crop}</b></td>
                   <td>${r.variety}</td>
-                  <td><span class="badge ${seedTypeBadge(r.seedType)}">${r.seedType}</span></td>
                   <td>${r.season}</td>
                   <td style="color:#1565C0;font-weight:600;">${r.allocatedQty}</td>
                   <td style="color:#2E7D32;font-weight:600;">${r.distributedQty}</td>
@@ -4404,6 +4431,10 @@ const App = {
             <select class="form-control" id="nd-season">
               <option>Kharif</option><option>Rabi</option><option>Summer</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label>Seed Type</label>
+            <input class="form-control" id="nd-seedtype" value="Breeder Seed" readonly style="background:#f5f5f5;font-weight:600;color:#2E7D32;">
           </div>
           <div class="form-group">
             <label>Crop *</label>

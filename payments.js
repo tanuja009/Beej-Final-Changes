@@ -117,10 +117,36 @@
         && (!q || [p.id, p.demandId, p.crop, p.variety, p.society].join(' ').toLowerCase().indexOf(q) !== -1);
     });
     var sum = function (arr, fn) { return arr.filter(fn).reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0); };
-    var paid = sum(rows, function (p) { return p.type !== 'Refund'; });
-    var adv = sum(rows, function (p) { return p.type === 'Advance (25%)'; });
-    var bal = sum(rows, function (p) { return p.type === 'Balance (75%)'; });
-    var ref = sum(rows, function (p) { return p.type === 'Refund'; });
+    // Summary boxes cover all of the society's payments (admin: the selected society), independent of the type / mode / search filters.
+    var scope = base.filter(function (p) { return !isAdmin || !f.society || p.socCode === f.society; });
+    var paid = sum(scope, function (p) { return p.type !== 'Refund'; });
+    var adv = sum(scope, function (p) { return p.type === 'Advance (25%)'; });
+    var ref = sum(scope, function (p) { return p.type === 'Refund'; });
+    // Group by demand to find fully paid demands and the balance still pending on the rest.
+    var perDemand = {};
+    scope.forEach(function (p) {
+      var g = perDemand[p.demandId] || (perDemand[p.demandId] = { adv: 0, bal: 0, ref: 0 });
+      if (p.type === 'Advance (25%)') g.adv += Number(p.amount) || 0;
+      else if (p.type === 'Balance (75%)') g.bal += Number(p.amount) || 0;
+      else if (p.type === 'Refund') g.ref += Number(p.amount) || 0;
+    });
+    var totalOf = function (id, advAmt) {
+      var d = App.state.demands.find(function (x) { return x.id === id; });
+      if (d) return Math.round((d.qty || 0) * (d.rate || 2400));
+      var a = (App.state.adminDemands || []).find(function (x) { return x.id === id; });
+      return a ? Math.round((a.requestedQty || 0) * 2400) : advAmt * 4;
+    };
+    var isRejected = function (id) {
+      var a = (App.state.adminDemands || []).find(function (x) { return x.id === id; });
+      var d = App.state.demands.find(function (x) { return x.id === id; });
+      return (a && a.approvalStatus === 'Rejected') || (d && d.approvalStatus === 'Rejected');
+    };
+    var fullPaid = 0, pending = 0;
+    Object.keys(perDemand).forEach(function (id) {
+      var g = perDemand[id];
+      if (g.bal > 0) fullPaid += g.adv + g.bal;                                  // advance + balance both paid
+      else if (g.adv > 0 && !g.ref && !isRejected(id)) pending += Math.max(0, totalOf(id, g.adv) - g.adv);   // advance paid, balance still due
+    });
     var rs = function (n) { return '\u20B9' + Number(n).toLocaleString('en-IN'); };
     var card = function (cls, icon, value, label) {
       return '<div class="stat-card ' + cls + '"><div class="stat-icon"><span class="material-icons">' + icon + '</span></div>'
@@ -154,10 +180,11 @@
     return '<div class="page-header"><h1>' + (isAdmin ? 'Payment Transactions' : 'Payment History') + '</h1>'
       + '<p>' + (isAdmin ? 'All payments and refunds of every society' : 'All payments made by ' + MY_SOC.name + ' (' + MY_SOC.code + ')') + '</p></div>'
       + '<div class="stats-grid">'
-      + card('', 'payments', rs(paid), 'Total Paid')
-      + card('blue', 'account_balance_wallet', rs(adv), 'Advance (25%)')
-      + card('teal', 'task_alt', rs(bal), 'Balance (75%)')
-      + card('red', 'currency_exchange', rs(ref), 'Refunded')
+      + card('', 'payments', rs(paid), 'Total Paid Amount')
+      + card('blue', 'account_balance_wallet', rs(adv), 'Total Advance Paid Amount')
+      + card('orange', 'pending_actions', rs(pending), 'Total Pending Balance Amount')
+      + card('teal', 'task_alt', rs(fullPaid), 'Total Full Paid Amount')
+      + card('red', 'currency_exchange', rs(ref), 'Total Refunded Amount')
       + '</div>'
       + '<div class="search-bar">'
       + '<div class="search-field"><label>Search</label><input class="form-control" placeholder="Txn ID, Demand ID, Crop…" value="' + (f.search || '') + '" onchange="' + setF('search') + '"/></div>'

@@ -138,10 +138,12 @@ AC3. No mode selected: ""Please select a payment mode"".
 AC4. On payment, one demand is created (DEM-2024-NNN) with status ""Under Review"" and payment ""Advance Paid (25%)"". Procurement Year, Demand Date, Expected Delivery and all choices are saved.
 AC5. The success screen shows Transaction ID, Payment Mode, Amount Paid, ""✓ Advance Paid"" and an invoice download.
 AC6. The payment is recorded in Payment History as ""Advance (25%)""."
-Breeder Seed Demand (Society),DEM-07,Full (Balance 75%) Payment,"As a Society Head, I want to pay the remaining 75% after approval, so that my demand is fully paid.","AC1. Before approval: ""Full payment is available once the demand is approved.""
-AC2. Already paid: ""This demand is already fully paid.""
-AC3. The preview shows Advance Already Paid (25%), Balance Payment Due (75%) and the note ""After payment, the full invoice (100%) will be generated.""
-AC4. After payment, the demand becomes ""Fully Paid"", the success screen shows ""✓ Fully Paid"", the Full invoice is generated, and Payment History records ""Balance (75%)""."
+Breeder Seed Demand (Society),DEM-07,Full (Balance 75%) Payment,"As a Society Head, I want to pay the remaining 75% after approval, so that my demand is fully paid.","AC1. Before approval, the Full Payment option shall be enabled only after the demand status becomes ""Received"".
+AC2. Once the demand is marked as ""Received"", the Society President shall be able to initiate the full balance payment (75%).
+AC3. The payment preview shall display Advance Already Paid (25%), Balance Payment Due (75%), and the note: ""After payment, the full invoice (100%) will be generated.""
+AC4. After successful balance payment, the demand status shall become ""Fully Paid"". The success screen shall display ""Fully Paid"", the full invoice (100%) shall be generated, and Payment History shall record the transaction as ""Balance (75%)"".
+AC5. In case of failed balance payment, the system shall allow the user to retry the payment up to 3 attempts.
+AC6. If the payment fails after all 3 retry attempts, the user shall be required to change/update the bank account details before initiating the payment again."
 Breeder Seed Demand (Society),DEM-08,Demand Details & Invoices,"As a Society Head, I want to view a demand and download its invoices, so that I have a record.","AC1. The View popup shows exactly the Raise Demand form fields: Society Name, Society Code, District, Block, Procurement Year, Demand Date, Season, Crop, First / Second / Third Choice Variety, Quantity Demanded (Kg), Price per Quintal, Total Amount, Expected Date of Delivery.
 AC2. ""25% Invoice"" is shown after the advance payment and ""Full Invoice"" after the full payment.
 AC3. Advance invoice not available: ""Advance not paid yet."" Full invoice not available: ""Full payment not completed yet.""

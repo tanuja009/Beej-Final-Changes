@@ -114,7 +114,7 @@
       return (!isAdmin || !f.society || p.socCode === f.society)
         && (!f.type || p.type === f.type)
         && (!f.mode || p.mode === f.mode)
-        && (!q || [p.id, p.demandId, p.crop, p.variety, p.society].join(' ').toLowerCase().indexOf(q) !== -1);
+        && (!q || [p.id, p.crop, p.variety, p.society].join(' ').toLowerCase().indexOf(q) !== -1);
     });
     var sum = function (arr, fn) { return arr.filter(fn).reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0); };
     // Summary boxes cover all of the society's payments (admin: the selected society), independent of the type / mode / search filters.
@@ -161,13 +161,12 @@
     var societies = (this.state.societies || []).map(function (s) { return opt(s.code, f.society, s.name + ' (' + s.code + ')'); }).join('');
 
     var body = rows.length === 0
-      ? '<tr><td colspan="' + (isAdmin ? 10 : 9) + '" style="text-align:center;padding:40px;color:#9E9E9E;">No transactions found</td></tr>'
+      ? '<tr><td colspan="' + (isAdmin ? 9 : 8) + '" style="text-align:center;padding:40px;color:#9E9E9E;">No transactions found</td></tr>'
       : rows.map(function (p) {
         return '<tr>'
           + '<td><b>' + p.id + '</b></td>'
           + '<td>' + p.date + '</td>'
           + (isAdmin ? '<td><div style="font-weight:500;">' + p.society + '</div><div style="font-size:0.72rem;color:#9E9E9E;">' + p.socCode + '</div></td>' : '')
-          + '<td>' + p.demandId + '</td>'
           + '<td>' + p.crop + '<div style="font-size:0.72rem;color:#9E9E9E;">' + p.variety + '</div></td>'
           + '<td>' + typeBadge(p.type) + '</td>'
           + '<td>' + p.mode + '</td>'
@@ -177,6 +176,16 @@
           + '</tr>';
       }).join('');
 
+    // Data for the Excel / PDF download (what is currently listed, with the summary boxes at the end).
+    var exportKey = isAdmin ? 'admin-payments' : 'soc-payments';
+    App._reportData = App._reportData || {};
+    App._reportData[exportKey] = {
+      title: isAdmin ? 'Payment Transactions' : 'Payment History',
+      subtitle: 'Total Paid ' + rs(paid) + ' | Advance ' + rs(adv) + ' | Pending Balance ' + rs(pending) + ' | Full Paid ' + rs(fullPaid) + ' | Refunded ' + rs(ref),
+      head: ['Txn ID', 'Date'].concat(isAdmin ? ['Society'] : [], ['Crop', 'Variety', 'Type', 'Mode', 'Amount (Rs)', 'Status']),
+      rows: rows.map(function (p) { return [p.id, p.date].concat(isAdmin ? [p.society + ' (' + p.socCode + ')'] : [], [p.crop, p.variety, p.type, p.mode, (p.type === 'Refund' ? '-' : '') + p.amount, p.status]); }),
+      foot: []
+    };
     return '<div class="page-header"><h1>' + (isAdmin ? 'Payment Transactions' : 'Payment History') + '</h1>'
       + '<p>' + (isAdmin ? 'All payments and refunds of every society' : 'All payments made by ' + MY_SOC.name + ' (' + MY_SOC.code + ')') + '</p></div>'
       + '<div class="stats-grid">'
@@ -187,15 +196,15 @@
       + card('red', 'currency_exchange', rs(ref), 'Total Refunded Amount')
       + '</div>'
       + '<div class="search-bar">'
-      + '<div class="search-field"><label>Search</label><input class="form-control" placeholder="Txn ID, Demand ID, Crop…" value="' + (f.search || '') + '" onchange="' + setF('search') + '"/></div>'
+      + '<div class="search-field"><label>Search</label><input class="form-control" placeholder="Txn ID, Crop…" value="' + (f.search || '') + '" onchange="' + setF('search') + '"/></div>'
       + (isAdmin ? '<div class="search-field"><label>Society</label><select class="form-control" onchange="' + setF('society') + '">' + opt('', f.society, 'All Societies') + societies + '</select></div>' : '')
       + '<div class="search-field"><label>Payment Type</label><select class="form-control" onchange="' + setF('type') + '">' + opt('', f.type, 'All Types') + ['Advance (25%)', 'Balance (75%)', 'Refund'].map(function (t) { return opt(t, f.type); }).join('') + '</select></div>'
       + '<div class="search-field"><label>Payment Mode</label><select class="form-control" onchange="' + setF('mode') + '">' + opt('', f.mode, 'All Modes') + MODE_LIST.map(function (m) { return opt(m, f.mode); }).join('') + '</select></div>'
       + '<div class="search-field"><label>&nbsp;</label><button class="btn btn-gray btn-sm" onclick="App.state.payFilter={society:\'\',type:\'\',mode:\'\',search:\'\'};App.render()"><span class="material-icons">clear</span> Reset</button></div>'
       + '</div>'
-      + '<div class="card"><div class="card-header"><h3>Transactions <span style="color:#757575;font-weight:400;font-size:.85rem;">(' + rows.length + ' records)</span></h3></div>'
+      + '<div class="card"><div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><h3>Transactions <span style="color:#757575;font-weight:400;font-size:.85rem;">(' + rows.length + ' records)</span></h3>' + App.reportButtons(exportKey) + '</div>'
       + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table><thead><tr>'
-      + '<th>Txn ID</th><th>Date</th>' + (isAdmin ? '<th>Society</th>' : '') + '<th>Demand ID</th><th>Crop / Variety</th><th>Type</th><th>Mode</th><th>Amount</th><th>Status</th><th>Receipt</th>'
+      + '<th>Txn ID</th><th>Date</th>' + (isAdmin ? '<th>Society</th>' : '') + '<th>Crop / Variety</th><th>Type</th><th>Mode</th><th>Amount</th><th>Status</th><th>Receipt</th>'
       + '</tr></thead><tbody>' + body + '</tbody></table></div></div></div>'
       + (this.state.payReceiptId ? this.renderPayReceipt() : '');
   };
@@ -214,7 +223,6 @@
       + row('Transaction ID', '<b>' + p.id + '</b>')
       + row('Date', p.date)
       + row('Society', p.society + ' (' + p.socCode + ')')
-      + row('Demand ID', p.demandId)
       + row('Crop / Variety', p.crop + ' / ' + p.variety)
       + row('Payment Type', p.type)
       + row('Payment Mode', p.mode)

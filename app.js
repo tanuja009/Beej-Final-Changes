@@ -740,6 +740,13 @@ const App = {
   // ============================
   // SCREEN 2: SOCIETY DASHBOARD
   // ============================
+  // First / Second / Third choice variety cells for a demand (demand raised reports).
+  _choiceTds(d) {
+    const first = (d.varieties && d.varieties.length) ? d.varieties.join(', ') : d.variety;
+    const j = arr => (arr && arr.length) ? arr.join(', ') : '—';
+    return `<td>${first || '—'}</td><td>${j(d.secondChoice)}</td><td>${j(d.thirdChoice)}</td>`;
+  },
+
   // ── Dashboard charts (inline SVG, no library) ──
   _chartCard(title, subtitle, body) {
     return `<div class="card"><div class="card-header"><div><h3>${title}</h3><div style="font-size:0.75rem;color:#757575;font-weight:400;">${subtitle}</div></div></div><div class="card-body">${body}</div></div>`;
@@ -857,10 +864,10 @@ const App = {
         <div class="card-header"><h3>Recent Raised Demands</h3><button class="btn btn-outline btn-sm" onclick="App.navigate('demand-history')">View All</button></div>
         <div class="card-body" style="padding:0;">
           <table>
-            <thead><tr><th>Demand ID</th><th>Demand Date</th><th>Season</th><th>Crop</th><th>Variety</th><th>Qty</th><th>Status</th></tr></thead>
+            <thead><tr><th>Season</th><th>Crop</th><th>First Choice Variety</th><th>Second Choice Variety</th><th>Third Choice Variety</th><th>Demand Date</th><th>Qty</th><th>Status</th></tr></thead>
             <tbody>
               ${this.state.demands.map(d => `<tr>
-                <td>${d.id}</td><td>${d.date}</td><td>${d.season}</td><td>${d.crop}</td><td>${d.variety}</td><td>${d.qty} Qt</td>
+                <td>${d.season}</td><td>${d.crop}</td>${this._choiceTds(d)}<td>${d.date}</td><td>${d.qty} Qt</td>
                 <td><span class="badge ${d.approvalStatus === 'Approved' ? 'badge-success' : d.approvalStatus === 'Under Review' ? 'badge-warning' : 'badge-info'}">${d.approvalStatus}</span></td>
               </tr>`).join('')}
             </tbody>
@@ -2040,7 +2047,7 @@ const App = {
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
           <div style="width:48px;height:48px;background:#4CAF50;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;">🌾</div>
           <div><h3 style="font-size:1.1rem;font-weight:700;color:#2E7D32;">${isFull ? 'Full Payment Summary' : 'Demand Application Summary'}</h3><p style="font-size:0.82rem;color:#666;">Rampur Krishi Samiti (SOC-001)</p></div>
-          <div style="margin-left:auto;"><span class="badge ${isFull ? 'badge-info' : 'badge-warning'}">${isFull ? d.id : 'Draft'}</span></div>
+          <div style="margin-left:auto;"><span class="badge ${isFull ? 'badge-info' : 'badge-warning'}">${isFull ? 'Balance Payment' : 'Draft'}</span></div>
         </div>
         <div class="preview-grid">
           <div class="preview-item"><label>Season</label><span>${d.season}</span></div>
@@ -2062,7 +2069,7 @@ const App = {
       </div>
       ${isFull ? `<div class="alert alert-info">
         <span class="material-icons">info</span>
-        <div>This is the <b>final balance payment (75%)</b> of <b>₹${balance.toLocaleString()}</b> for demand <b>${d.id}</b>. After payment, the full invoice (100%) will be generated.</div>
+        <div>This is the <b>final balance payment (75%)</b> of <b>₹${balance.toLocaleString()}</b>. After payment, the full invoice (100%) will be generated.</div>
       </div>` : ''}
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
         <button class="btn btn-gray" onclick="App.navigate('${backPage}')"><span class="material-icons">arrow_back</span> Back</button>
@@ -2091,7 +2098,6 @@ const App = {
         <div class="invoice-header">
           <div>
             <div class="invoice-title">🌾 ${isFull ? 'BALANCE PAYMENT SUMMARY' : 'PAYMENT SUMMARY'}</div>
-            ${isFull && d.id ? `<div class="invoice-no">Demand #${d.id}</div>` : ''}
             <div class="invoice-no">Invoice will be generated after payment</div>
           </div>
           <div style="text-align:right;">
@@ -2187,13 +2193,13 @@ const App = {
     const cd = this.state.currentDemand || {};
     if (isFull) {
       if (!cd.id) return [];
-      return [{ id: cd.id, kind: 'full', no: 'INV-FULL-' + cd.id, label: `${cd.crop} · ${cd.variety}`, type: 'Full Payment (100%)', amount: cd.cost || 0 }];
+      return [{ id: cd.id, kind: 'full', no: 'INV-FULL-' + String(cd.id).replace(/^DEM-/, ''), label: `${cd.crop} · ${cd.variety}`, type: 'Full Payment (100%)', amount: cd.cost || 0 }];
     }
     return (this.state._lastDemandIds || []).map(id => {
       const dm = this.state.demands.find(x => x.id === id);
       if (!dm) return null;
       const total = (dm.qty || 0) * (dm.rate || 2400);
-      return { id, kind: 'advance', no: 'INV-ADV-' + id, label: `${dm.crop} · ${dm.variety}`, type: 'Advance Payment (25%)', amount: Math.round(total * 0.25) };
+      return { id, kind: 'advance', no: 'INV-ADV-' + String(id).replace(/^DEM-/, ''), label: `${dm.crop} · ${dm.variety}`, type: 'Advance Payment (25%)', amount: Math.round(total * 0.25) };
     }).filter(Boolean);
   },
 
@@ -2280,7 +2286,7 @@ const App = {
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Crop</th><th>Date</th><th>Season</th><th>Variety</th><th>Requested</th><th>Approved</th><th>Pending</th><th>Payment</th><th>Status</th><th>Actions</th><th>Invoices</th></tr>
+              <tr><th>Crop</th><th>Date</th><th>Season</th><th>First Choice Variety</th><th>Second Choice Variety</th><th>Third Choice Variety</th><th>Requested</th><th>Approved</th><th>Pending</th><th>Payment</th><th>Status</th><th>Actions</th><th>Invoices</th></tr>
             </thead>
             <tbody>
               ${this.state.demands.map(d => {
@@ -2306,8 +2312,7 @@ const App = {
                 <td>${d.crop}</td>
                 <td>${d.date}</td>
                 <td>${d.season}</td>
-                <td>${d.variety}${(d.secondChoice && d.secondChoice.length) || (d.thirdChoice && d.thirdChoice.length)
-          ? `<div style="font-size:0.72rem;color:#757575;">${[(d.secondChoice || []).length ? '2nd: ' + d.secondChoice.join(', ') : '', (d.thirdChoice || []).length ? '3rd: ' + d.thirdChoice.join(', ') : ''].filter(Boolean).join(' · ')}</div>` : ''}</td>
+                ${this._choiceTds(d)}
                 <td style="font-weight:600;">${d.qty} Qt</td>
                 <td style="color:#2E7D32;font-weight:600;">${approved > 0 ? approved + ' Qt' : '—'}</td>
                 <td style="color:${pending > 0 ? '#E65100' : '#9E9E9E'};font-weight:600;">${pending > 0 ? pending + ' Qt' : '—'}</td>
@@ -2385,12 +2390,11 @@ const App = {
     const balance = total - advance;
     const isAdv = kind === 'advance';
     const amount = isAdv ? advance : total;
-    const invNo = (isAdv ? 'INV-ADV-' : 'INV-FULL-') + d.id;
+    const invNo = (isAdv ? 'INV-ADV-' : 'INV-FULL-') + String(d.id).replace(/^DEM-/, '');
     const rows = [
       ['Invoice No', invNo],
       ['Invoice Type', isAdv ? 'Advance Payment (25%)' : 'Full Payment (100%)'],
       ['Date', new Date().toLocaleDateString('en-IN')],
-      ['Demand ID', d.id],
       ['Society', 'Rampur Krishi Samiti (SOC-001)'],
       ['Crop / Variety', d.crop + ' / ' + d.variety],
       ['Quantity', d.qty + ' Quintal'],
@@ -2558,10 +2562,10 @@ const App = {
       <div class="card-body" style="padding:0;">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Transaction ID</th><th>Date</th><th>Demand ID</th><th>Amount</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>Transaction ID</th><th>Date</th><th>Amount</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               ${payments.map(p => `<tr>
-                <td><b>${p.txn}</b></td><td>${p.date}</td><td>${p.demandId}</td>
+                <td><b>${p.txn}</b></td><td>${p.date}</td>
                 <td style="font-weight:600;">${p.amount}</td><td>${p.type}</td>
                 <td><span class="badge ${p.status === 'Success' ? 'badge-success' : 'badge-warning'}">${p.status}</span></td>
                 <td><button class="btn btn-gray btn-sm"><span class="material-icons" style="font-size:14px;">download</span></button></td>
@@ -2711,10 +2715,10 @@ const App = {
       <div class="card-body" style="padding:0;">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Demand ID</th><th>Society</th><th>Crop</th><th>Qty</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th>Society</th><th>Crop</th><th>Qty</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
               ${this.state.adminDemands.map(d => `<tr>
-                <td><b>${d.id}</b></td><td>${d.society}</td><td>${d.crop}</td>
+                <td>${d.society}</td><td>${d.crop}</td>
                 <td>${d.qty} Qt</td>
                 <td><span class="badge ${d.payStatus === 'Paid' ? 'badge-success' : 'badge-warning'}">${d.payStatus}</span></td>
                 <td><span class="badge ${d.approvalStatus === 'Approved' ? 'badge-success' : d.approvalStatus === 'Pending' ? 'badge-warning' : 'badge-purple'}">${d.approvalStatus}</span></td>
@@ -3010,7 +3014,7 @@ const App = {
               <h3 style="color:#2E7D32;margin:0;">Refund Processed</h3>
               <p style="color:#666;font-size:0.85rem;margin:4px 0 0;">Advance payment refunded to the society.</p>
             </div>
-            ${[['Transaction ID', r.txn], ['Demand ID', r.demandId], ['Society', r.society + ' (' + r.socCode + ')'], ['Crop / Variety', r.crop + ' / ' + r.variety], ['Refund Mode', r.mode], ['Date', r.date]].map(([l, v]) => `
+            ${[['Transaction ID', r.txn], ['Society', r.society + ' (' + r.socCode + ')'], ['Crop / Variety', r.crop + ' / ' + r.variety], ['Refund Mode', r.mode], ['Date', r.date]].map(([l, v]) => `
               <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:0.86rem;"><span style="color:#757575;">${l}</span><span style="font-weight:600;">${v}</span></div>`).join('')}
             <div style="display:flex;justify-content:space-between;align-items:center;background:#F1F8E9;border-radius:8px;padding:12px 14px;margin-top:14px;">
               <span style="color:#1B5E20;font-weight:600;">Refund Amount</span>
@@ -3039,7 +3043,7 @@ const App = {
           </div>
           <div class="modal-body">
             <div style="background:#FFF3E0;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:0.85rem;color:#5D4037;">
-              Refunding advance payment of <b>₹${amount.toLocaleString()}</b> to <b>${dem.society}</b> for rejected demand <b>${dem.id}</b>.
+              Refunding advance payment of <b>₹${amount.toLocaleString()}</b> to <b>${dem.society}</b> for the rejected demand.
             </div>
             <div class="payment-modes">
               ${m('upi', 'qr_code_2', 'UPI Transfer')}
@@ -3071,8 +3075,6 @@ const App = {
               <div class="invoice-header">
                 <div>
                   <div class="invoice-title">💸 REFUND</div>
-                  <div class="invoice-no">Ref #RFD-${dem.id}</div>
-                  <div class="invoice-no">Demand #${dem.id}</div>
                 </div>
                 <div style="text-align:right;">
                   <div style="font-size:0.78rem;color:#666;">Date: ${new Date().toLocaleDateString('en-IN')}</div>
@@ -3196,7 +3198,7 @@ const App = {
     dem.approvedVariety = ch.variety;
     dem.approvedChoice = ch.label;
     dem.remarks = '';
-    this._afterDecision(`✓ ${dem.id} fully approved — ${dem.approvedQty} Qt of ${ch.variety} (${ch.label})`);
+    this._afterDecision(`✓ Fully approved — ${dem.approvedQty} Qt of ${ch.variety} (${ch.label})`);
   },
   // Close the popup after Approve / Partial; from the review page go back to the demand list.
   _afterDecision(msg) {
@@ -3244,7 +3246,7 @@ const App = {
     <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandPopup()">
       <div class="modal-box" style="max-width:500px;">
         <div class="modal-header" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);">
-          <h3>✅ Full Approval — ${dem.id}</h3>
+          <h3>✅ Full Approval</h3>
           <button class="modal-close" onclick="App.closeDemandPopup()">✕</button>
         </div>
         <div class="modal-body">
@@ -3269,7 +3271,7 @@ const App = {
     <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandPopup()">
       <div class="modal-box" style="max-width:500px;">
         <div class="modal-header" style="background:linear-gradient(135deg,#1565C0,#0D47A1);">
-          <h3>⚖️ Partial Approval — ${dem.id}</h3>
+          <h3>⚖️ Partial Approval</h3>
           <button class="modal-close" onclick="App.closeDemandPopup()">✕</button>
         </div>
         <div class="modal-body">
@@ -3313,7 +3315,7 @@ const App = {
     <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandPopup()">
       <div class="modal-box" style="max-width:460px;">
         <div class="modal-header" style="background:linear-gradient(135deg,#C62828,#B71C1C);">
-          <h3>❌ Reject Demand — ${dem.id}</h3>
+          <h3>❌ Reject Demand</h3>
           <button class="modal-close" onclick="App.closeDemandPopup()">✕</button>
         </div>
         <div class="modal-body">
@@ -3351,7 +3353,7 @@ const App = {
     <div class="modal-overlay" onclick="if(event.target===this)App.closeDemandPopup()">
       <div class="modal-box" style="max-width:460px;">
         <div class="modal-header" style="background:linear-gradient(135deg,#6A1B9A,#4A148C);">
-          <h3>⏸️ Put On Hold — ${dem.id}</h3>
+          <h3>⏸️ Put On Hold</h3>
           <button class="modal-close" onclick="App.closeDemandPopup()">✕</button>
         </div>
         <div class="modal-body">
@@ -3432,7 +3434,7 @@ const App = {
     dem.remarks = rsn + ': ' + rmk;
     this.state.demandActionPopup = null;
     this.state.reviewDemandId = null;
-    this.showToast(`Demand ${dem.id} rejected`);
+    this.showToast('Demand rejected');
     this.render();
   },
 
@@ -3447,7 +3449,7 @@ const App = {
     dem.remarks = rsn + ': ' + rmk;
     this.state.demandActionPopup = null;
     this.state.reviewDemandId = null;
-    this.showToast(`Demand ${dem.id} put on hold`);
+    this.showToast('Demand put on hold');
     this.render();
   },
 
@@ -3468,7 +3470,7 @@ const App = {
     return `
     <div class="page-header">
       <h1>Demand Review</h1>
-      <p>Demand ID: <b>${dem.id}</b> — ${dem.society}</p>
+      <p>${dem.society}</p>
     </div>
     <button class="btn btn-gray btn-sm" style="margin-bottom:16px;" onclick="App.navigate('admin-demands')">
       <span class="material-icons">arrow_back</span> Back to Demand List
@@ -3516,7 +3518,7 @@ const App = {
         <div class="card">
           <div class="card-header"><h3><span class="material-icons" style="font-size:18px;vertical-align:middle;color:#4CAF50;">grass</span> Demand Details</h3></div>
           <div class="card-body" style="display:grid;gap:10px;">
-            ${[['Demand ID', dem.id], ['Crop', dem.crop],
+            ${[['Crop', dem.crop],
       ...this._demChoiceList(dem).reduce((acc, c) => { const r = acc.find(x => x[0] === c.label + ' Variety'); if (r) r[1] += ', ' + c.variety; else acc.push([c.label + ' Variety', c.variety]); return acc; }, []),
       ...(dem.approvedVariety ? [['Approved Variety', dem.approvedVariety + ' (' + dem.approvedChoice + ')']] : []),
       ['Requested Qty', dem.requestedQty + ' Quintal'],
@@ -4244,6 +4246,8 @@ const App = {
     const foundationBal = sbt.Foundation;
     const certifiedBal = sbt.Certified;
     const hybridBal = sbt.Hybrid;
+    // Total seed distributed to members (Breeder seed; Kg converted to Quintal).
+    const distributedQt = Math.round(this.state.distributionRecords.filter(r => (r.seedType || 'Breeder') === 'Breeder').reduce((s, r) => s + (Number(r.qty) || 0) / (r.unit === 'Kg' ? 100 : 1), 0) * 100) / 100;
     const totalBal = Math.round((breederBal + foundationBal + certifiedBal + hybridBal) * 100) / 100;
     const seedTypeBadge = t => t === 'Breeder' ? 'badge-success' : t === 'Foundation' ? 'badge-info' : 'badge-purple';
     return `
@@ -4285,6 +4289,13 @@ const App = {
         <div class="stat-info">
           <div class="value">${hybridBal} Qt</div>
           <div class="label">Hybrid Seed Stock</div>
+        </div>
+      </div>
+      <div class="stat-card teal" style="cursor:pointer;" title="Click to view report" onclick="App.navigate('as-distributed')">
+        <div class="stat-icon"><span class="material-icons">agriculture</span></div>
+        <div class="stat-info">
+          <div class="value">${distributedQt} Qt</div>
+          <div class="label">Total Distributed Seed Quantity</div>
         </div>
       </div>
     </div>
@@ -5054,7 +5065,7 @@ const App = {
           <table>
             <thead>
               <tr>
-                <th>Demand ID</th><th>Society</th><th>Crop / Variety</th>
+                <th>Demand Date</th><th>Society</th><th>Crop / Variety</th>
                 <th>Approved Qty</th><th>Available Stock</th>
                 <th>Allocation Status</th><th>Actions</th>
               </tr>
@@ -5067,8 +5078,7 @@ const App = {
       return `
                 <tr>
                   <td>
-                    <b>${dem.id}</b>
-                    <div style="font-size:0.7rem;color:#9E9E9E;">${dem.date}</div>
+                    ${dem.date}
                   </td>
                   <td>
                     <div style="font-weight:500;">${dem.society}</div>

@@ -23,7 +23,8 @@ var DL = {
     'as-breeder': 'Breeder Stock Report',
     'as-foundation': 'Foundation Seed Stock Report',
     'as-certified': 'Certified Seed Stock Report',
-    'as-hybrid': 'Hybrid Seed Stock Report'
+    'as-hybrid': 'Hybrid Seed Stock Report',
+    'as-distributed': 'Total Distributed Seed Quantity'
   },
   approved: function (d) {
     var adm = App.state.adminDemands.find(function (x) { return x.id === d.id; });
@@ -42,14 +43,80 @@ var DL = {
     var alt = [(d.secondChoice || []).length ? '2nd: ' + d.secondChoice.join(', ') : '', (d.thirdChoice || []).length ? '3rd: ' + d.thirdChoice.join(', ') : ''].filter(Boolean).join(' · ');
     return d.variety + (alt ? '<div style="font-size:0.72rem;color:#757575;">' + alt + '</div>' : '');
   },
+  // Plain text of a cell / fragment (icons and tags removed).
+  text: function (h) {
+    return String(h == null ? '' : h).replace(/<span class="material-icons"[^>]*>.*?<\/span>/g, '').replace(/<[^>]+>/g, ' ')
+      .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&rsaquo;/g, '>').replace(/\s+/g, ' ').trim();
+  },
+  // <tr> html strings -> array of text rows (colspan cells are padded with empty cells).
+  matrix: function (trHtml) {
+    var out = [];
+    String(trHtml || '').replace(/<tr[^>]*>([\s\S]*?)<\/tr>/g, function (m, inner) {
+      var row = [];
+      inner.replace(/<td([^>]*)>([\s\S]*?)<\/td>/g, function (mm, attrs, cell) {
+        var cs = /colspan="(\d+)"/.exec(attrs);
+        row.push(DL.text(cell));
+        for (var i = 1; i < (cs ? +cs[1] : 1); i++) row.push('');
+        return '';
+      });
+      out.push(row);
+      return '';
+    });
+    return out;
+  },
   shell: function (title, subtitle, head, rows, footer, emptyMsg) {
+    // Keep the report data so Excel / PDF export uses exactly what is on screen (action columns are left out).
+    var keep = head.map(function (h, i) { return /^(Actions|Report)$/.test(h) ? -1 : i; }).filter(function (i) { return i >= 0; });
+    var pick = function (r) { return keep.map(function (i) { return r[i] == null ? '' : r[i]; }); };
+    DL.current = {
+      title: title, subtitle: DL.text(subtitle), head: pick(head),
+      rows: DL.matrix(rows.join('')).map(pick), foot: DL.matrix(footer || '').map(pick)
+    };
     return '<div style="margin-bottom:16px;"><button class="btn btn-gray btn-sm" onclick="App.navigate(\'dashboard\')"><span class="material-icons" style="font-size:16px;">arrow_back</span> Back to Dashboard</button></div>'
-      + '<div class="page-header"><h1>' + title + '</h1><p>' + subtitle + '</p></div>'
+      + '<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;"><div><h1>' + title + '</h1><p>' + subtitle + '</p></div>'
+      + App.reportButtons()
+      + '</div>'
       + '<div class="card"><div class="card-body" style="padding:0;"><div class="table-wrap"><table>'
       + '<thead><tr>' + head.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead><tbody>'
       + (rows.length ? rows.join('') : '<tr><td colspan="' + head.length + '" style="text-align:center;padding:30px;color:#9E9E9E;">' + emptyMsg + '</td></tr>')
       + (footer || '') + '</tbody></table></div></div></div>';
   }
+};
+
+// ───────────── Excel / PDF download (shared by every report) ─────────────
+App.reportButtons = function (key) {
+  var k = key ? "'" + key + "'" : '';
+  return '<div style="display:flex;gap:8px;">'
+    + '<button class="btn btn-success btn-sm" title="Download Excel" onclick="App.reportExport(\'excel\'' + (k ? ',' + k : '') + ')"><span class="material-icons" style="font-size:16px;">table_chart</span> Excel</button>'
+    + '<button class="btn btn-danger btn-sm" title="Download PDF" onclick="App.reportExport(\'pdf\'' + (k ? ',' + k : '') + ')"><span class="material-icons" style="font-size:16px;">picture_as_pdf</span> PDF</button></div>';
+};
+App.reportExport = function (kind, key) {
+  var r = key ? App._reportData && App._reportData[key] : DL.current;
+  if (!r || !r.rows.length) { App.showToast('No records to export.'); return; }
+  var fmt = function (v) { return App.fmtDateText ? App.fmtDateText(String(v == null ? '' : v)) : String(v == null ? '' : v); };
+  var slug = r.title.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + new Date().toISOString().slice(0, 10);
+  var all = r.rows.concat(r.foot || []);
+  if (kind === 'excel') {
+    var esc = function (v) { return '"' + fmt(v).replace(/"/g, '""') + '"'; };
+    var lines = [[r.title], [r.subtitle], [], r.head].concat(all).map(function (row) { return row.map(esc).join(','); });
+    App._saveFile('\uFEFF' + lines.join('\r\n'), slug + '.csv', 'text/csv;charset=utf-8');
+    App.showToast('Excel file downloaded.');
+    return;
+  }
+  var h = function (v) { return fmt(v).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+  var footStart = r.rows.length;
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + h(r.title) + '</title>'
+    + '<style>body{font-family:Arial,sans-serif;margin:24px;color:#222}h2{color:#1B5E20;margin:0 0 4px}p{color:#666;margin:0 0 14px;font-size:.85rem}'
+    + 'table{width:100%;border-collapse:collapse;font-size:.72rem}th{background:#E8F5E9;color:#1B5E20;text-align:left}th,td{border:1px solid #ddd;padding:5px 7px}tr.f td{background:#F1F8E9;font-weight:700}'
+    + '@page{size:landscape;margin:12mm}</style></head><body>'
+    + '<h2>' + h(r.title) + '</h2><p>Rampur Krishi Samiti (SOC-001) · ' + h(r.subtitle) + ' · Generated on ' + App.fmtDate(new Date()) + '</p>'
+    + '<table><thead><tr>' + r.head.map(function (x) { return '<th>' + h(x) + '</th>'; }).join('') + '</tr></thead><tbody>'
+    + all.map(function (row, i) { return '<tr' + (i >= footStart ? ' class="f"' : '') + '>' + row.map(function (c) { return '<td>' + h(c) + '</td>'; }).join('') + '</tr>'; }).join('')
+    + '</tbody></table><script>window.onload=function(){window.print();}<\/script></body></html>';
+  var w = window.open('', '_blank');
+  if (!w) { App.showToast('Please allow popups to download the PDF.'); return; }
+  w.document.write(html); w.document.close();
+  App.showToast('Choose "Save as PDF" in the print window.');
 };
 
 // ───────────── Members (Total / Active) ─────────────
@@ -76,7 +143,7 @@ DL.allDemands = function () {
     var st = App._demandStatus(d);
     var pay = st === 'Rejected' ? 'Pending' : (d.fullyPaid ? 'Fully Paid' : d.payStatus);
     var ap = DL.approved(d), pe = DL.pending(d);
-    return '<tr><td><b>' + d.id + '</b></td>' + demoTds() + '<td>' + d.date + '</td><td>' + d.season + '</td><td>' + d.crop + '</td><td>' + DL.variety(d) + '</td>'
+    return '<tr>' + demoTds() + '<td>' + d.date + '</td><td>' + d.season + '</td><td>' + d.crop + '</td>' + App._choiceTds(d) + ''
       + '<td style="font-weight:600;">' + d.qty + ' Qt</td>'
       + '<td style="color:#2E7D32;font-weight:600;">' + (ap > 0 ? ap + ' Qt' : '—') + '</td>'
       + '<td style="color:' + (pe > 0 ? '#E65100' : '#9E9E9E') + ';font-weight:600;">' + (pe > 0 ? pe + ' Qt' : '—') + '</td>'
@@ -84,20 +151,20 @@ DL.allDemands = function () {
       + '<td>' + DL.statusBadge(st) + '</td></tr>';
   });
   return DL.shell('Total Demand Raised', 'Demands raised by your society: ' + ds.length,
-    ['Demand ID', 'District', 'Block', 'Village', 'Date', 'Season', 'Crop', 'Variety', 'Requested', 'Approved', 'Pending', 'Payment', 'Status'], rows, '', 'No demands raised yet.');
+    ['District', 'Block', 'Village', 'Date', 'Season', 'Crop', 'First Choice Variety', 'Second Choice Variety', 'Third Choice Variety', 'Requested', 'Approved', 'Pending', 'Payment', 'Status'], rows, '', 'No demands raised yet.');
 };
 
 DL.approvedList = function () {
   var ds = App.state.demands.filter(function (d) { return DL.approved(d) > 0; });
   var total = ds.reduce(function (s, d) { return s + DL.approved(d); }, 0);
   var rows = ds.map(function (d) {
-    return '<tr><td><b>' + d.id + '</b></td>' + demoTds() + '<td>' + d.date + '</td><td>' + d.season + '</td><td>' + d.crop + '</td><td>' + DL.variety(d) + '</td>'
+    return '<tr>' + demoTds() + '<td>' + d.date + '</td><td>' + d.season + '</td><td>' + d.crop + '</td>' + App._choiceTds(d) + ''
       + '<td>' + d.qty + ' Qt</td><td style="color:#2E7D32;font-weight:700;">' + DL.approved(d) + ' Qt</td>'
       + '<td>' + DL.statusBadge(App._demandStatus(d)) + '</td></tr>';
   });
-  var foot = ds.length ? '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="9">Total Approved Seed Quantity</td><td style="color:#2E7D32;">' + total + ' Qt</td><td></td></tr>' : '';
+  var foot = ds.length ? '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="10">Total Approved Seed Quantity</td><td style="color:#2E7D32;">' + total + ' Qt</td><td></td></tr>' : '';
   return DL.shell('Total Approved Seed Quantity', 'Demands with approved quantity: ' + ds.length + ' | Total: ' + total + ' Qt',
-    ['Demand ID', 'District', 'Block', 'Village', 'Date', 'Season', 'Crop', 'Variety', 'Requested', 'Approved Qty', 'Status'], rows, foot, 'No approved quantity yet.');
+    ['District', 'Block', 'Village', 'Date', 'Season', 'Crop', 'First Choice Variety', 'Second Choice Variety', 'Third Choice Variety', 'Requested', 'Approved Qty', 'Status'], rows, foot, 'No approved quantity yet.');
 };
 
 // ───────────── Available Stock boxes: one report per seed type ─────────────
@@ -140,13 +207,13 @@ DL.breederReport = function () {
   var alloc = sum('allocatedQty'), dist = sum('distributedQty'), avail = r2(alloc - dist);
   var rows = list.map(function (r) {
     var bal = (r.allocatedQty || 0) - (r.distributedQty || 0);
-    return '<tr>' + demoTds() + '<td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td>'
+    return '<tr><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td>'
       + '<td style="color:#1565C0;font-weight:600;">' + r.allocatedQty + '</td><td style="color:#2E7D32;font-weight:600;">' + r.distributedQty + '</td>'
       + '<td style="color:' + (bal > 0 ? '#E65100' : '#757575') + ';font-weight:600;">' + bal + '</td><td>' + r.receivedDate + '</td></tr>';
   });
-  var foot = list.length ? '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="6">Total</td><td style="color:#1565C0;">' + alloc + '</td><td style="color:#2E7D32;">' + dist + '</td><td style="color:#E65100;">' + avail + '</td><td></td></tr>' : '';
-  return DL.backToStock(DL.shell('Breeder Stock Report', 'Seed received from Beej Sangh | Available: ' + avail + ' Qt (Allocated ' + alloc + ' Qt, Distributed ' + dist + ' Qt)',
-    ['District', 'Block', 'Village', 'Season', 'Crop', 'Variety', 'Allocated (Qt)', 'Distributed (Qt)', 'Available (Qt)', 'Received On'], rows, foot, 'No breeder seed stock received yet.'));
+  var foot = list.length ? '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="3">Total</td><td style="color:#1565C0;">' + alloc + '</td><td style="color:#2E7D32;">' + dist + '</td><td style="color:#E65100;">' + avail + '</td><td></td></tr>' : '';
+  return DL.backToStock(DL.shell('Breeder Stock Report', 'District: ' + SOC_DEMO.district + ' | Block: ' + SOC_DEMO.block + ' | Village: ' + SOC_DEMO.village + ' | Available: ' + avail + ' Qt (Allocated ' + alloc + ' Qt, Distributed ' + dist + ' Qt)',
+    ['Season', 'Crop', 'Variety', 'Allocated (Qt)', 'Distributed (Qt)', 'Available (Qt)', 'Received On'], rows, foot, 'No breeder seed stock received yet.'));
 };
 
 // Foundation / Certified: stock entered by the Society President = what the society's members produced (Produce Quantity).
@@ -189,22 +256,57 @@ DL.hybridReport = function () {
     rows, foot, 'No hybrid seed allocated by Admin yet.'));
 };
 
-// Total: stock by seed type and where it comes from.
+// Total: stock details by seed type.
 DL.totalReport = function () {
-  var st = App.stockByType(), b = DL.breederQt();
+  var uniq = function (a) { return a.filter(function (x, i) { return x && a.indexOf(x) === i; }); };
+  var maxDate = function (a) { return a.filter(Boolean).sort().pop() || '—'; };
+  var list = function (a) { return a.length ? a.join(', ') : '—'; };
+  var br = DL.breederRows();
+  var brAlloc = br.reduce(function (s, r) { return s + (r.allocatedQty || 0); }, 0);
+  var brDist = br.reduce(function (s, r) { return s + (r.distributedQty || 0); }, 0);
+  var fcRow = function (type) {
+    var l = DL.fcEntries(type);
+    var q = r2(l.reduce(function (s, e) { return s + toQt(e.produceQty, e.unit); }, 0));
+    return { type: type, crops: list(uniq(l.map(function (e) { return e.crop; }))), varieties: list(uniq(l.map(function (e) { return e.variety; }))),
+      entries: l.length, total: q, dist: null, avail: q, last: maxDate(l.map(function (e) { return e.updatedAt; })), page: 'as-' + type.toLowerCase() };
+  };
+  var hy = DL.hybridEntries();
+  var hyQ = r2(hy.reduce(function (s, h) { return s + (Number(h.allocQty) || 0); }, 0));
   var items = [
-    ['Breeder', 'Received from Beej Sangh against demand', b, 'as-breeder'],
-    ['Foundation', 'Entered by Society President', st.Foundation, 'as-foundation'],
-    ['Certified', 'Entered by Society President', st.Certified, 'as-certified'],
-    ['Hybrid', 'Allocated directly by Admin', st.Hybrid, 'as-hybrid']
+    { type: 'Breeder', crops: list(uniq(br.map(function (r) { return r.crop; }))), varieties: list(uniq(br.map(function (r) { return r.variety; }))),
+      entries: br.length, total: r2(brAlloc), dist: r2(brDist), avail: r2(brAlloc - brDist), last: maxDate(br.map(function (r) { return r.receivedDate; })), page: 'as-breeder' },
+    fcRow('Foundation'), fcRow('Certified'),
+    { type: 'Hybrid', crops: '—', varieties: list(uniq(hy.map(function (h) { return h.variety; }))),
+      entries: hy.length, total: hyQ, dist: null, avail: hyQ, last: maxDate(hy.map(function (h) { return h.updatedAt || h.allocDate; })), page: 'as-hybrid' }
   ];
-  var total = r2(items.reduce(function (s, i) { return s + i[2]; }, 0));
+  var sum = function (k) { return r2(items.reduce(function (s, i) { return s + (i[k] || 0); }, 0)); };
   var rows = items.map(function (i) {
-    return '<tr>' + demoTds() + '<td><b>' + i[0] + '</b></td><td>' + i[1] + '</td><td style="color:#2E7D32;font-weight:700;">' + i[2] + ' Qt</td>'
-      + '<td><button class="btn btn-outline btn-sm" onclick="App.navigate(\'' + i[3] + '\')"><span class="material-icons" style="font-size:14px;">visibility</span> View Report</button></td></tr>';
+    return '<tr><td><b>' + i.type + '</b></td><td>' + i.crops + '</td><td>' + i.varieties + '</td>'
+      + '<td style="color:#1565C0;font-weight:600;">' + i.total + '</td>'
+      + '<td style="color:#2E7D32;font-weight:600;">' + (i.dist == null ? '—' : i.dist) + '</td>'
+      + '<td style="color:#E65100;font-weight:700;">' + i.avail + '</td><td>' + i.last + '</td>'
+      + '<td><button class="btn btn-outline btn-sm" onclick="App.navigate(\'' + i.page + '\')"><span class="material-icons" style="font-size:14px;">visibility</span> View Report</button></td></tr>';
   });
-  var foot = '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="5">Total Stock</td><td style="color:#2E7D32;">' + total + ' Qt</td><td></td></tr>';
-  return DL.backToStock(DL.shell('Total Stock Report', 'Stock by seed type: ' + total + ' Qt', ['District', 'Block', 'Village', 'Seed Type', 'Source', 'Stock (Qt)', 'Report'], rows, foot, ''));
+  var foot = '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="3">Total Stock</td><td style="color:#1565C0;">' + sum('total') + '</td><td style="color:#2E7D32;">' + sum('dist') + '</td><td style="color:#E65100;">' + sum('avail') + '</td><td colspan="2"></td></tr>';
+  return DL.backToStock(DL.shell('Total Stock Report', 'District: ' + SOC_DEMO.district + ' | Block: ' + SOC_DEMO.block + ' | Village: ' + SOC_DEMO.village + ' | Available: ' + sum('avail') + ' Qt',
+    ['Seed Type', 'Crops', 'Varieties', 'Received / Produced (Qt)', 'Distributed (Qt)', 'Available (Qt)', 'Last Updated', 'Report'], rows, foot, ''));
+};
+
+// Seed distributed to society members (Breeder seed).
+DL.distributedReport = function () {
+  var list = (App.state.distributionRecords || []).filter(function (r) { return (r.seedType || 'Breeder') === 'Breeder'; });
+  var qt = function (r) { return (Number(r.qty) || 0) / (r.unit === 'Kg' ? 100 : 1); };
+  var total = r2(list.reduce(function (s, r) { return s + qt(r); }, 0));
+  var rows = list.map(function (r) {
+    var mb = App.state.members.find(function (m) { return m.id === r.memberId; }) || {};
+    return '<tr><td>' + r.memberName + '<div style="font-size:0.72rem;color:#9E9E9E;">' + r.memberId + '</div></td>'
+      + '<td>' + (mb.district || '—') + '</td><td>' + (mb.block || '—') + '</td><td>' + (r.village || mb.village || '—') + '</td>'
+      + '<td>' + (r.finYear || '—') + '</td><td>' + r.season + '</td><td><b>' + r.crop + '</b></td><td>' + r.variety + '</td>'
+      + '<td style="color:#2E7D32;font-weight:700;">' + r.qty + ' ' + (r.unit === 'Kg' ? 'Kg' : 'Quintal') + '</td><td>' + r.date + '</td></tr>';
+  });
+  var foot = list.length ? '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="8">Total (in Quintal)</td><td style="color:#2E7D32;">' + total + ' Qt</td><td></td></tr>' : '';
+  return DL.backToStock(DL.shell('Total Distributed Seed Quantity', 'Breeder seed distributed to members: ' + total + ' Qt across ' + list.length + ' distributions',
+    ['Member', 'District', 'Block', 'Village', 'Proc. Year', 'Season', 'Crop', 'Variety', 'Quantity', 'Distribution Date'], rows, foot, 'No seed distributed to members yet.'));
 };
 
 DL.stockReport = function (page) {
@@ -213,6 +315,7 @@ DL.stockReport = function (page) {
     case 'as-foundation': return DL.fcReport('Foundation');
     case 'as-certified': return DL.fcReport('Certified');
     case 'as-hybrid': return DL.hybridReport();
+    case 'as-distributed': return DL.distributedReport();
     default: return DL.totalReport();
   }
 };
@@ -226,7 +329,7 @@ DL.stockReport = function (page) {
       case 'dl-active-members': return DL.members(true);
       case 'dl-total-demands': return DL.allDemands();
       case 'dl-approved': return DL.approvedList();
-      case 'as-total': case 'as-breeder': case 'as-foundation': case 'as-certified': case 'as-hybrid': return DL.stockReport(this.state.currentPage);
+      case 'as-total': case 'as-breeder': case 'as-foundation': case 'as-certified': case 'as-hybrid': case 'as-distributed': return DL.stockReport(this.state.currentPage);
       default: return _page();
     }
   };

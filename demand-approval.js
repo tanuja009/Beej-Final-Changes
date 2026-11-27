@@ -68,7 +68,7 @@ App._daFiltered = function () {
     return (!f.season || d.season === f.season)
       && (!f.crop || d.crop === f.crop)
       && (!f.status || d.approvalStatus === f.status)
-      && (!f.search || (d.id + ' ' + d.society + ' ' + d.crop + ' ' + d.variety).toLowerCase().indexOf(f.search.toLowerCase()) >= 0);
+      && (!f.search || (d.society + ' ' + d.crop + ' ' + d.variety).toLowerCase().indexOf(f.search.toLowerCase()) >= 0);
   });
 };
 
@@ -85,7 +85,7 @@ App.daRenderList = function () {
 
     // Filters
     + '<div class="search-bar" style="margin-bottom:16px;flex-wrap:wrap;">'
-    + '<div class="search-field"><label>Search</label><input class="form-control" placeholder="ID, Society, Crop…" value="' + (f.search || '') + '" oninput="App.state.demandApproval.filter.search=this.value;App.render()"></div>'
+    + '<div class="search-field"><label>Search</label><input class="form-control" placeholder="Society, Crop…" value="' + (f.search || '') + '" oninput="App.state.demandApproval.filter.search=this.value;App.render()"></div>'
     + '<div class="search-field"><label>Season</label><select class="form-control" onchange="App.state.demandApproval.filter.season=this.value;App.render()">' + opt(seasons, f.season) + '</select></div>'
     + '<div class="search-field"><label>Crop</label><select class="form-control" onchange="App.state.demandApproval.filter.crop=this.value;App.render()">' + opt(crops, f.crop) + '</select></div>'
     + '<div class="search-field"><label>Status</label><select class="form-control" onchange="App.state.demandApproval.filter.status=this.value;App.render()">' + opt(statuses, f.status) + '</select></div>'
@@ -133,13 +133,12 @@ App.daRenderForm = function () {
 
   return '<div style="font-size:0.8rem;color:#757575;margin-bottom:6px;">Management &rsaquo; Demand Approval &rsaquo; Approve Demand</div>'
     + '<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">'
-    + '<div><h1>Approve Demand</h1><p>Demand ID: <b>' + d.id + '</b> | ' + d.society + '</p></div>'
+    + '<div><h1>Approve Demand</h1><p>' + d.society + '</p></div>'
     + '<button class="btn btn-outline btn-sm" onclick="App.navigate(\'da-list\')"><span class="material-icons">arrow_back</span> Back to List</button></div>'
 
     // Auto-filled demand details
     + '<div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>Demand Details <span style="font-size:0.72rem;color:#2E7D32;font-weight:500;margin-left:8px;">(Auto-filled)</span></h3></div>'
     + '<div class="card-body"><div class="form-grid">'
-    + ro('Demand ID', d.id)
     + ro('Society Name', d.society)
     + ro('Society Code', d.socCode)
     + ro('District', d.district)

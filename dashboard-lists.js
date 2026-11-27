@@ -238,6 +238,16 @@ DL.fcReport = function (type) {
     rows, foot, 'No ' + type.toLowerCase() + ' seed entries added yet. Add them from Foundation & Certified Seed.'));
 };
 
+// Society confirms the hybrid seed allocated by Admin has reached it: Allocated -> Received.
+App.hybridMarkReceived = function (id) {
+  var h = (App.state.hybridAllocs || []).find(function (x) { return x.id === id; });
+  if (!h) return;
+  h.received = true;
+  h.receivedDate = new Date().toISOString().slice(0, 10);
+  App.showToast('Hybrid seed marked as Received.');
+  App.render();
+};
+
 // Hybrid: allocated directly by Admin, no demand.
 DL.hybridReport = function () {
   var list = DL.hybridEntries();
@@ -247,12 +257,13 @@ DL.hybridReport = function () {
     return '<tr><td><b>' + h.id + '</b></td>' + demoTds() + '<td>' + h.allocDate + '</td><td>' + h.finYear + '</td><td>' + h.season + '</td>'
       + '<td>' + h.variety + '</td><td>' + (h.parentVariety || '—') + '</td>'
       + '<td style="color:#2E7D32;font-weight:700;">' + h.allocQty + ' Qt</td><td>' + h.expectedProd + ' Qt</td>'
-      + '<td><span class="badge badge-success">' + h.status + '</span></td><td>' + (h.remarks || '—') + '</td></tr>';
+      + '<td>' + (h.received ? '<span class="badge badge-success">Received</span>' : '<span class="badge badge-info">Allocated</span>') + '</td>'
+      + '<td>' + (h.received ? '<span style="font-size:0.78rem;color:#9E9E9E;">' + (h.receivedDate || '—') + '</span>' : '<button class="btn btn-primary btn-sm" onclick="App.hybridMarkReceived(\'' + h.id + '\')"><span class="material-icons" style="font-size:14px;">inventory</span> Mark Received</button>') + '</td></tr>';
   });
   var foot = list.length ? '<tr style="background:#F1F8E9;font-weight:700;"><td colspan="9">Total</td><td style="color:#2E7D32;">' + total + ' Qt</td><td>' + exp + ' Qt</td><td colspan="2"></td></tr>' : '';
   return DL.backToStock(DL.shell('Hybrid Seed Stock Report',
     'Allocated directly by Admin (no demand required) | Stock: ' + total + ' Qt',
-    ['Allocation ID', 'District', 'Block', 'Village', 'Allocation Date', 'Proc. Year', 'Season', 'Hybrid Variety', 'Parent Variety', 'Allocated Qty', 'Expected Production', 'Status', 'Remarks'],
+    ['Allocation ID', 'District', 'Block', 'Village', 'Allocation Date', 'Proc. Year', 'Season', 'Hybrid Variety', 'Parent Variety', 'Allocated Qty', 'Expected Production', 'Status', 'Actions'],
     rows, foot, 'No hybrid seed allocated by Admin yet.'));
 };
 

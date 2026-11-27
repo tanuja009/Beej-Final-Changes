@@ -29,7 +29,7 @@
   };
   App._payNextId = function () {
     var nums = App.state.payments.map(function (p) { return parseInt(String(p.id).replace(/\D/g, ''), 10) || 0; });
-    return 'TXN-' + String((nums.length ? Math.max.apply(null, nums) : 0) + 1).padStart(5, '0');
+    return 'APP-' + String((nums.length ? Math.max.apply(null, nums) : 0) + 1).padStart(5, '0');
   };
   App._payAdd = function (p) {
     p.id = App._payNextId();
@@ -182,7 +182,7 @@
     App._reportData[exportKey] = {
       title: isAdmin ? 'Payment Transactions' : 'Payment History',
       subtitle: 'Total Paid ' + rs(paid) + ' | Advance ' + rs(adv) + ' | Pending Balance ' + rs(pending) + ' | Full Paid ' + rs(fullPaid) + ' | Refunded ' + rs(ref),
-      head: ['Txn ID', 'Date'].concat(isAdmin ? ['Society'] : [], ['Crop', 'Variety', 'Type', 'Mode', 'Amount (Rs)', 'Status']),
+      head: ['Application ID', 'Date'].concat(isAdmin ? ['Society'] : [], ['Crop', 'Variety', 'Type', 'Mode', 'Amount (Rs)', 'Status']),
       rows: rows.map(function (p) { return [p.id, p.date].concat(isAdmin ? [p.society + ' (' + p.socCode + ')'] : [], [p.crop, p.variety, p.type, p.mode, (p.type === 'Refund' ? '-' : '') + p.amount, p.status]); }),
       foot: []
     };
@@ -196,7 +196,7 @@
       + card('red', 'currency_exchange', rs(ref), 'Total Refunded Amount')
       + '</div>'
       + '<div class="search-bar">'
-      + '<div class="search-field"><label>Search</label><input class="form-control" placeholder="Txn ID, Crop…" value="' + (f.search || '') + '" onchange="' + setF('search') + '"/></div>'
+      + '<div class="search-field"><label>Search</label><input class="form-control" placeholder="Application ID, Crop…" value="' + (f.search || '') + '" onchange="' + setF('search') + '"/></div>'
       + (isAdmin ? '<div class="search-field"><label>Society</label><select class="form-control" onchange="' + setF('society') + '">' + opt('', f.society, 'All Societies') + societies + '</select></div>' : '')
       + '<div class="search-field"><label>Payment Type</label><select class="form-control" onchange="' + setF('type') + '">' + opt('', f.type, 'All Types') + ['Advance (25%)', 'Balance (75%)', 'Refund'].map(function (t) { return opt(t, f.type); }).join('') + '</select></div>'
       + '<div class="search-field"><label>Payment Mode</label><select class="form-control" onchange="' + setF('mode') + '">' + opt('', f.mode, 'All Modes') + MODE_LIST.map(function (m) { return opt(m, f.mode); }).join('') + '</select></div>'
@@ -204,7 +204,7 @@
       + '</div>'
       + '<div class="card"><div class="card-header" style="display:flex;justify-content:space-between;align-items:center;"><h3>Transactions <span style="color:#757575;font-weight:400;font-size:.85rem;">(' + rows.length + ' records)</span></h3>' + App.reportButtons(exportKey) + '</div>'
       + '<div class="card-body" style="padding:0;"><div class="table-wrap"><table><thead><tr>'
-      + '<th>Txn ID</th><th>Date</th>' + (isAdmin ? '<th>Society</th>' : '') + '<th>Crop / Variety</th><th>Type</th><th>Mode</th><th>Amount</th><th>Status</th><th>Receipt</th>'
+      + '<th>Application ID</th><th>Date</th>' + (isAdmin ? '<th>Society</th>' : '') + '<th>Crop / Variety</th><th>Type</th><th>Mode</th><th>Amount</th><th>Status</th><th>Receipt</th>'
       + '</tr></thead><tbody>' + body + '</tbody></table></div></div></div>'
       + (this.state.payReceiptId ? this.renderPayReceipt() : '');
   };
@@ -220,7 +220,7 @@
     return '<div class="modal-overlay" onclick="if(event.target===this)App.closePayReceipt()"><div class="modal-box" style="max-width:480px;">'
       + '<div class="modal-header"><h3>' + (p.type === 'Refund' ? 'Refund Receipt' : 'Payment Receipt') + '</h3><button class="modal-close" onclick="App.closePayReceipt()">\u2715</button></div>'
       + '<div class="modal-body">'
-      + row('Transaction ID', '<b>' + p.id + '</b>')
+      + row('Application ID', '<b>' + p.id + '</b>')
       + row('Date', p.date)
       + row('Society', p.society + ' (' + p.socCode + ')')
       + row('Crop / Variety', p.crop + ' / ' + p.variety)
